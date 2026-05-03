@@ -1,0 +1,51 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from datetime import date
+from decimal import Decimal
+
+
+@dataclass(frozen=True)
+class TaxPosting:
+    # Bookkeeping dimensions
+    posting_date: date
+    source_account: str   # e.g. "assets:dkb:girokonto"
+    counter_account: str  # e.g. "expenses:business:hosting:hetzner"
+    amount: Decimal       # positive = expense, negative = income (hledger sign convention)
+    description: str
+    transaction_comment: str
+    posting_comment: str
+    source_file: str
+    source_line: int
+
+    # Tax enrichment — resolved from account directives at ingest time
+    tax_form: str         # "einnahmenueberschussrechnung" | "umsatzsteuer" | "einkommensteuer" | ""
+    tax_deduction: str    # "full" | "proportional" | "nicht_abzugsfaehig" | "afa" | ""
+    tax_role: str         # "business_income" | "tax_payment" | "income_tax" | "drawing" | "contribution" | ""
+    vat_rate: Decimal     # 0.19 / 0.07 / 0.00
+    expense_share: Decimal
+    vat_share: Decimal
+
+    # AfA metadata — only set when tax_deduction == "afa"
+    afa_years: int        # 0 if not AfA
+
+    # Synthetic rows
+    derived_kind: str     # "" or "abschreibung"
+
+    # Human-readable metadata resolved from account directives
+    label: str = ""            # Human label from elster_label tag on counter account
+    source_label: str = ""     # Human label from elster_label tag on source account
+    section: str = ""          # Section from tax_section tag (EÜR, ESt, …)
+    tax_period_year: int = 0   # Fiscal year this posting belongs to (from tax_period tag); 0 = use transaction year
+
+    @property
+    def year(self) -> int:
+        return self.posting_date.year
+
+    @property
+    def quarter(self) -> int:
+        return ((self.posting_date.month - 1) // 3) + 1
+
+    @property
+    def month(self) -> int:
+        return self.posting_date.month

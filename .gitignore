@@ -1,0 +1,6 @@
+data/build/
+data/exports/
+__pycache__/
+*.pyc
+.~lock.*
+.codex

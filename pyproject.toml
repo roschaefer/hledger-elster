@@ -1,0 +1,9 @@
+[project]
+name = "hledger-elster"
+version = "0.1.0"
+description = "German tax calculation and ELSTER-oriented exports for hledger"
+requires-python = ">=3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

@@ -1,0 +1,25 @@
+account assets:bank:checking  ; elster_account:private, elster_label:Girokonto
+account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Krankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:private:health-care:pv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Pflegeversicherung, elster_section:Vorsorgeaufwand
+account expenses:private:health-care:zb  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Zusatzbeitrag, elster_section:Vorsorgeaufwand
+account expenses:insurance:travel:long-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Langzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:insurance:travel:short-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Kurzzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:insurance:liability:haftpflicht  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Haftpflichtversicherung, elster_section:Vorsorgeaufwand
+
+2024-06-01 Health care contribution
+    expenses:private:health-care:kv   840.00 EUR
+    expenses:private:health-care:pv   240.00 EUR
+    expenses:private:health-care:zb   120.00 EUR
+    assets:bank:checking            -1200.00 EUR
+
+2024-06-08 Long-term travel health care
+    expenses:insurance:travel:long-term-health-care   343.50 EUR
+    assets:bank:checking                              -343.50 EUR
+
+2024-06-10 Short-term travel health care
+    expenses:insurance:travel:short-term-health-care   9.50 EUR
+    assets:bank:checking                               -9.50 EUR
+
+2024-06-15 Liability insurance
+    expenses:insurance:liability:haftpflicht   57.88 EUR
+    assets:bank:checking                       -57.88 EUR

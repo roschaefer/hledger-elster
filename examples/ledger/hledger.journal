@@ -1,0 +1,109 @@
+; Sanitised example transactions for the public test suite.
+
+account assets:kontist:geschaeftskonto  ; bank:kontist, account_kind:payment, elster_account:business, elster_label:Geschäftskonto
+account assets:dkb:girokonto  ; bank:dkb, account_kind:payment, elster_account:private, elster_label:Girokonto
+account transfers:kontist-girokonto  ; account_kind:transfer
+account income:business  ; elster_role:business_income, elster_vat_rate:0.19, elster_label:Betriebseinnahmen
+account expenses:business  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00
+account expenses:business:hosting:wasabi  ; elster_label:Serverkosten Wasabi, elster_section:Bezogene Fremdleistungen
+account expenses:business:steuerberater  ; elster_label:Steuerberatung, elster_section:Rechts- und Steuerberatung
+account expenses:business:education:conferences  ; elster_label:Konferenzen, elster_section:Fortbildungskosten
+account expenses:business:banking  ; elster_label:Kontofuehrungsgebuehren, elster_section:Arbeitsmittel
+account expenses:business:hardware:computer  ; elster_form:einnahmenueberschussrechnung, elster_afa_years:3, elster_label:Computer-Kauf
+account expenses:phone  ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat_share:0.20, elster_vat_rate:0.19, elster_label:Mobiltelefon, elster_section:Arbeitsmittel
+account expenses:insurance  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig
+account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Krankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:private:health-care:pv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Pflegeversicherung, elster_section:Vorsorgeaufwand
+account expenses:private:health-care:zb  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Zusatzbeitrag, elster_section:Vorsorgeaufwand
+account expenses:insurance:travel:long-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Langzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:insurance:travel:short-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Kurzzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:insurance:liability:haftpflicht  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Haftpflichtversicherung, elster_section:Vorsorgeaufwand
+account expenses:taxes:einkommensteuer:vorauszahlung  ; elster_role:income_tax_advance, elster_label:ESt-Vorauszahlung
+account expenses:taxes:einkommensteuer:abschlusszahlung  ; elster_role:income_tax_final, elster_label:ESt-Abschlusszahlung
+account expenses:taxes:umsatzsteuer:vorauszahlung  ; elster_role:vat_advance, elster_label:USt-Vorauszahlung
+account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
+account expenses:taxes:umsatzsteuer:vorauszahlung:2025  ; elster_period:2025
+
+2024-01-15 Example client invoice
+    assets:kontist:geschaeftskonto   1190.00 EUR
+    income:business:consulting      -1190.00 EUR
+
+2024-02-01 Wasabi
+    expenses:business:hosting:wasabi   23.80 EUR
+    assets:kontist:geschaeftskonto    -23.80 EUR
+
+2024-02-05 Tax advisor
+    expenses:business:steuerberater  119.00 EUR
+    assets:kontist:geschaeftskonto  -119.00 EUR
+
+2024-03-10 Conference ticket
+    expenses:business:education:conferences  238.00 EUR
+    assets:kontist:geschaeftskonto          -238.00 EUR
+
+2024-03-20 Bank fee
+    expenses:business:banking   23.80 EUR
+    assets:kontist:geschaeftskonto -23.80 EUR
+
+2024-04-01 Phone tariff
+    expenses:phone:service   11.90 EUR
+    assets:dkb:girokonto    -11.90 EUR
+
+2024-05-01 Laptop
+    expenses:business:hardware:computer  1190.00 EUR
+    assets:dkb:girokonto                -1190.00 EUR
+
+2024-06-01 Health care contribution
+    expenses:private:health-care:kv   840.00 EUR
+    expenses:private:health-care:pv   240.00 EUR
+    expenses:private:health-care:zb   120.00 EUR
+    assets:dkb:girokonto            -1200.00 EUR
+
+2024-06-08 Long-term travel health care
+    expenses:insurance:travel:long-term-health-care   343.50 EUR
+    assets:dkb:girokonto                              -343.50 EUR
+
+2024-06-10 Short-term travel health care
+    expenses:insurance:travel:short-term-health-care   9.50 EUR
+    assets:dkb:girokonto                               -9.50 EUR
+
+2024-06-15 Haftpflicht
+    expenses:insurance:liability:haftpflicht   57.88 EUR
+    assets:dkb:girokonto                       -57.88 EUR
+
+2024-07-01 Income tax advance
+    expenses:taxes:einkommensteuer:vorauszahlung  400.00 EUR
+    assets:kontist:geschaeftskonto               -400.00 EUR
+
+2024-08-01 VAT advance 2024
+    expenses:taxes:umsatzsteuer:vorauszahlung:2024  190.00 EUR
+    assets:kontist:geschaeftskonto                 -190.00 EUR
+
+2024-09-01 Owner draw
+    transfers:kontist-girokonto      500.00 EUR
+    assets:kontist:geschaeftskonto  -500.00 EUR
+
+2025-01-15 Example client invoice
+    assets:kontist:geschaeftskonto   595.00 EUR
+    income:business:consulting      -595.00 EUR
+
+2025-02-01 Wasabi
+    expenses:business:hosting:wasabi   23.80 EUR
+    assets:kontist:geschaeftskonto    -23.80 EUR
+
+2025-03-01 Phone tariff
+    expenses:phone:service   11.90 EUR
+    assets:dkb:girokonto    -11.90 EUR
+
+2025-04-01 Health care contribution
+    expenses:private:health-care:kv   910.00 EUR
+    expenses:private:health-care:pv   260.00 EUR
+    expenses:private:health-care:zb   130.00 EUR
+    assets:dkb:girokonto            -1300.00 EUR
+
+2025-05-01 Income tax final
+    expenses:taxes:einkommensteuer:abschlusszahlung   50.00 EUR
+    assets:kontist:geschaeftskonto                   -50.00 EUR
+
+2025-06-01 VAT advance 2025
+    expenses:taxes:umsatzsteuer:vorauszahlung:2025   95.00 EUR
+    assets:kontist:geschaeftskonto                  -95.00 EUR
