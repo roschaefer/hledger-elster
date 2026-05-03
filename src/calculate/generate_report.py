@@ -33,7 +33,10 @@ _CORE_XML = (
 ).encode()
 
 _HEADER_FILL = PatternFill(fill_type="solid", fgColor="D9E1F2")
-_HEADER_FONT = Font(bold=True)
+_DEFAULT_FILL = PatternFill(fill_type="solid", fgColor="FFFFFF")
+_DEFAULT_FONT = Font(color="000000")
+_HEADER_FONT = Font(bold=True, color="000000")
+_BOLD_FONT = Font(bold=True, color="000000")
 _BLANK_FILL = PatternFill(fill_type="solid", fgColor="F2F2F2")
 _SECTION_FILL = PatternFill(fill_type="solid", fgColor="E9EFF7")
 _SUBTOTAL_FILL = PatternFill(fill_type="solid", fgColor="DDEBF7")
@@ -100,6 +103,16 @@ def _is_section_header(row: dict[str, str]) -> bool:
     return row.get("Kennzahl", "").startswith("# ")
 
 
+def _apply_default_light_style(cell) -> None:
+    cell.font = _DEFAULT_FONT
+    cell.fill = _DEFAULT_FILL
+
+
+def _style_row_light(row) -> None:
+    for cell in row:
+        _apply_default_light_style(cell)
+
+
 def _write_summary_sheet(ws: openpyxl.worksheet.worksheet.Worksheet, rows: list[dict[str, str]]) -> None:
     if not rows:
         return
@@ -115,15 +128,18 @@ def _write_summary_sheet(ws: openpyxl.worksheet.worksheet.Worksheet, rows: list[
             display = dict(row)
             display["Kennzahl"] = row["Kennzahl"][2:]  # strip "# "
             ws.append([display.get(h, "") for h in headers])
+            _style_row_light(ws[ws.max_row])
             for cell in ws[ws.max_row]:
-                cell.font = Font(bold=True)
+                cell.font = _BOLD_FONT
                 cell.fill = _SECTION_FILL
         elif _is_blank(row):
             ws.append([row.get(h, "") for h in headers])
+            _style_row_light(ws[ws.max_row])
             for cell in ws[ws.max_row]:
                 cell.fill = _BLANK_FILL
         else:
             ws.append([row.get(h, "") for h in headers])
+            _style_row_light(ws[ws.max_row])
 
     for col_idx, header in enumerate(headers, start=1):
         col_letter = get_column_letter(col_idx)
@@ -153,6 +169,7 @@ def _write_ust_sheet(ws: openpyxl.worksheet.worksheet.Worksheet, rows: list[dict
     for row in rows:
         ws.append([row.get(h, "") for h in headers])
         row_num = ws.max_row
+        _style_row_light(ws[row_num])
         zeitraum = row.get("Zeitraum", "")
         if not any(row.values()):
             for cell in ws[row_num]:
@@ -160,11 +177,11 @@ def _write_ust_sheet(ws: openpyxl.worksheet.worksheet.Worksheet, rows: list[dict
         elif "Q" in zeitraum:
             for cell in ws[row_num]:
                 cell.fill = _SUBTOTAL_FILL
-                cell.font = Font(bold=True)
+                cell.font = _BOLD_FONT
         elif "-" not in zeitraum and zeitraum:
             for cell in ws[row_num]:
                 cell.fill = _TOTAL_FILL
-                cell.font = Font(bold=True)
+                cell.font = _BOLD_FONT
 
     for col_idx, header in enumerate(headers, start=1):
         col_letter = get_column_letter(col_idx)
@@ -181,9 +198,10 @@ def _write_trail_sheet(ws: openpyxl.worksheet.worksheet.Worksheet, sheet: TrailS
     for trail_row in sheet.rows:
         ws.append(trail_row.cells)
         row_num = ws.max_row
+        _style_row_light(ws[row_num])
         if trail_row.bold:
             for cell in ws[row_num]:
-                cell.font = Font(bold=True)
+                cell.font = _BOLD_FONT
         if trail_row.fill == "subtotal":
             for cell in ws[row_num]:
                 cell.fill = _SUBTOTAL_FILL

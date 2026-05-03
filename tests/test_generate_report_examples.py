@@ -3,12 +3,18 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
+import openpyxl
+
 from calculate.generate_report import main
 
 
 def _read_rows(path: Path) -> list[dict[str, str]]:
     with path.open(newline="", encoding="utf-8") as handle:
         return list(csv.DictReader(handle))
+
+
+def _rgb(color) -> str:
+    return color.rgb[-6:]
 
 
 def test_generate_report_writes_expected_example_outputs(monkeypatch, tmp_path: Path) -> None:
@@ -38,3 +44,12 @@ def test_generate_report_writes_expected_example_outputs(monkeypatch, tmp_path: 
     assert next(row for row in est_2025 if row["Kennzahl"] == "Zusatzbeitrag")["2025"] == "130.00"
     assert next(row for row in est_2025 if row["Kennzahl"] == "ESt-Abschlusszahlung")["2025"] == "50.00"
     assert next(row for row in ust_2024 if row["Zeitraum"] == "2024")["Bereits Entrichtet"] == "190.00"
+
+    workbook = openpyxl.load_workbook(tmp_path / "2024" / "steuererklaerung.xlsx")
+    euer_sheet = workbook["EÜR"]
+    assert _rgb(euer_sheet["A1"].font.color) == "000000"
+    assert _rgb(euer_sheet["A1"].fill.fgColor) == "D9E1F2"
+    assert _rgb(euer_sheet["A2"].font.color) == "000000"
+    assert _rgb(euer_sheet["A2"].fill.fgColor) == "E9EFF7"
+    assert _rgb(euer_sheet["A3"].font.color) == "000000"
+    assert _rgb(euer_sheet["A3"].fill.fgColor) == "FFFFFF"
