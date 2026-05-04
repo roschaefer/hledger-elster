@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import io
+import re
 import sys
 import zipfile
 from pathlib import Path
@@ -48,6 +49,7 @@ _ELSTER_FORMS = {
     "umsatzsteuer":                   ("USt", "umsatzsteuer"),
     "einkommensteuer":                ("ESt", "einkommensteuer"),
 }
+_INVALID_SHEET_TITLE_CHARS = re.compile(r"[\[\]:*?/\\]")
 
 
 # ── ZIP stabilisation ─────────────────────────────────────────────────────────
@@ -90,7 +92,12 @@ def _write_trail_csv(path: Path, sheet: TrailSheet, touched_files: set[Path]) ->
 
 
 def _tab_csv_name(sheet_name: str) -> str:
-    return sheet_name.lower().replace(" ", "-") + ".csv"
+    return _INVALID_SHEET_TITLE_CHARS.sub("-", sheet_name).lower().replace(" ", "-") + ".csv"
+
+
+def _xlsx_sheet_title(sheet_name: str) -> str:
+    title = _INVALID_SHEET_TITLE_CHARS.sub("-", sheet_name).strip()
+    return (title or "Sheet")[:31]
 
 
 # ── XLSX writers ──────────────────────────────────────────────────────────────
@@ -302,7 +309,7 @@ def main() -> int:
             wb = openpyxl.Workbook()
             wb.remove(wb.active)
             for sheet in sheets:
-                ws = wb.create_sheet(title=sheet.name)
+                ws = wb.create_sheet(title=_xlsx_sheet_title(sheet.name))
                 _write_trail_sheet(ws, sheet)
             _save_xlsx(base / "herleitung" / f"{csv_stem}.xlsx", wb, touched_files)
 
@@ -314,7 +321,7 @@ def main() -> int:
             wb = openpyxl.Workbook()
             wb.remove(wb.active)
             for sheet in ignored_sheets:
-                ws = wb.create_sheet(title=sheet.name)
+                ws = wb.create_sheet(title=_xlsx_sheet_title(sheet.name))
                 _write_trail_sheet(ws, sheet)
             _save_xlsx(base / "herleitung" / "ignoriert.xlsx", wb, touched_files)
             for sheet in ignored_sheets:

@@ -149,6 +149,70 @@ def test_est_insurance_rows_use_tax_metadata_not_account_case(tmp_path: Path) ->
     }
 
 
+def test_est_sonderausgaben_donations_are_exported_from_section_metadata(tmp_path: Path) -> None:
+    dataset = _build_dataset(
+        tmp_path,
+        [
+            "account assets:dkb:girokonto  ;elster_account:private, elster_label:Girokonto",
+            "account expenses:charity:drk  ;elster_form:einkommensteuer, elster_section:Sonderausgaben, elster_label:Spenden",
+        ],
+        [
+            _posting(
+                "1",
+                "2024-12-01",
+                "DRK donation",
+                "expenses:charity:drk",
+                "50.00",
+                source_account="assets:dkb:girokonto",
+            ),
+        ],
+    )
+
+    est = est_rows(dataset, 2024)
+    assert next(row for row in est if row["Kennzahl"] == "Spenden")["2024"] == "50.00"
+    assert next(row for row in est if row["Kennzahl"] == "Summe privat gezahlt")["2024"] == "50.00"
+    assert next(row for row in est if row["Kennzahl"] == "Abziehbar (Netto)")["2024"] == "50.00"
+    assert next(row for row in est if row["Kennzahl"] == "Summe abziehbar")["2024"] == "50.00"
+
+    est_sheets = herleitung_sheets(dataset, 2024)["einkommensteuer"]
+    assert {sheet.name for sheet in est_sheets} >= {"Spenden"}
+
+
+def test_est_sections_are_user_defined_groupings(tmp_path: Path) -> None:
+    dataset = _build_dataset(
+        tmp_path,
+        [
+            "account assets:dkb:girokonto  ;elster_account:private, elster_label:Girokonto",
+            "account expenses:private:one  ;elster_form:einkommensteuer, elster_section:Freie Gruppe A, elster_label:Erste Position",
+            "account expenses:private:two  ;elster_form:einkommensteuer, elster_section:Freie Gruppe B, elster_label:Zweite Position",
+        ],
+        [
+            _posting(
+                "1",
+                "2024-01-01",
+                "First custom group",
+                "expenses:private:one",
+                "10.00",
+                source_account="assets:dkb:girokonto",
+            ),
+            _posting(
+                "2",
+                "2024-01-02",
+                "Second custom group",
+                "expenses:private:two",
+                "20.00",
+                source_account="assets:dkb:girokonto",
+            ),
+        ],
+    )
+
+    est = est_rows(dataset, 2024)
+    assert "# Freie Gruppe A" in {row["Kennzahl"] for row in est}
+    assert "# Freie Gruppe B" in {row["Kennzahl"] for row in est}
+    assert next(row for row in est if row["Kennzahl"] == "Erste Position")["2024"] == "10.00"
+    assert next(row for row in est if row["Kennzahl"] == "Zweite Position")["2024"] == "20.00"
+
+
 def test_vat_advance_reversal_should_net_out_in_ust_exports(tmp_path: Path) -> None:
     dataset = _build_dataset(
         tmp_path,

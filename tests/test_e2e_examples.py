@@ -57,6 +57,37 @@ class EndToEndExampleTest(unittest.TestCase):
         self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Haftpflichtversicherung")["2024"], "57.88")
         self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Summe privat gezahlt")["2024"], "1610.88")
 
+    def test_donations_fixture_exports_user_defined_est_section(self) -> None:
+        out_dir, _ = self.run_fixture("donations")
+        rows = _read_rows(out_dir / "2024" / "steuererklaerung" / "einkommensteuer.csv")
+
+        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "# Sonderausgaben")["2024"], "")
+        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Spenden")["2024"], "50.00")
+        self.assertEqual(
+            next(row for row in rows if row["Kennzahl"] == "Parteispende (§34g/§10b manuell berechnen)")["2024"],
+            "MANUAL",
+        )
+        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Summe privat gezahlt")["2024"], "50.00")
+        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Abziehbar (Netto)")["2024"], "50.00")
+        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Summe abziehbar")["2024"], "50.00")
+
+        trail_rows = _read_rows(out_dir / "2024" / "herleitung" / "einkommensteuer" / "spenden.csv")
+        self.assertEqual(
+            next(row for row in trail_rows if row["Konto"] == "Girokonto" and row["Beschreibung"] == "Example charity donation")["Betrag"],
+            "50.00",
+        )
+
+        manual_trail_rows = _read_rows(
+            out_dir / "2024" / "herleitung" / "einkommensteuer" / "parteispende-(§34g-§10b-manuell.csv"
+        )
+        self.assertEqual(
+            next(
+                row for row in manual_trail_rows
+                if row["Konto"] == "Girokonto" and row["Beschreibung"] == "Example political party donation"
+            )["Betrag"],
+            "100.00",
+        )
+
     def test_business_account_fallback_fixture_exports_drawings_and_contributions(self) -> None:
         out_dir, _ = self.run_fixture("business-account-fallback")
         rows = _read_rows(out_dir / "2024" / "steuererklaerung" / "einnahmen-ueberschuss-rechnung.csv")

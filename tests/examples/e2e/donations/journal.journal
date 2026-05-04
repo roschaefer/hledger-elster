@@ -1,0 +1,11 @@
+account assets:bank:checking  ; elster_account:private, elster_label:Girokonto
+account expenses:charity:example  ; elster_form:einkommensteuer, elster_label:Spenden, elster_section:Sonderausgaben
+account expenses:politics:party  ; elster_form:einkommensteuer, elster_label:Parteispende (§34g/§10b manuell berechnen), elster_section:Sonderausgaben, elster_calculation:manual
+
+2024-12-01 Example charity donation
+    expenses:charity:example    50.00 EUR
+    assets:bank:checking       -50.00 EUR
+
+2024-12-02 Example political party donation
+    expenses:politics:party    100.00 EUR
+    assets:bank:checking      -100.00 EUR

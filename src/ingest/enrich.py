@@ -119,6 +119,7 @@ def _enrich_posting(
             tax_form="",
             tax_deduction="",
             tax_role="ignore",
+            calculation="",
             vat_rate=Decimal("0"),
             expense_share=Decimal("1"),
             vat_share=Decimal("0"),
@@ -142,6 +143,7 @@ def _enrich_posting(
     tax_deduction = tags.get("elster_deduction", "")
     tax_form = tags.get("elster_form", "")
     tax_role = tags.get("elster_role", "")
+    calculation = tags.get("elster_calculation", "")
     vat_rate = _to_decimal(tags.get("elster_vat_rate"))
     expense_share = _to_decimal(tags.get("elster_expense_share"), "1")
     vat_share = _to_decimal(tags.get("elster_vat_share"), "0")
@@ -180,6 +182,7 @@ def _enrich_posting(
         tax_form=tax_form,
         tax_deduction=tax_deduction,
         tax_role=tax_role,
+        calculation=calculation,
         vat_rate=vat_rate,
         expense_share=expense_share,
         vat_share=vat_share,

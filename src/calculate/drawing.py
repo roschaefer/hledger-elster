@@ -20,7 +20,7 @@ def is_drawing(p: TaxPosting) -> bool:
 
     A drawing is any outflow from the business sphere that is not a business
     expense (EÜR) and not a tax payment — regardless of how the counter-account
-    is categorised for other tax forms (e.g. ESt Vorsorgeaufwand).
+    is categorised for user-defined tax form sections.
     """
     return (
         p.source_is_business

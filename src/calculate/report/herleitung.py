@@ -98,10 +98,10 @@ def _sheet_label(ds: TaxDataset, account: str) -> str:
     return next((p.label for p in ds if p.label), None) or _short(account)
 
 
-def _vorsorge_ds(dataset: TaxDataset, year: int) -> TaxDataset:
+def _est_section_ds(dataset: TaxDataset, year: int) -> TaxDataset:
     return TaxDataset([
         p for p in dataset
-        if p.tax_form == "einkommensteuer" and p.section == "Vorsorgeaufwand" and p.year == year
+        if p.tax_form == "einkommensteuer" and p.section and p.year == year
     ])
 
 
@@ -405,9 +405,9 @@ def _est_sheets(dataset: TaxDataset, year: int) -> list[TrailSheet]:
     seen: set[str] = set()
     add = lambda s: _collect(result, seen, s)  # noqa: E731
 
-    vorsorge_ds = _vorsorge_ds(dataset, year)
-    for account in sorted({p.counter_account for p in vorsorge_ds}):
-        acc_ds = vorsorge_ds.for_account_prefix(account)
+    section_ds = _est_section_ds(dataset, year)
+    for account in sorted({p.counter_account for p in section_ds}):
+        acc_ds = section_ds.for_account_prefix(account)
         add(_gross_sheet(acc_ds, _sheet_label(acc_ds, account), signed=True))
 
     add(_gross_sheet(dataset.for_role("income_tax_advance").for_year(year), "ESt Vorauszahlung"))
