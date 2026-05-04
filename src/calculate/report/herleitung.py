@@ -98,6 +98,10 @@ def _sheet_label(ds: TaxDataset, account: str) -> str:
     return next((p.label for p in ds if p.label), None) or _short(account)
 
 
+def _posting_label(p: TaxPosting) -> str:
+    return p.label or _short(p.counter_account)
+
+
 def _est_section_ds(dataset: TaxDataset, year: int) -> TaxDataset:
     return TaxDataset([
         p for p in dataset
@@ -344,8 +348,11 @@ def _euer_sheets(dataset: TaxDataset, year: int) -> list[TrailSheet]:
     add(_income_sheet(income_ds))
 
     euer_ds = euer_expenses(dataset)
-    for account in sorted({p.counter_account for p in euer_ds.exclude_deduction("afa").for_year(year)}):
-        add(_expense_sheet(euer_ds.for_account_prefix(account).for_year(year), account))
+    by_label: dict[str, list[TaxPosting]] = {}
+    for p in euer_ds.exclude_deduction("afa").for_year(year):
+        by_label.setdefault(_posting_label(p), []).append(p)
+    for label in sorted(by_label.keys()):
+        add(_expense_sheet(TaxDataset(by_label[label]), label))
 
     afa_postings = list(dataset.for_deduction("afa"))
     for account in sorted({p.counter_account for p in afa_postings}):
@@ -406,9 +413,11 @@ def _est_sheets(dataset: TaxDataset, year: int) -> list[TrailSheet]:
     add = lambda s: _collect(result, seen, s)  # noqa: E731
 
     section_ds = _est_section_ds(dataset, year)
-    for account in sorted({p.counter_account for p in section_ds}):
-        acc_ds = section_ds.for_account_prefix(account)
-        add(_gross_sheet(acc_ds, _sheet_label(acc_ds, account), signed=True))
+    by_label: dict[str, list[TaxPosting]] = {}
+    for p in section_ds:
+        by_label.setdefault(_posting_label(p), []).append(p)
+    for label in sorted(by_label.keys()):
+        add(_gross_sheet(TaxDataset(by_label[label]), label, signed=True))
 
     add(_gross_sheet(dataset.for_role("income_tax_advance").for_year(year), "ESt Vorauszahlung"))
     add(_gross_sheet(dataset.for_role("income_tax_final").for_year(year), "ESt Abschluss"))

@@ -73,7 +73,10 @@ account expenses:insurance:health:kv  ; elster_label:Krankenversicherung,  elste
 account expenses:insurance:health:pv  ; elster_label:Pflegeversicherung,   elster_section:Vorsorgeaufwand
 
 ; Donations are ordinary ESt accounts grouped by a user-defined section.
+; Unlabelled child accounts inherit this label and are summed into one row.
 account expenses:charity              ; elster_form:einkommensteuer, elster_label:Spenden, elster_section:Sonderausgaben
+account expenses:charity:drk
+account expenses:charity:unicef
 
 ; Use manual calculation for cases the tool should list but not calculate.
 account expenses:politics:party       ; elster_form:einkommensteuer, elster_label:Parteispende - §34g/§10b manuell berechnen, elster_section:Sonderausgaben, elster_calculation:manual
@@ -100,7 +103,7 @@ account expenses:taxes:umsatzsteuer:vorauszahlung:2025  ; elster_period:2025
 | `elster_form` | `einnahmenueberschussrechnung` | Marks an account as belonging to the EÜR. Income accounts flow into Betriebseinnahmen; expense accounts flow into Betriebsausgaben. Net/VAT split is controlled by `elster_vat_rate`; deduction treatment by the calculation tags below. |
 | `elster_form` | `einkommensteuer` | Marks an account as belonging to the ESt. The account appears under the user-defined `elster_section`; postings from a `business` source account are additionally counted as Entnahmen in the EÜR. |
 | `elster_section` | free text | User-defined grouping within a form (for example `Sonderausgaben` for donations or `Arbeitsmittel` for EÜR expenses). The code does not interpret specific section names. |
-| `elster_label` | free text | Human-readable label shown in the output instead of the account name. |
+| `elster_label` | free text | Human-readable label shown in the output instead of the account name. Inherited labels are used for grouping: child accounts without their own `elster_label` are summed into the parent label; child accounts with their own label appear separately. |
 | `elster_period` | `YYYY` | On USt Vorauszahlung sub-accounts: the fiscal year the payment belongs to, regardless of when the transaction occurred. Required on every `vat_advance` sub-account. |
 
 ---

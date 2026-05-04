@@ -29,6 +29,10 @@ def _account_section(dataset: TaxDataset, account: str, year: int) -> str:
     return (p.section if p else "") or ""
 
 
+def _posting_label(p) -> str:
+    return p.label or p.counter_account.split(":")[-1]
+
+
 def _requires_manual_calculation(dataset: TaxDataset) -> bool:
     return any(p.calculation == "manual" for p in dataset)
 
@@ -56,12 +60,10 @@ def est_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
 
     # ── ESt account sections ──────────────────────────────────────────────
     section_ds = _est_section_ds(dataset, year)
-    section_accounts = sorted({p.counter_account for p in section_ds})
 
-    by_section: dict[str, list[str]] = defaultdict(list)
-    for account in section_accounts:
-        sec = _account_section(section_ds, account, year)
-        by_section[sec].append(account)
+    by_section: dict[str, dict[str, list]] = defaultdict(lambda: defaultdict(list))
+    for p in section_ds:
+        by_section[p.section][_posting_label(p)].append(p)
 
     section_rows: list[dict[str, str]] = []
     summe_totals: dict[str, Decimal] = {lbl: ZERO for lbl in labels}
@@ -70,11 +72,10 @@ def est_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
     for sec_name in sorted(by_section.keys()):
         if sec_name:
             section_rows.append(section_row(sec_name, labels))
-        for account in sorted(by_section[sec_name]):
-            acc_ds = section_ds.for_account_prefix(account)
+        for label in sorted(by_section[sec_name].keys()):
+            acc_ds = TaxDataset(by_section[sec_name][label])
             totals = aggregate_periods(acc_ds, year, aggregates.signed_total, labels)
             deductible_totals = aggregate_periods(acc_ds, year, aggregates.deductible_net, labels)
-            label = _account_label(section_ds, account, year)
             row = {"Kennzahl": label}
             manual = _requires_manual_calculation(acc_ds)
             for lbl in labels:

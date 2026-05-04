@@ -47,6 +47,10 @@ def _account_section(dataset: TaxDataset, account: str, year: int) -> str:
     return (p.section if p else "") or ""
 
 
+def _posting_label(p: TaxPosting) -> str:
+    return p.label or p.counter_account.split(":")[-1]
+
+
 def _row_from_values(name: str, values: dict[str, Decimal]) -> dict[str, str]:
     row = {"Kennzahl": name}
     for label, value in values.items():
@@ -125,21 +129,18 @@ def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
 
     # ── regular expense accounts, grouped by section ──────────────────────
     regular_ds = euer_ds.exclude_deduction("afa").for_year(year)
-    accounts = sorted({p.counter_account for p in regular_ds})
 
-    by_section: dict[str, list[str]] = defaultdict(list)
-    for account in accounts:
-        sec = _account_section(dataset, account, year)
-        by_section[sec].append(account)
+    by_section: dict[str, dict[str, list[TaxPosting]]] = defaultdict(lambda: defaultdict(list))
+    for p in regular_ds:
+        by_section[p.section][_posting_label(p)].append(p)
 
     expense_sections: list[tuple[str, list[dict[str, str]]]] = []
     summe_betriebskosten: dict[str, Decimal] = {lbl: ZERO for lbl in labels}
 
     for section_name in sorted(by_section.keys(), key=_section_sort_key):
         section_rows: list[dict[str, str]] = []
-        for account in sorted(by_section[section_name]):
-            acc_ds = euer_ds.for_account_prefix(account)
-            label = _account_label(euer_ds, account, year)
+        for label in sorted(by_section[section_name]):
+            acc_ds = TaxDataset(by_section[section_name][label])
             row: dict[str, str] = {"Kennzahl": label}
             for lbl in labels:
                 value = aggregate_periods(acc_ds, year, aggregates.deductible_net, labels)[lbl]

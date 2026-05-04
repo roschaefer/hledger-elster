@@ -62,19 +62,24 @@ class EndToEndExampleTest(unittest.TestCase):
         rows = _read_rows(out_dir / "2024" / "steuererklaerung" / "einkommensteuer.csv")
 
         self.assertEqual(next(row for row in rows if row["Kennzahl"] == "# Sonderausgaben")["2024"], "")
-        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Spenden")["2024"], "50.00")
+        self.assertEqual([row["Kennzahl"] for row in rows].count("Spenden"), 1)
+        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Spenden")["2024"], "75.00")
         self.assertEqual(
             next(row for row in rows if row["Kennzahl"] == "Parteispende (§34g/§10b manuell berechnen)")["2024"],
             "MANUAL",
         )
-        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Summe privat gezahlt")["2024"], "50.00")
-        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Abziehbar (Netto)")["2024"], "50.00")
-        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Summe abziehbar")["2024"], "50.00")
+        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Summe privat gezahlt")["2024"], "75.00")
+        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Abziehbar (Netto)")["2024"], "75.00")
+        self.assertEqual(next(row for row in rows if row["Kennzahl"] == "Summe abziehbar")["2024"], "75.00")
 
         trail_rows = _read_rows(out_dir / "2024" / "herleitung" / "einkommensteuer" / "spenden.csv")
         self.assertEqual(
             next(row for row in trail_rows if row["Konto"] == "Girokonto" and row["Beschreibung"] == "Example charity donation")["Betrag"],
             "50.00",
+        )
+        self.assertEqual(
+            next(row for row in trail_rows if row["Konto"] == "Girokonto" and row["Beschreibung"] == "Another charity donation")["Betrag"],
+            "25.00",
         )
 
         manual_trail_rows = _read_rows(
