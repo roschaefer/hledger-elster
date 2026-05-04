@@ -6,11 +6,14 @@ default:
 help:
     @just --list
 
+sync:
+    uv sync --extra test
+
 test:
-    pytest tests/ -v
+    uv run pytest tests/ -v
 
 generate-features:
-    python scripts/generate_features.py
+    uv run python scripts/generate_features.py
 
 acceptance: generate-features
-    behave tests/features
+    uv run behave tests/features
