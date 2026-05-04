@@ -24,6 +24,13 @@ Private data and private tests stay outside this repository.
 - Keep user-specific verification tests outside this repository.
 - Keep workbook export structure consistent: `name.xlsx` has a sibling `name/` directory, and each workbook tab is also exported there as a CSV.
 
+## Tag contract
+
+The `elster_*` tag reference in `README.md` is the authoritative contract between
+the journal author and the tool. Whenever a tag is added, removed, or its semantics
+change, `README.md` must be updated in the same change. The README table is the
+source of truth — the code is the implementation.
+
 ## Traceability invariant
 
 Every numeric line in the main output forms (EÜR, ESt, USt) must be backed by a

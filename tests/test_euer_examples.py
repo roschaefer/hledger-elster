@@ -12,9 +12,10 @@ def _postings_for_label(dataset: TaxDataset, label: str) -> TaxDataset:
 
 def test_euer_2024_income_and_expenses(dataset: TaxDataset) -> None:
     year = 2024
-    assert aggregates.gross_amount(dataset.for_role("business_income").for_year(year)) == Decimal("1190.00")
-    assert aggregates.net_amount(dataset.for_role("business_income").for_year(year)) == Decimal("1000.00")
-    assert aggregates.collected_vat(dataset.for_role("business_income").for_year(year)) == Decimal("190.00")
+    income_ds = TaxDataset([p for p in dataset.for_year(year) if p.tax_form == "einnahmenueberschussrechnung" and p.amount < Decimal("0")])
+    assert aggregates.gross_amount(income_ds) == Decimal("1190.00")
+    assert aggregates.net_amount(income_ds) == Decimal("1000.00")
+    assert aggregates.collected_vat(income_ds) == Decimal("190.00")
     assert aggregates.deductible_net(_postings_for_label(dataset, "Serverkosten Wasabi").for_year(year)) == Decimal("20.00")
     assert aggregates.deductible_net(_postings_for_label(dataset, "Mobiltelefon").for_year(year)) == Decimal("2.00")
     assert aggregates.deductible_net(_postings_for_label(dataset, "Steuerberatung").for_year(year)) == Decimal("100.00")

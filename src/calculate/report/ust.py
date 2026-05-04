@@ -4,6 +4,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from domain.dataset import TaxDataset
 from calculate import aggregates
+from calculate.report.classification import euer_expenses, euer_income
 from calculate.report.periods import filter_period, fmt
 
 
@@ -32,8 +33,8 @@ def _vat_advance_year(dataset: TaxDataset, year: int) -> TaxDataset:
 
 
 def ust_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
-    income_ds = dataset.for_role("business_income")
-    euer_ds = dataset.for_form("einnahmenueberschussrechnung")
+    income_ds = euer_income(dataset)
+    euer_ds = euer_expenses(dataset)
     vat_advance_year = _vat_advance_year(dataset, year)
 
     col_vorauszahlungssoll = "Bereits Entrichtet"

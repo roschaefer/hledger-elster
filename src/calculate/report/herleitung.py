@@ -5,6 +5,7 @@ from decimal import Decimal, ROUND_HALF_UP
 
 from calculate import afa as afa_module
 from calculate.drawing import is_drawing, is_contribution
+from calculate.report.classification import euer_expenses, euer_income
 from domain.dataset import TaxDataset
 from domain.posting import TaxPosting
 
@@ -339,11 +340,12 @@ def _euer_sheets(dataset: TaxDataset, year: int) -> list[TrailSheet]:
     seen: set[str] = set()
     add = lambda s: _collect(result, seen, s)  # noqa: E731
 
-    add(_income_sheet(dataset.for_role("business_income").for_year(year)))
+    income_ds = euer_income(dataset).for_year(year)
+    add(_income_sheet(income_ds))
 
-    euer_ds = dataset.for_form("einnahmenueberschussrechnung")
+    euer_ds = euer_expenses(dataset)
     for account in sorted({p.counter_account for p in euer_ds.exclude_deduction("afa").for_year(year)}):
-        add(_expense_sheet(dataset.for_account_prefix(account).for_year(year), account))
+        add(_expense_sheet(euer_ds.for_account_prefix(account).for_year(year), account))
 
     afa_postings = list(dataset.for_deduction("afa"))
     for account in sorted({p.counter_account for p in afa_postings}):
@@ -382,7 +384,8 @@ def _ust_sheets(dataset: TaxDataset, year: int) -> list[TrailSheet]:
     seen: set[str] = set()
     add = lambda s: _collect(result, seen, s)  # noqa: E731
 
-    add(_income_sheet(dataset.for_role("business_income").for_year(year)))
+    income_ds = euer_income(dataset).for_year(year)
+    add(_income_sheet(income_ds))
 
     vat_payment_ds = TaxDataset([
         p for p in dataset.for_year(year)
@@ -391,7 +394,7 @@ def _ust_sheets(dataset: TaxDataset, year: int) -> list[TrailSheet]:
     add(_gross_sheet(vat_payment_ds, "USt-Abschlusszahlungen"))
     add(_vat_advance_sheet(dataset.for_role("vat_advance"), year))
 
-    euer_ds = dataset.for_form("einnahmenueberschussrechnung")
+    euer_ds = euer_expenses(dataset)
     add(_input_vat_sheet(euer_ds.for_year(year)))
 
     return result

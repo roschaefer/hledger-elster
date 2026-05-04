@@ -3,7 +3,7 @@
 account assets:kontist:geschaeftskonto  ; bank:kontist, account_kind:payment, elster_account:business, elster_label:Geschäftskonto
 account assets:dkb:girokonto  ; bank:dkb, account_kind:payment, elster_account:private, elster_label:Girokonto
 account transfers:kontist-girokonto  ; account_kind:transfer
-account income:business  ; elster_role:business_income, elster_vat_rate:0.19, elster_label:Betriebseinnahmen
+account income:business  ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_label:Betriebseinnahmen
 account expenses:business  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00
 account expenses:business:hosting:wasabi  ; elster_label:Serverkosten Wasabi, elster_section:Bezogene Fremdleistungen
 account expenses:business:steuerberater  ; elster_label:Steuerberatung, elster_section:Rechts- und Steuerberatung

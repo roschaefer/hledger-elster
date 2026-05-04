@@ -72,6 +72,36 @@ def test_reimbursements_reduce_euer_and_vorsteuer_totals(tmp_path: Path) -> None
     assert vorsteuer.rows[-2].cells == ["Σ Kreditkartenkonto", "", "", "-13.18", "-2.10", "", "-2.10"]
 
 
+def test_euer_income_with_vat_is_not_vorsteuer(tmp_path: Path) -> None:
+    dataset = _build_dataset(
+        tmp_path,
+        [
+            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_label:Geschäftskonto",
+            "account income:business:consulting  ;elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_label:Betriebseinnahmen",
+            "account expenses:business:hosting:aws  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00, elster_label:AWS",
+        ],
+        [
+            _posting("1", "2024-01-10", "Customer invoice", "income:business:consulting", "-119.00"),
+            _posting("2", "2024-01-11", "AWS EMEA", "expenses:business:hosting:aws", "11.90"),
+        ],
+    )
+
+    euer = euer_rows(dataset, 2024)
+    assert next(row for row in euer if row["Kennzahl"] == "Umsatzsteuerpflichtige Betriebseinnahmen")["2024"] == "100.00"
+    assert next(row for row in euer if row["Kennzahl"] == "Vereinnahmte Umsatzsteuer")["2024"] == "19.00"
+    assert next(row for row in euer if row["Kennzahl"] == "AWS")["2024"] == "10.00"
+
+    ust = ust_rows(dataset, 2024)
+    assert next(row for row in ust if row["Zeitraum"] == "2024")["Abziehbare Vorsteuerbeträge"] == "1.90"
+
+    vorsteuer = next(
+        sheet for sheet in herleitung_sheets(dataset, 2024)["umsatzsteuer"]
+        if sheet.name == "Vorsteuer"
+    )
+    assert "Customer invoice" not in {row.cells[2] for row in vorsteuer.rows if len(row.cells) > 2}
+    assert vorsteuer.rows[-2].cells == ["Σ Geschäftskonto", "", "", "11.90", "1.90", "", "1.90"]
+
+
 def test_income_tax_reversal_nets_out_in_est_summary(tmp_path: Path) -> None:
     dataset = _build_dataset(
         tmp_path,

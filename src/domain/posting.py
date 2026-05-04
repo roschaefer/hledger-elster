@@ -21,7 +21,7 @@ class TaxPosting:
     # Tax enrichment — resolved from account directives at ingest time
     tax_form: str         # "einnahmenueberschussrechnung" | "umsatzsteuer" | "einkommensteuer" | ""
     tax_deduction: str    # "full" | "proportional" | "nicht_abzugsfaehig" | "afa" | ""
-    tax_role: str         # "business_income" | "tax_payment" | "income_tax" | "drawing" | "contribution" | ""
+    tax_role: str         # "tax_payment" | "income_tax" | "vat_payment" | "vat_advance" | "income_tax_advance" | "income_tax_final" | "drawing" | "contribution" | "ignore" | ""
     vat_rate: Decimal     # 0.19 / 0.07 / 0.00
     expense_share: Decimal
     vat_share: Decimal

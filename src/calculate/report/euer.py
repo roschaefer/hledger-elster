@@ -7,6 +7,7 @@ from domain.dataset import TaxDataset
 from domain.posting import TaxPosting
 from calculate import aggregates, afa
 from calculate.drawing import is_drawing, is_contribution
+from calculate.report.classification import euer_expenses, euer_income
 from calculate.report.periods import (
     aggregate_periods,
     annual_labels,
@@ -104,10 +105,10 @@ def _afa_posting_for_label(p: TaxPosting, year: int, label: str) -> Decimal:
 
 def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
     labels = annual_labels(year)
-    euer_ds = dataset.for_form("einnahmenueberschussrechnung")
+    euer_ds = euer_expenses(dataset)
 
     # ── Betriebseinnahmen ─────────────────────────────────────────────────
-    income_ds = dataset.for_role("business_income")
+    income_ds = euer_income(dataset)
     net_totals = aggregate_periods(income_ds, year, aggregates.net_amount, labels)
     collected_totals = aggregate_periods(income_ds, year, aggregates.collected_vat, labels)
 
@@ -137,8 +138,8 @@ def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
     for section_name in sorted(by_section.keys(), key=_section_sort_key):
         section_rows: list[dict[str, str]] = []
         for account in sorted(by_section[section_name]):
-            acc_ds = dataset.for_account_prefix(account)
-            label = _account_label(dataset, account, year)
+            acc_ds = euer_ds.for_account_prefix(account)
+            label = _account_label(euer_ds, account, year)
             row: dict[str, str] = {"Kennzahl": label}
             for lbl in labels:
                 value = aggregate_periods(acc_ds, year, aggregates.deductible_net, labels)[lbl]

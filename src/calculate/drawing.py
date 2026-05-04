@@ -9,7 +9,6 @@ ZERO = Decimal("0")
 
 # Roles that are never Entnahmen/Einlagen regardless of source account.
 _NON_DRAWING_ROLES = frozenset({
-    "business_income",
     "vat_payment", "vat_advance",
     "income_tax", "income_tax_advance", "income_tax_final", "tax_payment",
     "ignore",
