@@ -11,8 +11,25 @@ dependencies = [
 test = [
     "behave>=1.3.3",
     "pytest>=9",
+    "ruff>=0.14.0",
+    "ty>=0.0.31",
 ]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "UP",
+]
+ignore = [
+    "E501",
+]

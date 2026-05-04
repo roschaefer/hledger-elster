@@ -1,35 +1,26 @@
 from __future__ import annotations
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
-from domain.dataset import TaxDataset
 from calculate import aggregates
 from calculate.report.classification import euer_expenses, euer_income
 from calculate.report.periods import filter_period, fmt
-
+from domain.dataset import TaxDataset
 
 TWOPLACES = Decimal("0.01")
 ZERO = Decimal("0.00")
 
 
 def _vat_advance_year(dataset: TaxDataset, year: int) -> TaxDataset:
-    invalid = [
-        p for p in dataset.for_role("vat_advance")
-        if p.amount != ZERO and p.tax_period_year == 0
-    ]
+    invalid = [p for p in dataset.for_role("vat_advance") if p.amount != ZERO and p.tax_period_year == 0]
     if invalid:
         examples = ", ".join(
-            f"{p.posting_date} {p.description} ({p.source_account} -> {p.counter_account})"
-            for p in invalid[:3]
+            f"{p.posting_date} {p.description} ({p.source_account} -> {p.counter_account})" for p in invalid[:3]
         )
         raise ValueError(
-            "vat_advance postings require tax_period. "
-            f"Missing tax_period for {len(invalid)} posting(s): {examples}"
+            f"vat_advance postings require tax_period. Missing tax_period for {len(invalid)} posting(s): {examples}"
         )
-    return TaxDataset([
-        p for p in dataset.for_role("vat_advance")
-        if p.amount != ZERO and p.tax_period_year == year
-    ])
+    return TaxDataset([p for p in dataset.for_role("vat_advance") if p.amount != ZERO and p.tax_period_year == year])
 
 
 def ust_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
@@ -53,9 +44,7 @@ def ust_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
             "Abziehbare Vorsteuerbeträge": fmt(vorsteuer),
             "Vorauszahlungssoll": fmt(uberschuss),
             col_vorauszahlungssoll: (
-                fmt(aggregates.signed_total(for_vorauszahlung))
-                if for_vorauszahlung is not None
-                else ""
+                fmt(aggregates.signed_total(for_vorauszahlung)) if for_vorauszahlung is not None else ""
             ),
         }
 

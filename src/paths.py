@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-
 TOOLS_ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_LEDGER_JOURNAL = TOOLS_ROOT / "examples" / "ledger" / "hledger.journal"
 DEFAULT_TAX_DATA_DIR = TOOLS_ROOT / "data" / "exports"

@@ -5,7 +5,6 @@ from decimal import Decimal
 from domain.dataset import TaxDataset
 from domain.posting import TaxPosting
 
-
 ZERO = Decimal("0.00")
 EUER_FORM = "einnahmenueberschussrechnung"
 EXPENSE_DEDUCTIONS = {"full", "proportional", "nicht_abzugsfaehig", "afa"}

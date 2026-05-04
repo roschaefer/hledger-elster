@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Iterator
+from collections.abc import Iterator
 
 from .posting import TaxPosting
 

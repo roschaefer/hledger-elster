@@ -9,8 +9,7 @@ def test_generated_features_match_markdown_sources() -> None:
     actual_paths = set(GENERATED_FEATURE_DIR.glob("*.feature"))
 
     assert actual_paths == set(expected_by_path), (
-        "Generated behave features are out of date. "
-        "Run `python scripts/generate_features.py` and commit the result."
+        "Generated behave features are out of date. Run `python scripts/generate_features.py` and commit the result."
     )
     for path, content in expected_by_path.items():
         assert path.read_text(encoding="utf-8") == content, (

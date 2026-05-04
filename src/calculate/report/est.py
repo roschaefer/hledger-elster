@@ -1,22 +1,19 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
-from domain.dataset import TaxDataset
 from calculate import aggregates
 from calculate.report.periods import aggregate_periods, annual_labels, blank_row, fmt, section_row
-
+from domain.dataset import TaxDataset
 
 TWOPLACES = Decimal("0.01")
 ZERO = Decimal("0.00")
 MANUAL_PLACEHOLDER = "MANUAL"
 
+
 def _est_section_ds(dataset: TaxDataset, year: int) -> TaxDataset:
-    return TaxDataset([
-        p for p in dataset
-        if p.tax_form == "einkommensteuer" and p.section and p.year == year
-    ])
+    return TaxDataset([p for p in dataset if p.tax_form == "einkommensteuer" and p.section and p.year == year])
 
 
 def _account_label(dataset: TaxDataset, account: str, year: int) -> str:
@@ -111,13 +108,15 @@ def est_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
         rows.extend(tax_rows)
         rows.append(blank_row(labels))
     rows.extend(section_rows)
-    rows.extend([
-        blank_row(labels),
-        summe_row,
-        abziehbar_row,
-        vorsteuer_row,
-        abziehbare_vorsteuer_row,
-        summe_abziehbar_row,
-        blank_row(labels),
-    ])
+    rows.extend(
+        [
+            blank_row(labels),
+            summe_row,
+            abziehbar_row,
+            vorsteuer_row,
+            abziehbare_vorsteuer_row,
+            summe_abziehbar_row,
+            blank_row(labels),
+        ]
+    )
     return rows

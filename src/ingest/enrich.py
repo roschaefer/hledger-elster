@@ -10,13 +10,13 @@ from pathlib import Path
 from domain.dataset import TaxDataset
 from domain.posting import TaxPosting
 
-
 # ── hledger ingestion ──────────────────────────────────────────────────────
+
 
 def _posting_tags(posting: dict) -> dict[str, str]:
     # hledger lists most-specific account's tags first; first occurrence wins.
     result: dict[str, str] = {}
-    for key, value in (posting.get("ptags") or []):
+    for key, value in posting.get("ptags") or []:
         if key not in result:
             result[key] = value
     return result
@@ -45,7 +45,12 @@ def _source_posting(transaction: dict) -> dict | None:
 def _load_transactions(journal_path: Path) -> list[dict]:
     result = subprocess.run(
         [
-            "hledger", "-f", str(journal_path), "print", "--output-format", "json",
+            "hledger",
+            "-f",
+            str(journal_path),
+            "print",
+            "--output-format",
+            "json",
         ],
         check=True,
         capture_output=True,
@@ -55,6 +60,7 @@ def _load_transactions(journal_path: Path) -> list[dict]:
 
 
 # ── enrichment ────────────────────────────────────────────────────────────
+
 
 def _is_tax_relevant(tags: dict[str, str]) -> bool:
     return bool(tags.get("elster_form") or tags.get("elster_role") or tags.get("elster_deduction"))
@@ -197,6 +203,7 @@ def _enrich_posting(
 
 
 # ── top-level builder ──────────────────────────────────────────────────────
+
 
 def build_dataset(journal_path: Path) -> TaxDataset:
     transactions = _load_transactions(journal_path)

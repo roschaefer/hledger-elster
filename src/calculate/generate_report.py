@@ -8,30 +8,31 @@ import zipfile
 from pathlib import Path
 
 import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.worksheet import Worksheet
 
-from ingest.enrich import build_dataset
-from calculate.report.euer import euer_rows
-from calculate.report.ust import ust_rows
 from calculate.report.est import est_rows
-from calculate.report.herleitung import herleitung_sheets, TrailSheet, FORM_KEYS
+from calculate.report.euer import euer_rows
+from calculate.report.herleitung import FORM_KEYS, TrailSheet, herleitung_sheets
+from calculate.report.ust import ust_rows
+from ingest.enrich import build_dataset
 from paths import ledger_journal_path, tax_data_dir
 
 # Fixed timestamps so repeated runs produce byte-identical files.
 _ZIP_DATE_TIME = (2000, 1, 1, 0, 0, 0)
 _CORE_XML = (
-    "<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\r\n"
-    '<cp:coreProperties'
-    ' xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"'
-    ' xmlns:dc="http://purl.org/dc/elements/1.1/"'
-    ' xmlns:dcterms="http://purl.org/dc/terms/"'
-    ' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
-    "<dc:creator>openpyxl</dc:creator>"
-    '<dcterms:created xsi:type="dcterms:W3CDTF">2000-01-01T00:00:00Z</dcterms:created>'
-    '<dcterms:modified xsi:type="dcterms:W3CDTF">2000-01-01T00:00:00Z</dcterms:modified>'
-    "</cp:coreProperties>"
-).encode()
+    b"<?xml version='1.0' encoding='UTF-8' standalone='yes'?>\r\n"
+    b"<cp:coreProperties"
+    b' xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"'
+    b' xmlns:dc="http://purl.org/dc/elements/1.1/"'
+    b' xmlns:dcterms="http://purl.org/dc/terms/"'
+    b' xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">'
+    b"<dc:creator>openpyxl</dc:creator>"
+    b'<dcterms:created xsi:type="dcterms:W3CDTF">2000-01-01T00:00:00Z</dcterms:created>'
+    b'<dcterms:modified xsi:type="dcterms:W3CDTF">2000-01-01T00:00:00Z</dcterms:modified>'
+    b"</cp:coreProperties>"
+)
 
 _HEADER_FILL = PatternFill(fill_type="solid", fgColor="D9E1F2")
 _DEFAULT_FILL = PatternFill(fill_type="solid", fgColor="FFFFFF")
@@ -46,13 +47,14 @@ _TOTAL_FILL = PatternFill(fill_type="solid", fgColor="FCE4D6")
 # Maps form key → (XLSX tab name, CSV filename stem)
 _ELSTER_FORMS = {
     "einnahmen-ueberschuss-rechnung": ("EÜR", "einnahmen-ueberschuss-rechnung"),
-    "umsatzsteuer":                   ("USt", "umsatzsteuer"),
-    "einkommensteuer":                ("ESt", "einkommensteuer"),
+    "umsatzsteuer": ("USt", "umsatzsteuer"),
+    "einkommensteuer": ("ESt", "einkommensteuer"),
 }
 _INVALID_SHEET_TITLE_CHARS = re.compile(r"[\[\]:*?/\\]")
 
 
 # ── ZIP stabilisation ─────────────────────────────────────────────────────────
+
 
 def _stabilize_zip(path: Path) -> None:
     data = path.read_bytes()
@@ -69,6 +71,7 @@ def _stabilize_zip(path: Path) -> None:
 
 
 # ── CSV writers ───────────────────────────────────────────────────────────────
+
 
 def _write_rows_csv(path: Path, rows: list[dict[str, str]], touched_files: set[Path]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -102,6 +105,7 @@ def _xlsx_sheet_title(sheet_name: str) -> str:
 
 # ── XLSX writers ──────────────────────────────────────────────────────────────
 
+
 def _is_blank(row: dict[str, str]) -> bool:
     return all(v == "" for v in row.values())
 
@@ -120,7 +124,7 @@ def _style_row_light(row) -> None:
         _apply_default_light_style(cell)
 
 
-def _write_summary_sheet(ws: openpyxl.worksheet.worksheet.Worksheet, rows: list[dict[str, str]]) -> None:
+def _write_summary_sheet(ws: Worksheet, rows: list[dict[str, str]]) -> None:
     if not rows:
         return
     headers = list(rows[0].keys())
@@ -155,7 +159,7 @@ def _write_summary_sheet(ws: openpyxl.worksheet.worksheet.Worksheet, rows: list[
         ws.column_dimensions[col_letter].width = min(max_len + 2, 50)
 
 
-def _write_ust_sheet(ws: openpyxl.worksheet.worksheet.Worksheet, rows: list[dict[str, str]]) -> None:
+def _write_ust_sheet(ws: Worksheet, rows: list[dict[str, str]]) -> None:
     """Writer for the vertical USt layout.
 
     Row type is inferred from the Zeitraum column:
@@ -196,7 +200,7 @@ def _write_ust_sheet(ws: openpyxl.worksheet.worksheet.Worksheet, rows: list[dict
         ws.column_dimensions[col_letter].width = min(max(max_len, len(header)) + 2, 50)
 
 
-def _write_trail_sheet(ws: openpyxl.worksheet.worksheet.Worksheet, sheet: TrailSheet) -> None:
+def _write_trail_sheet(ws: Worksheet, sheet: TrailSheet) -> None:
     ws.append(sheet.headers)
     for cell in ws[1]:
         cell.font = _HEADER_FONT
@@ -242,9 +246,7 @@ def _warn_about_untouched_files(data_dir: Path, touched_files: set[Path]) -> Non
     if not data_dir.exists():
         return
     untouched = sorted(
-        path.resolve()
-        for path in data_dir.rglob("*")
-        if path.is_file() and path.resolve() not in touched_files
+        path.resolve() for path in data_dir.rglob("*") if path.is_file() and path.resolve() not in touched_files
     )
     if not untouched:
         return
@@ -261,6 +263,7 @@ def _warn_about_untouched_files(data_dir: Path, touched_files: set[Path]) -> Non
 
 
 # ── main ──────────────────────────────────────────────────────────────────────
+
 
 def main() -> int:
     journal_path = ledger_journal_path()

@@ -8,7 +8,6 @@ import pytest
 from domain.dataset import TaxDataset
 from ingest.enrich import build_dataset
 
-
 TOOLS_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE_LEDGER_JOURNAL = TOOLS_ROOT / "examples" / "ledger" / "hledger.journal"
 

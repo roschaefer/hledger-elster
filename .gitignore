@@ -1,5 +1,7 @@
 data/build/
 data/exports/
+.uv-cache/
+.venv/
 __pycache__/
 *.pyc
 .~lock.*

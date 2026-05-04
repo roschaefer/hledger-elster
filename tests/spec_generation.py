@@ -4,7 +4,6 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 SPEC_SOURCE_DIR = PROJECT_ROOT / "docs" / "specs"
 GENERATED_FEATURE_DIR = PROJECT_ROOT / "tests" / "features" / "generated"

@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-from decimal import Decimal, ROUND_HALF_UP
-from datetime import date
+from decimal import ROUND_HALF_UP, Decimal
 
 from domain.posting import TaxPosting
-
 
 TWOPLACES = Decimal("0.01")
 
@@ -39,7 +37,6 @@ def depreciation_for_year(posting: TaxPosting, year: int) -> Decimal:
     monthly = cost / Decimal(total_months)
 
     # months in `year` that fall within the depreciation window
-    window_start = date(purchase.year, purchase.month, 1)
     window_end_month = purchase.month - 1 + total_months  # total months from window start
     window_end_year = purchase.year + (window_end_month - 1) // 12
     window_end_cal_month = ((window_end_month - 1) % 12) + 1

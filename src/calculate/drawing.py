@@ -4,15 +4,20 @@ from decimal import Decimal
 
 from domain.posting import TaxPosting
 
-
 ZERO = Decimal("0")
 
 # Roles that are never Entnahmen/Einlagen regardless of source account.
-_NON_DRAWING_ROLES = frozenset({
-    "vat_payment", "vat_advance",
-    "income_tax", "income_tax_advance", "income_tax_final", "tax_payment",
-    "ignore",
-})
+_NON_DRAWING_ROLES = frozenset(
+    {
+        "vat_payment",
+        "vat_advance",
+        "income_tax",
+        "income_tax_advance",
+        "income_tax_final",
+        "tax_payment",
+        "ignore",
+    }
+)
 
 
 def is_drawing(p: TaxPosting) -> bool:

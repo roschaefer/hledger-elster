@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
 from domain.dataset import TaxDataset
 from domain.posting import TaxPosting
-
 
 TWOPLACES = Decimal("0.01")
 

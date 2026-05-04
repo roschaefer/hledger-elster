@@ -7,10 +7,9 @@ from domain.dataset import TaxDataset
 
 
 def _gross_for_label(dataset: TaxDataset, year: int, label: str) -> Decimal:
-    labeled = TaxDataset([
-        p for p in dataset
-        if p.year == year and p.tax_form == "einkommensteuer" and p.label == label
-    ])
+    labeled = TaxDataset(
+        [p for p in dataset if p.year == year and p.tax_form == "einkommensteuer" and p.label == label]
+    )
     return aggregates.gross_amount(labeled)
 
 

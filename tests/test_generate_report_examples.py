@@ -29,13 +29,18 @@ def test_generate_report_writes_expected_example_outputs(monkeypatch, tmp_path: 
     est_2024 = _read_rows(tmp_path / "2024" / "steuererklaerung" / "einkommensteuer.csv")
     est_2025 = _read_rows(tmp_path / "2025" / "steuererklaerung" / "einkommensteuer.csv")
 
-    assert next(row for row in euer_2024 if row["Kennzahl"] == "Umsatzsteuerpflichtige Betriebseinnahmen")["2024"] == "1000.00"
+    assert (
+        next(row for row in euer_2024 if row["Kennzahl"] == "Umsatzsteuerpflichtige Betriebseinnahmen")["2024"]
+        == "1000.00"
+    )
     assert next(row for row in euer_2024 if row["Kennzahl"] == "Vereinnahmte Umsatzsteuer")["2024"] == "190.00"
     assert next(row for row in euer_2024 if row["Kennzahl"] == "Steuerpflichtiger Gewinn/Verlust")["2024"] == "-824.22"
     assert next(row for row in est_2024 if row["Kennzahl"] == "Krankenversicherung")["2024"] == "840.00"
     assert next(row for row in est_2024 if row["Kennzahl"] == "Pflegeversicherung")["2024"] == "240.00"
     assert next(row for row in est_2024 if row["Kennzahl"] == "Zusatzbeitrag")["2024"] == "120.00"
-    assert next(row for row in est_2024 if row["Kennzahl"] == "Langzeit-Auslandskrankenversicherung")["2024"] == "343.50"
+    assert (
+        next(row for row in est_2024 if row["Kennzahl"] == "Langzeit-Auslandskrankenversicherung")["2024"] == "343.50"
+    )
     assert next(row for row in est_2024 if row["Kennzahl"] == "Kurzzeit-Auslandskrankenversicherung")["2024"] == "9.50"
     assert next(row for row in est_2024 if row["Kennzahl"] == "Haftpflichtversicherung")["2024"] == "57.88"
     assert next(row for row in est_2024 if row["Kennzahl"] == "Summe privat gezahlt")["2024"] == "1610.88"

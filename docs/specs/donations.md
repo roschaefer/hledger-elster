@@ -1,8 +1,19 @@
 # Donations
 
-This page is the source of truth for the acceptance test. The fenced Gherkin block
-is extracted into `tests/features/generated/donations.feature` before `behave`
-runs.
+Donation accounts are Einkommensteuer rows grouped by user-defined section
+metadata. The account contract is:
+
+- `elster_form:einkommensteuer` places the account in the ESt export.
+- `elster_section:Sonderausgaben` groups the rows under the Sonderausgaben
+  heading. The section name is user-defined; the tool does not hard-code a
+  donation category.
+- `elster_label` becomes the visible row name.
+- Child accounts inherit the parent account metadata, so multiple charity
+  subaccounts roll up to one `Spenden` row.
+- `elster_calculation:manual` keeps a row visible as `MANUAL` and writes an audit
+  trail, but excludes the amount from calculated ESt totals. This is used for
+  cases such as political party donations where the tax treatment must be
+  calculated outside the tool.
 
 ```gherkin
 Feature: Donations

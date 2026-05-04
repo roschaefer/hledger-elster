@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 
-from domain.dataset import TaxDataset
-from domain.posting import TaxPosting
-from calculate import aggregates, afa
-from calculate.drawing import is_drawing, is_contribution
+from calculate import afa, aggregates
+from calculate.drawing import is_contribution, is_drawing
 from calculate.report.classification import euer_expenses, euer_income
 from calculate.report.periods import (
     aggregate_periods,
@@ -15,7 +13,8 @@ from calculate.report.periods import (
     fmt,
     section_row,
 )
-
+from domain.dataset import TaxDataset
+from domain.posting import TaxPosting
 
 TWOPLACES = Decimal("0.01")
 ZERO = Decimal("0.00")
@@ -123,9 +122,7 @@ def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
     for lbl in labels:
         einnahmen_net_row[lbl] = fmt(net_totals[lbl])
         einnahmen_ust_row[lbl] = fmt(collected_totals[lbl])
-        einnahmen_total[lbl] = (net_totals[lbl] + collected_totals[lbl]).quantize(
-            TWOPLACES, rounding=ROUND_HALF_UP
-        )
+        einnahmen_total[lbl] = (net_totals[lbl] + collected_totals[lbl]).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
 
     # ── regular expense accounts, grouped by section ──────────────────────
     regular_ds = euer_ds.exclude_deduction("afa").for_year(year)
@@ -151,9 +148,7 @@ def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
             expense_sections.append((section_name, section_rows))
 
     for lbl in labels:
-        summe_betriebskosten[lbl] = summe_betriebskosten[lbl].quantize(
-            TWOPLACES, rounding=ROUND_HALF_UP
-        )
+        summe_betriebskosten[lbl] = summe_betriebskosten[lbl].quantize(TWOPLACES, rounding=ROUND_HALF_UP)
 
     # ── AfA accounts ──────────────────────────────────────────────────────
     afa_postings = list(dataset.for_deduction("afa"))
@@ -179,14 +174,10 @@ def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
     annual_hop = _home_office_pauschale(year)
 
     # ── UStVA payments (ELSTER EÜR line 57) — advance + final settlements ──
-    vat_paid_ds = TaxDataset([
-        p for p in dataset
-        if p.tax_role in ("vat_payment", "vat_advance") and p.amount > Decimal("0")
-    ])
-    vat_refund_ds = TaxDataset([
-        p for p in dataset
-        if p.tax_role == "vat_payment" and p.amount < Decimal("0")
-    ])
+    vat_paid_ds = TaxDataset(
+        [p for p in dataset if p.tax_role in ("vat_payment", "vat_advance") and p.amount > Decimal("0")]
+    )
+    vat_refund_ds = TaxDataset([p for p in dataset if p.tax_role == "vat_payment" and p.amount < Decimal("0")])
     ust_paid_totals = aggregate_periods(vat_paid_ds, year, aggregates.gross_amount, labels)
     ust_refund_totals = aggregate_periods(vat_refund_ds, year, aggregates.gross_amount, labels)
 
@@ -202,16 +193,14 @@ def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
     gewinn_totals: dict[str, Decimal] = {}
 
     for lbl in labels:
-        summe_betriebseinnahmen[lbl] = (
-            einnahmen_total[lbl] + ust_refund_totals[lbl]
-        ).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
-        betriebsausgaben = (
-            summe_betriebskosten[lbl] + afa_totals[lbl] + annual_hop + ust_paid_totals[lbl]
-        ).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
-        summe_betriebsausgaben[lbl] = betriebsausgaben
-        gewinn = (einnahmen_total[lbl] - betriebsausgaben).quantize(
+        summe_betriebseinnahmen[lbl] = (einnahmen_total[lbl] + ust_refund_totals[lbl]).quantize(
             TWOPLACES, rounding=ROUND_HALF_UP
         )
+        betriebsausgaben = (summe_betriebskosten[lbl] + afa_totals[lbl] + annual_hop + ust_paid_totals[lbl]).quantize(
+            TWOPLACES, rounding=ROUND_HALF_UP
+        )
+        summe_betriebsausgaben[lbl] = betriebsausgaben
+        gewinn = (einnahmen_total[lbl] - betriebsausgaben).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
         gewinn_totals[lbl] = gewinn
 
     rows: list[dict[str, str]] = [

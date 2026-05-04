@@ -7,7 +7,6 @@ from pathlib import Path
 
 from behave import given, then, use_step_matcher, when
 
-
 use_step_matcher("re")
 
 
@@ -45,6 +44,20 @@ def file_should_contain_exactly(context, path: str) -> None:
     actual_path = _resolve_work_path(context, path)
     assert actual_path.exists(), f"Expected output file was not created: {path}"
     assert actual_path.read_text(encoding="utf-8") == _doc_string(context)
+
+
+@then(r"stderr should contain:")
+def stderr_should_contain(context) -> None:
+    assert context.last_result is not None, "No command has been run"
+    expected = _doc_string(context)
+    assert expected in context.last_result.stderr
+
+
+@then(r"stdout should contain:")
+def stdout_should_contain(context) -> None:
+    assert context.last_result is not None, "No command has been run"
+    expected = _doc_string(context)
+    assert expected in context.last_result.stdout
 
 
 def _resolve_work_path(context, path: str) -> Path:
