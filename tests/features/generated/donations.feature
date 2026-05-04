@@ -1,0 +1,56 @@
+# Generated from docs/specs/donations.md
+# Run: python scripts/generate_features.py
+
+Feature: Donations
+
+  Scenario: Donations are exported to Einkommensteuer
+    Given a file named "journal.journal" with content:
+      """
+      account assets:bank:checking  ; elster_account:private, elster_label:Girokonto
+      account expenses:charity  ; elster_form:einkommensteuer, elster_label:Spenden, elster_section:Sonderausgaben
+      account expenses:charity:example
+      account expenses:charity:another
+      account expenses:politics:party  ; elster_form:einkommensteuer, elster_label:Parteispende (§34g/§10b manuell berechnen), elster_section:Sonderausgaben, elster_calculation:manual
+
+      2024-12-01 Example charity donation
+          expenses:charity:example    50.00 EUR
+          assets:bank:checking       -50.00 EUR
+
+      2024-12-02 Another charity donation
+          expenses:charity:another    25.00 EUR
+          assets:bank:checking       -25.00 EUR
+
+      2024-12-02 Example political party donation
+          expenses:politics:party    100.00 EUR
+          assets:bank:checking      -100.00 EUR
+      """
+    When I run "hledger elster -f journal.journal -o export"
+    Then the file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:
+      """
+      Kennzahl,2024
+      # Sonderausgaben,
+      Parteispende (§34g/§10b manuell berechnen),MANUAL
+      Spenden,75.00
+      ,
+      Summe privat gezahlt,75.00
+      Abziehbar (Netto),75.00
+      Gezahlte Vorsteuer,0.00
+      Abziehbare Vorsteuer,0.00
+      Summe abziehbar,75.00
+      ,
+      """
+    And the file "export/2024/herleitung/einkommensteuer/spenden.csv" should contain exactly:
+      """
+      Konto,Datum,Beschreibung,Betrag
+      Girokonto,2024-12-01,Example charity donation,50.00
+      Girokonto,2024-12-02,Another charity donation,25.00
+      Σ Girokonto,,,75.00
+      GESAMT,,,75.00
+      """
+    And the file "export/2024/herleitung/einkommensteuer/parteispende-(§34g-§10b-manuell.csv" should contain exactly:
+      """
+      Konto,Datum,Beschreibung,Betrag
+      Girokonto,2024-12-02,Example political party donation,100.00
+      Σ Girokonto,,,100.00
+      GESAMT,,,100.00
+      """

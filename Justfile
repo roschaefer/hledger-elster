@@ -8,3 +8,9 @@ help:
 
 test:
     pytest tests/ -v
+
+generate-features:
+    python scripts/generate_features.py
+
+acceptance: generate-features
+    behave tests/features
