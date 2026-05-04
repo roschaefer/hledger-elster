@@ -128,6 +128,7 @@ def _enrich_posting(
             source_label=source_label,
             section="",
             tax_period_year=0,
+            source_is_business=source_tags.get("elster_account") == "business",
         )
 
     if not _is_tax_relevant(tags):
@@ -188,6 +189,7 @@ def _enrich_posting(
         source_label=source_label,
         section=section,
         tax_period_year=tax_period_year,
+        source_is_business=source_tags.get("elster_account") == "business",
     )
 
 

@@ -37,6 +37,7 @@ class TaxPosting:
     source_label: str = ""     # Human label from elster_label tag on source account
     section: str = ""          # Section from tax_section tag (EÜR, ESt, …)
     tax_period_year: int = 0   # Fiscal year this posting belongs to (from tax_period tag); 0 = use transaction year
+    source_is_business: bool = False  # True when source account carries elster_account:business
 
     @property
     def year(self) -> int:

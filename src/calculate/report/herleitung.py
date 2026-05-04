@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from decimal import Decimal, ROUND_HALF_UP
 
 from calculate import afa as afa_module
+from calculate.drawing import is_drawing, is_contribution
 from domain.dataset import TaxDataset
 from domain.posting import TaxPosting
 
@@ -368,10 +369,9 @@ def _euer_sheets(dataset: TaxDataset, year: int) -> list[TrailSheet]:
     add(_gross_sheet(vat_payment_ds, "USt-Abschlusszahlungen"))
     add(_vat_advance_sheet(dataset.for_role("vat_advance"), year))
 
-    # Positive amounts only — avoids double-counting the transfer reconciliation leg
-    drawing_ds = TaxDataset([p for p in dataset.for_role("drawing").for_year(year) if p.amount > ZERO])
+    drawing_ds = TaxDataset([p for p in dataset.for_year(year) if is_drawing(p)])
     add(_gross_sheet(drawing_ds, "Entnahmen"))
-    contribution_ds = TaxDataset([p for p in dataset.for_role("contribution").for_year(year) if p.amount < ZERO])
+    contribution_ds = TaxDataset([p for p in dataset.for_year(year) if is_contribution(p)])
     add(_gross_sheet(contribution_ds, "Einlagen"))
 
     return result

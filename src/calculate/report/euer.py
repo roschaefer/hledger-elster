@@ -6,6 +6,7 @@ from decimal import Decimal, ROUND_HALF_UP
 from domain.dataset import TaxDataset
 from domain.posting import TaxPosting
 from calculate import aggregates, afa
+from calculate.drawing import is_drawing, is_contribution
 from calculate.report.periods import (
     aggregate_periods,
     annual_labels,
@@ -188,9 +189,9 @@ def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
     ust_refund_totals = aggregate_periods(vat_refund_ds, year, aggregates.gross_amount, labels)
 
     # ── Entnahmen / Einlagen from business accounts ──────────────────────
-    drawing_ds = TaxDataset([p for p in dataset.for_role("drawing") if p.amount > Decimal("0")])
+    drawing_ds = TaxDataset([p for p in dataset if is_drawing(p)])
     drawing_totals = aggregate_periods(drawing_ds, year, aggregates.gross_amount, labels)
-    contribution_ds = TaxDataset([p for p in dataset.for_role("contribution") if p.amount < Decimal("0")])
+    contribution_ds = TaxDataset([p for p in dataset if is_contribution(p)])
     contribution_totals = aggregate_periods(contribution_ds, year, aggregates.gross_amount, labels)
 
     # ── summary rows ─────────────────────────────────────────────────────
