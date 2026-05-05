@@ -18,7 +18,7 @@ def _vat_advance_year(dataset: TaxDataset, year: int) -> TaxDataset:
             f"{p.posting_date} {p.description} ({p.source_account} -> {p.counter_account})" for p in invalid[:3]
         )
         raise ValueError(
-            f"vat_advance postings require tax_period. Missing tax_period for {len(invalid)} posting(s): {examples}"
+            f"vat_advance postings require elster_period. Missing elster_period for {len(invalid)} posting(s): {examples}"
         )
     return TaxDataset([p for p in dataset.for_role("vat_advance") if p.amount != ZERO and p.tax_period_year == year])
 

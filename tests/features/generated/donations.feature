@@ -6,11 +6,11 @@ Feature: Donations
   Scenario: Donations are exported to Einkommensteuer
     Given a file named "journal.journal" with content:
       """
-      account assets:bank:checking  ; elster_account:private, elster_label:Girokonto
-      account expenses:charity  ; elster_form:einkommensteuer, elster_label:Spenden, elster_section:Sonderausgaben
+      account assets:bank:checking  ; elster_account:private, elster_item:Girokonto
+      account expenses:charity  ; elster_form:einkommensteuer, elster_item:Spenden, elster_section:Sonderausgaben
       account expenses:charity:example
       account expenses:charity:another
-      account expenses:politics:party  ; elster_form:einkommensteuer, elster_label:Parteispende (§34g/§10b manuell berechnen), elster_section:Sonderausgaben, elster_calculation:manual
+      account expenses:politics:party  ; elster_form:einkommensteuer, elster_item:Parteispende (§34g/§10b manuell berechnen), elster_section:Sonderausgaben, elster_calculation:manual
 
       2024-12-01 Example charity donation
           expenses:charity:example    50.00 EUR

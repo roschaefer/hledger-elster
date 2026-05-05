@@ -22,5 +22,6 @@ Specifications:
 - [Business accounts](./business-accounts.md)
 - [Donations](./donations.md)
 - [Export hygiene](./export-hygiene.md)
+- [Form, section, and item tags](./form-section-item-tags.md)
 - [Health care and insurance](./health-care.md)
 - [VAT payments](./vat.md)

@@ -74,6 +74,7 @@ Executable specifications:
 - [Business accounts](./docs/specs/business-accounts.md)
 - [Donations](./docs/specs/donations.md)
 - [Export hygiene](./docs/specs/export-hygiene.md)
+- [Form, section, and item tags](./docs/specs/form-section-item-tags.md)
 - [Health care and insurance](./docs/specs/health-care.md)
 - [VAT payments](./docs/specs/vat.md)
 
@@ -97,41 +98,41 @@ All tags are prefixed with `elster_`. Tags fall into three categories:
 
 ```hledger
 ; ── Payment accounts ──────────────────────────────────────────────────────────
-account assets:bank:business          ; elster_account:business, elster_label:Geschäftskonto
-account assets:bank:private           ; elster_account:private,  elster_label:Girokonto
+account assets:bank:business          ; elster_account:business, elster_item:Geschäftskonto
+account assets:bank:private           ; elster_account:private,  elster_item:Girokonto
 
 ; ── Business income (EÜR + USt) ───────────────────────────────────────────────
-account income:business               ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_label:Betriebseinnahmen
+account income:business               ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
 
 ; ── Business expenses (EÜR) ───────────────────────────────────────────────────
 ; Base account sets defaults; sub-accounts inherit and override.
 account expenses:business             ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00
-account expenses:business:hosting     ; elster_label:Serverkosten, elster_section:Bezogene Fremdleistungen
-account expenses:business:education   ; elster_label:Fortbildung,  elster_section:Fortbildungskosten
+account expenses:business:hosting     ; elster_item:Serverkosten, elster_section:Bezogene Fremdleistungen
+account expenses:business:education   ; elster_item:Fortbildung,  elster_section:Fortbildungskosten
 
 ; Proportional deduction (e.g. phone: 20 % business use)
-account expenses:phone                ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat_share:0.20, elster_vat_rate:0.19, elster_label:Mobiltelefon, elster_section:Arbeitsmittel
+account expenses:phone                ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat_share:0.20, elster_vat_rate:0.19, elster_item:Mobiltelefon, elster_section:Arbeitsmittel
 
 ; Depreciable asset (AfA)
-account expenses:business:hardware:computer ; elster_form:einnahmenueberschussrechnung, elster_afa_years:3, elster_label:Computer-Kauf, elster_section:Arbeitsmittel
+account expenses:business:hardware:computer ; elster_form:einnahmenueberschussrechnung, elster_afa_years:3, elster_item:Computer-Kauf, elster_section:Arbeitsmittel
 
 ; ── Private expenses (ESt) ────────────────────────────────────────────────────
 account expenses:insurance            ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig
-account expenses:insurance:health:kv  ; elster_label:Krankenversicherung,  elster_section:Vorsorgeaufwand
-account expenses:insurance:health:pv  ; elster_label:Pflegeversicherung,   elster_section:Vorsorgeaufwand
+account expenses:insurance:health:kv  ; elster_item:Krankenversicherung,  elster_section:Vorsorgeaufwand
+account expenses:insurance:health:pv  ; elster_item:Pflegeversicherung,   elster_section:Vorsorgeaufwand
 
 ; Donations are ordinary ESt accounts grouped by a user-defined section.
-; Unlabelled child accounts inherit this label and are summed into one row.
-account expenses:charity              ; elster_form:einkommensteuer, elster_label:Spenden, elster_section:Sonderausgaben
+; Child accounts without their own item inherit this item and are summed into one row.
+account expenses:charity              ; elster_form:einkommensteuer, elster_item:Spenden, elster_section:Sonderausgaben
 account expenses:charity:drk
 account expenses:charity:unicef
 
 ; Use manual calculation for cases the tool should list but not calculate.
-account expenses:politics:party       ; elster_form:einkommensteuer, elster_label:Parteispende - §34g/§10b manuell berechnen, elster_section:Sonderausgaben, elster_calculation:manual
+account expenses:politics:party       ; elster_form:einkommensteuer, elster_item:Parteispende - §34g/§10b manuell berechnen, elster_section:Sonderausgaben, elster_calculation:manual
 
 ; ── Tax payments ──────────────────────────────────────────────────────────────
-account expenses:taxes:einkommensteuer:vorauszahlung    ; elster_role:income_tax_advance, elster_label:ESt-Vorauszahlung
-account expenses:taxes:einkommensteuer:abschlusszahlung ; elster_role:income_tax_final,   elster_label:ESt-Abschlusszahlung
+account expenses:taxes:einkommensteuer:vorauszahlung    ; elster_role:income_tax_advance, elster_item:ESt-Vorauszahlung
+account expenses:taxes:einkommensteuer:abschlusszahlung ; elster_role:income_tax_final,   elster_item:ESt-Abschlusszahlung
 account expenses:taxes:umsatzsteuer:vorauszahlung       ; elster_role:vat_advance
 account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
 account expenses:taxes:umsatzsteuer:vorauszahlung:2025  ; elster_period:2025
@@ -148,10 +149,10 @@ account expenses:taxes:umsatzsteuer:vorauszahlung:2025  ; elster_period:2025
 | `elster_role` | `tax_payment` | Generic parent role for all tax payments. Prevents tax outflows from being counted as Entnahmen in the EÜR. |
 | `elster_role` | `vat_payment` | Marks USt Abschlusszahlung accounts. Postings flow into the EÜR (line 57: gezahlte Umsatzsteuer) and the USt report. |
 | `elster_role` | `vat_advance` | Marks USt Vorauszahlung accounts. Requires `elster_period` on sub-accounts for correct fiscal-year attribution. |
-| `elster_form` | `einnahmenueberschussrechnung` | Marks an account as belonging to the EÜR. Income accounts flow into Betriebseinnahmen; expense accounts flow into Betriebsausgaben. Net/VAT split is controlled by `elster_vat_rate`; deduction treatment by the calculation tags below. |
+| `elster_form` | `einnahmenueberschussrechnung` | Marks an account as belonging to the EÜR. Income accounts flow into Betriebseinnahmen; expense accounts flow into Betriebsausgaben. Net/VAT split is controlled by `elster_vat_rate`; deduction treatment by the calculation tags below. The USt export is derived from these EÜR VAT fields and VAT payment roles. |
 | `elster_form` | `einkommensteuer` | Marks an account as belonging to the ESt. The account appears under the user-defined `elster_section`; postings from a `business` source account are additionally counted as Entnahmen in the EÜR. |
 | `elster_section` | free text | User-defined grouping within a form (for example `Sonderausgaben` for donations or `Arbeitsmittel` for EÜR expenses). The code does not interpret specific section names. |
-| `elster_label` | free text | Human-readable label shown in the output instead of the account name. Inherited labels are used for grouping: child accounts without their own `elster_label` are summed into the parent label; child accounts with their own label appear separately. |
+| `elster_item` | free text | Report item shown as an output row. Use it to translate technical account names and to define aggregation boundaries: child accounts without their own `elster_item` are summed into the inherited parent item; child accounts with their own `elster_item` appear separately. |
 | `elster_period` | `YYYY` | On USt Vorauszahlung sub-accounts: the fiscal year the payment belongs to, regardless of when the transaction occurred. Required on every `vat_advance` sub-account. |
 
 ---

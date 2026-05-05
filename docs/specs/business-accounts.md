@@ -19,10 +19,10 @@ Feature: Business accounts
   Scenario: Business account postings classify income, owner draws, and owner contributions
     Given a file named "journal.journal" with content:
       """
-      account assets:bank:business  ; elster_account:business, elster_label:Geschäftskonto
-      account assets:bank:private   ; elster_account:private, elster_label:Girokonto
+      account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
+      account assets:bank:private   ; elster_account:private, elster_item:Girokonto
       account transfers:clearing
-      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_label:Betriebseinnahmen
+      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
 
       2024-01-15 Client invoice
           income:business       -119.00 EUR

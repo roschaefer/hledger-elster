@@ -49,9 +49,9 @@ def test_reimbursements_reduce_euer_and_vorsteuer_totals(tmp_path: Path) -> None
     dataset = _build_dataset(
         tmp_path,
         [
-            "account assets:dkb:kreditkarte  ;elster_account:private, elster_label:Kreditkartenkonto",
+            "account assets:dkb:kreditkarte  ;elster_account:private, elster_item:Kreditkartenkonto",
             "account expenses:business  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00",
-            "account expenses:business:hosting:aws  ;elster_label:AWS",
+            "account expenses:business:hosting:aws  ;elster_item:AWS",
         ],
         [
             _posting(
@@ -96,9 +96,9 @@ def test_euer_income_with_vat_is_not_vorsteuer(tmp_path: Path) -> None:
     dataset = _build_dataset(
         tmp_path,
         [
-            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_label:Geschäftskonto",
-            "account income:business:consulting  ;elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_label:Betriebseinnahmen",
-            "account expenses:business:hosting:aws  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00, elster_label:AWS",
+            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_item:Geschäftskonto",
+            "account income:business:consulting  ;elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen",
+            "account expenses:business:hosting:aws  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00, elster_item:AWS",
         ],
         [
             _posting("1", "2024-01-10", "Customer invoice", "income:business:consulting", "-119.00"),
@@ -125,8 +125,8 @@ def test_income_tax_reversal_nets_out_in_est_summary(tmp_path: Path) -> None:
     dataset = _build_dataset(
         tmp_path,
         [
-            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_label:Geschäftskonto",
-            "account expenses:taxes:einkommensteuer:vorauszahlung  ;elster_role:income_tax_advance, elster_label:ESt-Vorauszahlung",
+            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_item:Geschäftskonto",
+            "account expenses:taxes:einkommensteuer:vorauszahlung  ;elster_role:income_tax_advance, elster_item:ESt-Vorauszahlung",
         ],
         [
             _posting(
@@ -149,10 +149,10 @@ def test_est_insurance_rows_use_tax_metadata_not_account_case(tmp_path: Path) ->
     dataset = _build_dataset(
         tmp_path,
         [
-            "account Assets:DKB:Girokonto  ;elster_account:private, elster_label:Girokonto",
-            "account Expenses:Insurance:Health:AOK:KV  ;elster_form:einkommensteuer, elster_section:Vorsorgeaufwand, elster_label:Krankenversicherung",
-            "account Expenses:Insurance:Health:AOK:PV  ;elster_form:einkommensteuer, elster_section:Vorsorgeaufwand, elster_label:Pflegeversicherung",
-            "account Expenses:Insurance:Liability:Haftpflicht  ;elster_form:einkommensteuer, elster_section:Vorsorgeaufwand, elster_label:Haftpflichtversicherung",
+            "account Assets:DKB:Girokonto  ;elster_account:private, elster_item:Girokonto",
+            "account Expenses:Insurance:Health:AOK:KV  ;elster_form:einkommensteuer, elster_section:Vorsorgeaufwand, elster_item:Krankenversicherung",
+            "account Expenses:Insurance:Health:AOK:PV  ;elster_form:einkommensteuer, elster_section:Vorsorgeaufwand, elster_item:Pflegeversicherung",
+            "account Expenses:Insurance:Liability:Haftpflicht  ;elster_form:einkommensteuer, elster_section:Vorsorgeaufwand, elster_item:Haftpflichtversicherung",
         ],
         [
             _posting(
@@ -199,8 +199,8 @@ def test_est_sonderausgaben_donations_are_exported_from_section_metadata(tmp_pat
     dataset = _build_dataset(
         tmp_path,
         [
-            "account assets:dkb:girokonto  ;elster_account:private, elster_label:Girokonto",
-            "account expenses:charity:drk  ;elster_form:einkommensteuer, elster_section:Sonderausgaben, elster_label:Spenden",
+            "account assets:dkb:girokonto  ;elster_account:private, elster_item:Girokonto",
+            "account expenses:charity:drk  ;elster_form:einkommensteuer, elster_section:Sonderausgaben, elster_item:Spenden",
         ],
         [
             _posting(
@@ -228,9 +228,9 @@ def test_est_sections_are_user_defined_groupings(tmp_path: Path) -> None:
     dataset = _build_dataset(
         tmp_path,
         [
-            "account assets:dkb:girokonto  ;elster_account:private, elster_label:Girokonto",
-            "account expenses:private:one  ;elster_form:einkommensteuer, elster_section:Freie Gruppe A, elster_label:Erste Position",
-            "account expenses:private:two  ;elster_form:einkommensteuer, elster_section:Freie Gruppe B, elster_label:Zweite Position",
+            "account assets:dkb:girokonto  ;elster_account:private, elster_item:Girokonto",
+            "account expenses:private:one  ;elster_form:einkommensteuer, elster_section:Freie Gruppe A, elster_item:Erste Position",
+            "account expenses:private:two  ;elster_form:einkommensteuer, elster_section:Freie Gruppe B, elster_item:Zweite Position",
         ],
         [
             _posting(
@@ -263,8 +263,8 @@ def test_vat_advance_reversal_should_net_out_in_ust_exports(tmp_path: Path) -> N
     dataset = _build_dataset(
         tmp_path,
         [
-            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_label:Geschäftskonto",
-            "account expenses:taxes:umsatzsteuer:vorauszahlung  ;elster_role:vat_advance, elster_label:USt-Vorauszahlung",
+            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_item:Geschäftskonto",
+            "account expenses:taxes:umsatzsteuer:vorauszahlung  ;elster_role:vat_advance, elster_item:USt-Vorauszahlung",
             "account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ;elster_period:2024",
         ],
         [
@@ -290,7 +290,7 @@ def test_euer_paid_vat_includes_refunds_and_herleitung_sheet_shows_signed_totals
     dataset = _build_dataset(
         tmp_path,
         [
-            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_label:Geschäftskonto",
+            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_item:Geschäftskonto",
             "account expenses:taxes:umsatzsteuer  ;elster_role:vat_payment",
             "account expenses:taxes:umsatzsteuer:vorauszahlung  ;elster_role:vat_advance",
             "account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ;elster_period:2024",

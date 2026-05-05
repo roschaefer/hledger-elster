@@ -1,26 +1,26 @@
 ; Sanitised example transactions for the public test suite.
 
-account assets:kontist:geschaeftskonto  ; bank:kontist, account_kind:payment, elster_account:business, elster_label:Geschäftskonto
-account assets:dkb:girokonto  ; bank:dkb, account_kind:payment, elster_account:private, elster_label:Girokonto
+account assets:kontist:geschaeftskonto  ; bank:kontist, account_kind:payment, elster_account:business, elster_item:Geschäftskonto
+account assets:dkb:girokonto  ; bank:dkb, account_kind:payment, elster_account:private, elster_item:Girokonto
 account transfers:kontist-girokonto  ; account_kind:transfer
-account income:business  ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_label:Betriebseinnahmen
+account income:business  ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
 account expenses:business  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00
-account expenses:business:hosting:wasabi  ; elster_label:Serverkosten Wasabi, elster_section:Bezogene Fremdleistungen
-account expenses:business:steuerberater  ; elster_label:Steuerberatung, elster_section:Rechts- und Steuerberatung
-account expenses:business:education:conferences  ; elster_label:Konferenzen, elster_section:Fortbildungskosten
-account expenses:business:banking  ; elster_label:Kontofuehrungsgebuehren, elster_section:Arbeitsmittel
-account expenses:business:hardware:computer  ; elster_form:einnahmenueberschussrechnung, elster_afa_years:3, elster_label:Computer-Kauf
-account expenses:phone  ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat_share:0.20, elster_vat_rate:0.19, elster_label:Mobiltelefon, elster_section:Arbeitsmittel
+account expenses:business:hosting:wasabi  ; elster_item:Serverkosten Wasabi, elster_section:Bezogene Fremdleistungen
+account expenses:business:steuerberater  ; elster_item:Steuerberatung, elster_section:Rechts- und Steuerberatung
+account expenses:business:education:conferences  ; elster_item:Konferenzen, elster_section:Fortbildungskosten
+account expenses:business:banking  ; elster_item:Kontofuehrungsgebuehren, elster_section:Arbeitsmittel
+account expenses:business:hardware:computer  ; elster_form:einnahmenueberschussrechnung, elster_afa_years:3, elster_item:Computer-Kauf
+account expenses:phone  ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat_share:0.20, elster_vat_rate:0.19, elster_item:Mobiltelefon, elster_section:Arbeitsmittel
 account expenses:insurance  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig
-account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Krankenversicherung, elster_section:Vorsorgeaufwand
-account expenses:private:health-care:pv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Pflegeversicherung, elster_section:Vorsorgeaufwand
-account expenses:private:health-care:zb  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Zusatzbeitrag, elster_section:Vorsorgeaufwand
-account expenses:insurance:travel:long-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Langzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
-account expenses:insurance:travel:short-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Kurzzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
-account expenses:insurance:liability:haftpflicht  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_label:Haftpflichtversicherung, elster_section:Vorsorgeaufwand
-account expenses:taxes:einkommensteuer:vorauszahlung  ; elster_role:income_tax_advance, elster_label:ESt-Vorauszahlung
-account expenses:taxes:einkommensteuer:abschlusszahlung  ; elster_role:income_tax_final, elster_label:ESt-Abschlusszahlung
-account expenses:taxes:umsatzsteuer:vorauszahlung  ; elster_role:vat_advance, elster_label:USt-Vorauszahlung
+account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Krankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:private:health-care:pv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Pflegeversicherung, elster_section:Vorsorgeaufwand
+account expenses:private:health-care:zb  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Zusatzbeitrag, elster_section:Vorsorgeaufwand
+account expenses:insurance:travel:long-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Langzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:insurance:travel:short-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Kurzzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:insurance:liability:haftpflicht  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Haftpflichtversicherung, elster_section:Vorsorgeaufwand
+account expenses:taxes:einkommensteuer:vorauszahlung  ; elster_role:income_tax_advance, elster_item:ESt-Vorauszahlung
+account expenses:taxes:einkommensteuer:abschlusszahlung  ; elster_role:income_tax_final, elster_item:ESt-Abschlusszahlung
+account expenses:taxes:umsatzsteuer:vorauszahlung  ; elster_role:vat_advance, elster_item:USt-Vorauszahlung
 account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
 account expenses:taxes:umsatzsteuer:vorauszahlung:2025  ; elster_period:2025
 

@@ -19,7 +19,7 @@ class TaxPosting:
     source_line: int
 
     # Tax enrichment — resolved from account directives at ingest time
-    tax_form: str  # "einnahmenueberschussrechnung" | "umsatzsteuer" | "einkommensteuer" | ""
+    tax_form: str  # "einnahmenueberschussrechnung" | "einkommensteuer" | ""
     tax_deduction: str  # "full" | "proportional" | "nicht_abzugsfaehig" | "afa" | ""
     tax_role: str  # "tax_payment" | "income_tax" | "vat_payment" | "vat_advance" | "income_tax_advance" | "income_tax_final" | "drawing" | "contribution" | "ignore" | ""
     calculation: str  # "" | "manual"
@@ -34,10 +34,10 @@ class TaxPosting:
     derived_kind: str  # "" or "abschreibung"
 
     # Human-readable metadata resolved from account directives
-    label: str = ""  # Human label from elster_label tag on counter account
-    source_label: str = ""  # Human label from elster_label tag on source account
-    section: str = ""  # Section from tax_section tag (EÜR, ESt, …)
-    tax_period_year: int = 0  # Fiscal year this posting belongs to (from tax_period tag); 0 = use transaction year
+    label: str = ""  # Report item from elster_item tag on counter account
+    source_label: str = ""  # Report item from elster_item tag on source account
+    section: str = ""  # Section from elster_section tag (EÜR, ESt, ...)
+    tax_period_year: int = 0  # Fiscal year this posting belongs to (from elster_period tag); 0 = use transaction year
     source_is_business: bool = False  # True when source account carries elster_account:business
 
     @property

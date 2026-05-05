@@ -159,7 +159,7 @@ Do not rely on chart-of-accounts names as a tool contract. Use tags for all ELST
 
 Examples:
 
-- duplicating a display label that is already supplied by `elster_label_de`
+- duplicating an output item that is already supplied by `elster_item`
 - restating a bank identifier that already lives in a non-ELSTER tag
 - storing ad-hoc transaction notes that do not affect ELSTER output
 

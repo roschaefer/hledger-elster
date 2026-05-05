@@ -6,8 +6,8 @@ Feature: VAT payments
   Scenario: VAT advance reversals reduce the amount already paid
     Given a file named "journal.journal" with content:
       """
-      account assets:bank:business  ; elster_account:business, elster_label:Geschäftskonto
-      account expenses:taxes:umsatzsteuer:vorauszahlung  ; elster_role:vat_advance, elster_label:USt-Vorauszahlung
+      account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
+      account expenses:taxes:umsatzsteuer:vorauszahlung  ; elster_role:vat_advance, elster_item:USt-Vorauszahlung
       account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
 
       2024-02-15 VAT advance
@@ -44,7 +44,7 @@ Feature: VAT payments
   Scenario: Booking year and VAT period are evaluated independently
     Given a file named "journal.journal" with content:
       """
-      account assets:bank:business  ; elster_account:business, elster_label:Geschäftskonto
+      account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
       account expenses:taxes:umsatzsteuer  ; elster_role:vat_payment
       account expenses:taxes:umsatzsteuer:vorauszahlung  ; elster_role:vat_advance
       account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024

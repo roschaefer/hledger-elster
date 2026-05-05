@@ -94,7 +94,7 @@ def _bank_label(p: TaxPosting) -> str:
 
 
 def _sheet_label(ds: TaxDataset, account: str) -> str:
-    """Use elster_label from first matching posting if available, else last account component."""
+    """Use elster_item from first matching posting if available, else last account component."""
     return next((p.label for p in ds if p.label), None) or _short(account)
 
 
@@ -362,7 +362,7 @@ def _vat_advance_sheet(ds: TaxDataset, year: int) -> TrailSheet:
             f"{p.posting_date} {p.description} ({p.source_account} -> {p.counter_account})" for p in invalid[:3]
         )
         raise ValueError(
-            f"vat_advance postings require tax_period. Missing tax_period for {len(invalid)} posting(s): {examples}"
+            f"vat_advance postings require elster_period. Missing elster_period for {len(invalid)} posting(s): {examples}"
         )
 
     headers = ["Konto", "Datum", "Steuerperiode", "Beschreibung", "Betrag"]

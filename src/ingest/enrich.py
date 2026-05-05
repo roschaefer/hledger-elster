@@ -107,7 +107,7 @@ def _enrich_posting(
     posting_date = date.fromisoformat(posting_date_raw if posting_date_raw else transaction_date)
 
     tags = _posting_tags(posting)
-    source_label = source_tags.get("elster_label", "")
+    source_label = source_tags.get("elster_item", "")
 
     if _comment_has_ignore(transaction_comment, posting_comment):
         if account == source_account:
@@ -155,7 +155,7 @@ def _enrich_posting(
     vat_share = _to_decimal(tags.get("elster_vat_share"), "0")
     afa_years_raw = tags.get("elster_afa_years")
     afa_years = int(afa_years_raw) if afa_years_raw else 0
-    label = tags.get("elster_label", "")
+    label = tags.get("elster_item", "")
     section = tags.get("elster_section", "")
     tax_period_raw = tags.get("elster_period", "")
     tax_period_year = int(tax_period_raw) if tax_period_raw else 0
