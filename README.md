@@ -31,6 +31,9 @@ Typical development commands:
 just test
 ```
 
+Executable acceptance specifications live in [`docs/specs/`](./docs/specs/).
+They are written as Markdown and generated into Behave feature files.
+
 Sanitized public fixtures live under [`examples/`](./examples). Keep real journals,
 tax filings, and verification data outside this repository.
 

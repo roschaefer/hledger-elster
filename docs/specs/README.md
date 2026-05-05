@@ -16,3 +16,11 @@ Use:
 just generate-features
 just acceptance
 ```
+
+Specifications:
+
+- [Business accounts](./business-accounts.md)
+- [Donations](./donations.md)
+- [Export hygiene](./export-hygiene.md)
+- [Health care and insurance](./health-care.md)
+- [VAT payments](./vat.md)
