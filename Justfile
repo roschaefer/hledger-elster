@@ -10,6 +10,9 @@ help:
 sync:
     uv sync --extra test
 
+hledger-elster *args="":
+    uv run python src/cli.py {{args}}
+
 test:
     uv run pytest tests/ -v
 

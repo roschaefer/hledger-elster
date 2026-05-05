@@ -1,8 +1,23 @@
 # hledger-elster
 
-`hledger-elster` generates German tax exports for `ELSTER.de` from an `hledger` journal.
+`hledger-elster` generates German tax exports for [ELSTER.de](https://www.elster.de) from an `hledger` journal.
 
-## Installation / Usage
+## Installation
+
+Required tools:
+
+- Python 3.12 or newer
+- [`uv`](https://docs.astral.sh/uv/)
+- [`just`](https://just.systems/)
+- [`hledger`](https://hledger.org/)
+
+Install the Python dependencies:
+
+```bash
+just sync
+```
+
+## Usage
 
 Outputs are written under `data/exports/<year>/` by default:
 
@@ -14,12 +29,12 @@ Workbook export convention:
 - every `name.xlsx` workbook has a sibling `name/` directory
 - each workbook tab is also exported there as a CSV with the corresponding derived filename
 
-Usage:
+Run the tool through `just`:
 
 ```bash
-./hledger-elster
-./hledger-elster -f examples/ledger/hledger.journal
-./hledger-elster -f examples/ledger/hledger.journal -o /tmp/elster-out
+just hledger-elster
+just hledger-elster -f examples/ledger/hledger.journal
+just hledger-elster -f examples/ledger/hledger.journal -o /tmp/elster-out
 ```
 
 Arguments:
@@ -30,7 +45,7 @@ Arguments:
 Typical development commands:
 
 ```bash
-just test
+just check
 ```
 
 Sanitized public fixtures live under [`examples/`](./examples). Keep real journals,
