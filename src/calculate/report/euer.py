@@ -13,6 +13,7 @@ from calculate.report.periods import (
     fmt,
     section_row,
 )
+from config import TaxConfig
 from domain.dataset import TaxDataset
 from domain.posting import TaxPosting
 
@@ -57,14 +58,6 @@ def _row_from_values(name: str, values: dict[str, Decimal]) -> dict[str, str]:
     return row
 
 
-def _home_office_pauschale(year: int) -> Decimal:
-    if 2020 <= year <= 2022:
-        return Decimal("600.00")
-    if year >= 2023:
-        return Decimal("1260.00")
-    return ZERO
-
-
 def _afa_for_label(postings: list[TaxPosting], year: int, label: str) -> Decimal:
     """Distribute annual AfA across periods by counting active months in each period."""
     total = ZERO
@@ -106,7 +99,7 @@ def _afa_posting_for_label(p: TaxPosting, year: int, label: str) -> Decimal:
     return monthly * len(months)
 
 
-def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
+def euer_rows(dataset: TaxDataset, year: int, config: TaxConfig) -> list[dict[str, str]]:
     labels = annual_labels(year)
     euer_ds = euer_expenses(dataset)
 
@@ -171,7 +164,7 @@ def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
         afa_totals[lbl] = afa_totals[lbl].quantize(TWOPLACES, rounding=ROUND_HALF_UP)
 
     # ── Home-Office-Pauschale ─────────────────────────────────────────────
-    annual_hop = _home_office_pauschale(year)
+    annual_hop = config.home_office_pauschale.amount_for_year(year)
 
     # ── UStVA payments (ELSTER EÜR line 57) — advance + final settlements ──
     vat_paid_ds = TaxDataset(
@@ -225,10 +218,11 @@ def euer_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
         rows.append(section_row(section_name, labels))
         rows.extend(afa_sections[section_name])
 
+    rows.append(blank_row(labels))
+    if annual_hop != ZERO:
+        rows.append(_row_from_values("Home-Office-Pauschale", {lbl: annual_hop for lbl in labels}))
     rows.extend(
         [
-            blank_row(labels),
-            _row_from_values("Home-Office-Pauschale", {lbl: annual_hop for lbl in labels}),
             _row_from_values(
                 "An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer",
                 ust_paid_totals,

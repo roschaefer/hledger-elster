@@ -16,8 +16,9 @@ from calculate.report.est import est_rows
 from calculate.report.euer import euer_rows
 from calculate.report.herleitung import FORM_KEYS, TrailSheet, herleitung_sheets
 from calculate.report.ust import ust_rows
+from config import load_config
 from ingest.enrich import build_dataset
-from paths import ledger_journal_path, tax_data_dir
+from paths import elster_config_path, ledger_journal_path, tax_data_dir
 
 # Fixed timestamps so repeated runs produce byte-identical files.
 _ZIP_DATE_TIME = (2000, 1, 1, 0, 0, 0)
@@ -268,6 +269,7 @@ def _warn_about_untouched_files(data_dir: Path, touched_files: set[Path]) -> Non
 def main() -> int:
     journal_path = ledger_journal_path()
     data_dir = tax_data_dir()
+    config = load_config(elster_config_path())
     touched_files: set[Path] = set()
 
     if not journal_path.exists():
@@ -283,7 +285,7 @@ def main() -> int:
 
         # ── steuererklaerung.xlsx + steuererklaerung/ CSVs ───────────────
         elster_rows = {
-            "EÜR": euer_rows(dataset, year),
+            "EÜR": euer_rows(dataset, year, config),
             "USt": ust_rows(dataset, year),
             "ESt": est_rows(dataset, year),
         }

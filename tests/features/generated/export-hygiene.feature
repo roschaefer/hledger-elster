@@ -17,7 +17,12 @@ Feature: Export hygiene
       """
       stale
       """
-    When I run "hledger elster -f journal.journal -o export"
+    And a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
+    When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then stderr should contain:
       """
       Warning: untouched files remain in ELSTER export directory. Consider emptying the export directory and running the tool again.

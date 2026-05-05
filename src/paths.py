@@ -19,3 +19,8 @@ def ledger_journal_path() -> Path:
 
 def tax_data_dir() -> Path:
     return env_path("FINANCES_TAX_DATA_DIR", DEFAULT_TAX_DATA_DIR)
+
+
+def elster_config_path() -> Path | None:
+    value = os.environ.get("HLEDGER_ELSTER_CONFIG")
+    return Path(value).resolve() if value else None

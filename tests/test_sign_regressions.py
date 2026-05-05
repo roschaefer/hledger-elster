@@ -6,6 +6,7 @@ from calculate.report.est import est_rows
 from calculate.report.euer import euer_rows
 from calculate.report.herleitung import herleitung_sheets
 from calculate.report.ust import ust_rows
+from config import TaxConfig
 from ingest.enrich import build_dataset
 
 
@@ -81,7 +82,7 @@ def test_reimbursements_reduce_euer_and_vorsteuer_totals(tmp_path: Path) -> None
         ],
     )
 
-    euer = euer_rows(dataset, 2024)
+    euer = euer_rows(dataset, 2024, TaxConfig())
     assert next(row for row in euer if row["Kennzahl"] == "AWS")["2024"] == "-11.08"
 
     vorsteuer = next(
@@ -106,7 +107,7 @@ def test_euer_income_with_vat_is_not_vorsteuer(tmp_path: Path) -> None:
         ],
     )
 
-    euer = euer_rows(dataset, 2024)
+    euer = euer_rows(dataset, 2024, TaxConfig())
     assert (
         next(row for row in euer if row["Kennzahl"] == "Umsatzsteuerpflichtige Betriebseinnahmen")["2024"] == "100.00"
     )
@@ -303,7 +304,7 @@ def test_euer_paid_vat_includes_refunds_and_herleitung_sheet_shows_signed_totals
         ],
     )
 
-    euer = euer_rows(dataset, 2024)
+    euer = euer_rows(dataset, 2024, TaxConfig())
     assert (
         next(row for row in euer if row["Kennzahl"] == "An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer")[
             "2024"

@@ -42,7 +42,12 @@ Feature: Health care and insurance
           expenses:insurance:liability:haftpflicht   57.88 EUR
           assets:bank:checking                       -57.88 EUR
       """
-    When I run "hledger elster -f journal.journal -o export"
+    And a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
+    When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:
       """
       Kennzahl,2024

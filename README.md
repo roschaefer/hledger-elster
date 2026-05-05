@@ -34,13 +34,14 @@ Run the tool through `just`:
 ```bash
 just hledger-elster
 just hledger-elster -f examples/ledger/hledger.journal
-just hledger-elster -f examples/ledger/hledger.journal -o /tmp/elster-out
+just hledger-elster -f examples/ledger/hledger.journal --config elster.toml -o /tmp/elster-out
 ```
 
 Arguments:
 
 - `-f`, `--file`: input journal, with the same meaning as `hledger -f`
 - `-o`, `--output-dir`: output directory for generated tax artifacts
+- `--config`: TOML config file for user-specific tax adjustments
 
 Typical development commands:
 
@@ -72,6 +73,7 @@ contract and links back to the source files.
 Executable specifications:
 
 - [Business accounts](./docs/specs/business-accounts.md)
+- [Configuration](./docs/specs/configuration.md)
 - [Donations](./docs/specs/donations.md)
 - [Export hygiene](./docs/specs/export-hygiene.md)
 - [Form, section, and item tags](./docs/specs/form-section-item-tags.md)
@@ -137,6 +139,35 @@ account expenses:taxes:umsatzsteuer:vorauszahlung       ; elster_role:vat_advanc
 account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
 account expenses:taxes:umsatzsteuer:vorauszahlung:2025  ; elster_period:2025
 ```
+
+---
+
+### Config file
+
+User-specific tax assumptions that are not ledger transactions live in a TOML
+config file. Generate the default config with:
+
+```bash
+just hledger-elster init-config --output elster.toml
+```
+
+The default config enables the Home-Office-Pauschale and uses the maximum number
+of days for each supported year, because this adjustment is easy to forget:
+
+```toml
+[euer.home_office_pauschale]
+enabled = true
+default_days = "max"
+# Set per-year days when the default does not match your situation.
+# 2020-2022: 5 EUR/day, capped at 600 EUR.
+# 2023+: 6 EUR/day, capped at 1260 EUR.
+
+[euer.home_office_pauschale.days]
+# 2024 = 210
+```
+
+Use `enabled = false` for journal-only exports, or set per-year days when the
+maximum does not match your situation.
 
 ---
 

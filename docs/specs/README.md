@@ -20,6 +20,7 @@ just acceptance
 Specifications:
 
 - [Business accounts](./business-accounts.md)
+- [Configuration](./configuration.md)
 - [Donations](./donations.md)
 - [Export hygiene](./export-hygiene.md)
 - [Form, section, and item tags](./form-section-item-tags.md)

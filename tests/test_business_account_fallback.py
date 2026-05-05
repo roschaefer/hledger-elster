@@ -4,6 +4,7 @@ from pathlib import Path
 
 from calculate.report.euer import euer_rows
 from calculate.report.herleitung import herleitung_sheets
+from config import TaxConfig
 from ingest.enrich import build_dataset
 
 
@@ -40,7 +41,7 @@ def test_business_account_fallback_classifies_unmapped_postings_as_drawings_and_
 
     dataset = build_dataset(journal)
 
-    summary_rows = euer_rows(dataset, 2024)
+    summary_rows = euer_rows(dataset, 2024, TaxConfig())
     assert next(row for row in summary_rows if row["Kennzahl"] == "Entnahmen")["2024"] == "25.00"
     assert next(row for row in summary_rows if row["Kennzahl"] == "Einlagen")["2024"] == "40.00"
 

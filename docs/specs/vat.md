@@ -28,7 +28,12 @@ Feature: VAT payments
           expenses:taxes:umsatzsteuer:vorauszahlung:2024  -40.00 EUR
           assets:bank:business                             40.00 EUR
       """
-    When I run "hledger elster -f journal.journal -o export"
+    And a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
+    When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/umsatzsteuer.csv" should contain exactly:
       """
       Zeitraum,Einnahme (Netto),Vereinnahmte Umsatzsteuer,Abziehbare Vorsteuerbeträge,Vorauszahlungssoll,Bereits Entrichtet
@@ -88,7 +93,12 @@ Feature: VAT payments
           expenses:taxes:umsatzsteuer   80.00 EUR
           assets:bank:business         -80.00 EUR
       """
-    When I run "hledger elster -f journal.journal -o export"
+    And a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
+    When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
       """
       Kennzahl,2024
@@ -100,13 +110,12 @@ Feature: VAT payments
       ,
       # Betriebsausgaben,
       ,
-      Home-Office-Pauschale,1260.00
       An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer,100.00
       Summe Betriebskosten,0.00
-      Summe Betriebsausgaben,1360.00
+      Summe Betriebsausgaben,100.00
       ,
       # Ermittlung des Gewinns,
-      Steuerpflichtiger Gewinn/Verlust,-1360.00
+      Steuerpflichtiger Gewinn/Verlust,-100.00
       ,
       # Zusätzliche Angaben bei Einzelunternehmen,
       Entnahmen,0.00
@@ -123,13 +132,12 @@ Feature: VAT payments
       ,
       # Betriebsausgaben,
       ,
-      Home-Office-Pauschale,1260.00
       An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer,310.00
       Summe Betriebskosten,0.00
-      Summe Betriebsausgaben,1570.00
+      Summe Betriebsausgaben,310.00
       ,
       # Ermittlung des Gewinns,
-      Steuerpflichtiger Gewinn/Verlust,-1570.00
+      Steuerpflichtiger Gewinn/Verlust,-310.00
       ,
       # Zusätzliche Angaben bei Einzelunternehmen,
       Entnahmen,0.00

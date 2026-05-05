@@ -39,7 +39,12 @@ Feature: Donations
           expenses:politics:party    100.00 EUR
           assets:bank:checking      -100.00 EUR
       """
-    When I run "hledger elster -f journal.journal -o export"
+    And a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
+    When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:
       """
       Kennzahl,2024

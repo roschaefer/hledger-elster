@@ -25,7 +25,12 @@ Feature: Form, section, and item tags
           expenses:charity:international   30.00 EUR
           assets:bank:private             -30.00 EUR
       """
-    When I run "hledger elster -f journal.journal -o export"
+    And a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
+    When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
       """
       Kennzahl,2024
@@ -37,13 +42,12 @@ Feature: Form, section, and item tags
       ,
       # Betriebsausgaben,
       ,
-      Home-Office-Pauschale,1260.00
       An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer,0.00
       Summe Betriebskosten,0.00
-      Summe Betriebsausgaben,1260.00
+      Summe Betriebsausgaben,0.00
       ,
       # Ermittlung des Gewinns,
-      Steuerpflichtiger Gewinn/Verlust,-1141.00
+      Steuerpflichtiger Gewinn/Verlust,119.00
       ,
       # Zusätzliche Angaben bei Einzelunternehmen,
       Entnahmen,0.00
