@@ -9,8 +9,9 @@ counterposting account:
 - `elster_account:business` identifies the bank account that makes owner draws
   and contributions visible even when the other posting uses an untagged owner
   equity account.
-- Transfers between business accounts and neutral clearing accounts are not owner
-  draws.
+- Unclassified outflows from a business account are treated as owner draws. Use
+  `elster_role:ignore` on internal funding movements when the actual business
+  expense is booked in a separate transaction.
 
 ```gherkin
 Feature: Business accounts
@@ -35,7 +36,7 @@ Feature: Business accounts
           liabilities:owner      -40.00 EUR
           assets:bank:business    40.00 EUR
 
-      2024-09-03 Internal transfer
+      2024-09-03 Internal transfer  ; elster_role:ignore
           transfers:clearing      75.00 EUR
           assets:bank:business   -75.00 EUR
       """
@@ -60,7 +61,7 @@ Feature: Business accounts
       Steuerpflichtiger Gewinn/Verlust,-1141.00
       ,
       # Zusätzliche Angaben bei Einzelunternehmen,
-      Entnahmen,125.00
+      Entnahmen,50.00
       Einlagen,40.00
       """
 ```
