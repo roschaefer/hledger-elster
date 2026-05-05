@@ -9,7 +9,7 @@ Required tools:
 - Python 3.12 or newer
 - [`uv`](https://docs.astral.sh/uv/)
 - [`just`](https://just.systems/)
-- [`hledger`](https://hledger.org/)
+- [`hledger`](https://hledger.org/) 1.52.1
 
 Install the Python dependencies:
 

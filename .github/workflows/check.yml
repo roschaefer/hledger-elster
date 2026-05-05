@@ -7,6 +7,8 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    env:
+      HLEDGER_VERSION: "1.52.1"
 
     steps:
       - name: Check out repository
@@ -28,8 +30,9 @@ jobs:
 
       - name: Install hledger
         run: |
-          sudo apt-get update
-          sudo apt-get install -y hledger
+          curl -fL "https://github.com/simonmichael/hledger/releases/download/${HLEDGER_VERSION}/hledger-linux-x64.tar.gz" \
+            | sudo tar -xz -f- -C /usr/local/bin hledger
+          hledger --version
 
       - name: Install dependencies
         run: just sync
