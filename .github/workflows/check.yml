@@ -1,0 +1,38 @@
+name: Check
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Set up just
+        uses: extractions/setup-just@v3
+
+      - name: Install hledger
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y hledger
+
+      - name: Install dependencies
+        run: just sync
+
+      - name: Run checks
+        run: just check
