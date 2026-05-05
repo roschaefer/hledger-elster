@@ -2,6 +2,8 @@
 
 `hledger-elster` generates German tax exports for `ELSTER.de` from an `hledger` journal.
 
+## Installation / Usage
+
 Outputs are written under `data/exports/<year>/` by default:
 
 - `steuererklaerung/`: summary CSV files plus `steuererklaerung.xlsx`
@@ -31,15 +33,43 @@ Typical development commands:
 just test
 ```
 
-Executable acceptance specifications live in [`docs/specs/`](./docs/specs/).
-They are written as Markdown and generated into Behave feature files.
-
 Sanitized public fixtures live under [`examples/`](./examples). Keep real journals,
 tax filings, and verification data outside this repository.
 
----
+## Audience
 
-## Account tag reference
+This tool currently targets my own situation: I am a software developer working
+remotely as a freelancer (`selbstständig`) and as a `Freiberufler`. I do not pay
+Gewerbesteuer, but I do need to file EÜR, USt, and ESt.
+
+I am not an expert in German tax law, and calculations may contain errors. Bug
+fixes and contributions are very welcome, especially for additional tax
+scenarios. The goal is to cover more cases over time through executable examples.
+
+## Specification By Example
+
+The acceptance tests are written as Markdown specifications. Each fenced
+`gherkin` block is generated into a Behave feature file, and pytest checks that
+the generated files do not drift from the Markdown source. The
+[specification index](./docs/specs/) explains the Markdown-to-feature generation
+contract and links back to the source files.
+
+Executable specifications:
+
+- [Business accounts](./docs/specs/business-accounts.md)
+- [Donations](./docs/specs/donations.md)
+- [Export hygiene](./docs/specs/export-hygiene.md)
+- [Health care and insurance](./docs/specs/health-care.md)
+- [VAT payments](./docs/specs/vat.md)
+
+Run them with:
+
+```bash
+just generate-features
+just acceptance
+```
+
+## Documentation
 
 The tool reads account-level metadata from hledger account directives (`;` comments).
 All tags are prefixed with `elster_`. Tags fall into three categories:

@@ -28,7 +28,10 @@ typecheck:
 generate-features:
     uv run python scripts/generate_features.py
 
+check-generated-features: generate-features
+    git diff --exit-code -- tests/features/generated
+
 acceptance: generate-features
     uv run behave tests/features
 
-check: check-format lint typecheck test acceptance
+check: check-format lint typecheck test check-generated-features acceptance
