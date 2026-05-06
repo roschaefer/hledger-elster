@@ -10,119 +10,79 @@ Feature: VAT cash settlement
       enabled = false
       """
 
-  Scenario: Booking year and VAT period are evaluated independently
+  Scenario: EÜR follows the booking year while USt settles against the tax period
     Given a file named "journal.journal" with content:
       """
       account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-      account expenses:taxes:umsatzsteuer  ; elster_role:vat_payment
+      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
       account expenses:taxes:umsatzsteuer:vorauszahlung  ; elster_role:vat_advance
       account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
-      account expenses:taxes:umsatzsteuer:vorauszahlung:2025  ; elster_period:2025
 
-      2024-02-15 VAT advance 2024
-          expenses:taxes:umsatzsteuer:vorauszahlung:2024  100.00 EUR
-          assets:bank:business                           -100.00 EUR
-
-      2024-03-01 VAT advance reversal 2024
-          expenses:taxes:umsatzsteuer:vorauszahlung:2024  -40.00 EUR
-          assets:bank:business                             40.00 EUR
-
-      2024-08-22 VAT final refund for 2023
-          expenses:taxes:umsatzsteuer  -25.00 EUR
-          assets:bank:business          25.00 EUR
+      2024-12-20 Client invoice
+          income:business       -119.00 EUR
+          assets:bank:business   119.00 EUR
 
       2025-01-10 Late VAT advance for 2024
-          expenses:taxes:umsatzsteuer:vorauszahlung:2024   30.00 EUR
-          assets:bank:business                             -30.00 EUR
-
-      2025-02-14 VAT advance 2025
-          expenses:taxes:umsatzsteuer:vorauszahlung:2025  200.00 EUR
-          assets:bank:business                           -200.00 EUR
-
-      2025-03-02 VAT advance reversal 2025
-          expenses:taxes:umsatzsteuer:vorauszahlung:2025  -50.00 EUR
-          assets:bank:business                             50.00 EUR
-
-      2025-09-01 VAT final payment 2025
-          expenses:taxes:umsatzsteuer   80.00 EUR
-          assets:bank:business         -80.00 EUR
+          expenses:taxes:umsatzsteuer:vorauszahlung:2024   19.00 EUR
+          assets:bank:business                             -19.00 EUR
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the CSV file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
-      | Kennzahl                                                    | 2024    |
-      | # Betriebseinnahmen                                         |         |
-      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 0.00    |
-      | Vereinnahmte Umsatzsteuer                                   | 0.00    |
-      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 25.00   |
-      | Summe Betriebseinnahmen                                     | 25.00   |
-      |                                                             |         |
-      | # Betriebsausgaben                                          |         |
-      |                                                             |         |
-      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 100.00  |
-      | Summe Betriebskosten                                        | 0.00    |
-      | Summe Betriebsausgaben                                      | 100.00  |
-      |                                                             |         |
-      | # Ermittlung des Gewinns                                    |         |
-      | Steuerpflichtiger Gewinn/Verlust                            | -100.00 |
-      |                                                             |         |
-      | # Zusätzliche Angaben bei Einzelunternehmen                 |         |
-      | Entnahmen                                                   | 0.00    |
-      | Einlagen                                                    | 0.00    |
+      | Kennzahl                                                    | 2024   |
+      | # Betriebseinnahmen                                         |        |
+      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 100.00 |
+      | Vereinnahmte Umsatzsteuer                                   | 19.00  |
+      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0.00   |
+      | Summe Betriebseinnahmen                                     | 119.00 |
+      |                                                             |        |
+      | # Betriebsausgaben                                          |        |
+      |                                                             |        |
+      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0.00   |
+      | Summe Betriebskosten                                        | 0.00   |
+      | Summe Betriebsausgaben                                      | 0.00   |
+      |                                                             |        |
+      | # Ermittlung des Gewinns                                    |        |
+      | Steuerpflichtiger Gewinn/Verlust                            | 119.00 |
+      |                                                             |        |
+      | # Zusätzliche Angaben bei Einzelunternehmen                 |        |
+      | Entnahmen                                                   | 0.00   |
+      | Einlagen                                                    | 0.00   |
     And the CSV file "export/2025/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
-      | Kennzahl                                                    | 2025    |
-      | # Betriebseinnahmen                                         |         |
-      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 0.00    |
-      | Vereinnahmte Umsatzsteuer                                   | 0.00    |
-      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0.00    |
-      | Summe Betriebseinnahmen                                     | 0.00    |
-      |                                                             |         |
-      | # Betriebsausgaben                                          |         |
-      |                                                             |         |
-      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 310.00  |
-      | Summe Betriebskosten                                        | 0.00    |
-      | Summe Betriebsausgaben                                      | 310.00  |
-      |                                                             |         |
-      | # Ermittlung des Gewinns                                    |         |
-      | Steuerpflichtiger Gewinn/Verlust                            | -310.00 |
-      |                                                             |         |
-      | # Zusätzliche Angaben bei Einzelunternehmen                 |         |
-      | Entnahmen                                                   | 0.00    |
-      | Einlagen                                                    | 0.00    |
+      | Kennzahl                                                    | 2025   |
+      | # Betriebseinnahmen                                         |        |
+      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 0.00   |
+      | Vereinnahmte Umsatzsteuer                                   | 0.00   |
+      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0.00   |
+      | Summe Betriebseinnahmen                                     | 0.00   |
+      |                                                             |        |
+      | # Betriebsausgaben                                          |        |
+      |                                                             |        |
+      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 19.00  |
+      | Summe Betriebskosten                                        | 0.00   |
+      | Summe Betriebsausgaben                                      | 19.00  |
+      |                                                             |        |
+      | # Ermittlung des Gewinns                                    |        |
+      | Steuerpflichtiger Gewinn/Verlust                            | -19.00 |
+      |                                                             |        |
+      | # Zusätzliche Angaben bei Einzelunternehmen                 |        |
+      | Entnahmen                                                   | 0.00   |
+      | Einlagen                                                    | 0.00   |
     And the CSV file "export/2024/steuererklaerung/umsatzsteuer.csv" should contain exactly:
       | Zeitraum | Einnahme (Netto) | Vereinnahmte Umsatzsteuer | Abziehbare Vorsteuerbeträge | Vorauszahlungssoll | Bereits Entrichtet |
-      | 2024-01  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-02  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-03  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-04  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-05  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-06  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-07  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-08  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-09  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-10  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-11  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024-12  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024 Q1  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024 Q2  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024 Q3  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024 Q4  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2024     | 0.00             | 0.00                      | 0.00                        | 0.00               | 90.00              |
-    And the CSV file "export/2025/steuererklaerung/umsatzsteuer.csv" should contain exactly:
-      | Zeitraum | Einnahme (Netto) | Vereinnahmte Umsatzsteuer | Abziehbare Vorsteuerbeträge | Vorauszahlungssoll | Bereits Entrichtet |
-      | 2025-01  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-02  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-03  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-04  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-05  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-06  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-07  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-08  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-09  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-10  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-11  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025-12  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025 Q1  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025 Q2  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025 Q3  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025 Q4  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
-      | 2025     | 0.00             | 0.00                      | 0.00                        | 0.00               | 150.00             |
+      | 2024-01  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-02  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-03  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-04  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-05  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-06  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-07  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-08  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-09  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-10  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-11  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024-12  | 100.00           | 19.00                     | 0.00                        | 19.00               |                    |
+      | 2024 Q1  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024 Q2  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024 Q3  | 0.00             | 0.00                      | 0.00                        | 0.00                |                    |
+      | 2024 Q4  | 100.00           | 19.00                     | 0.00                        | 19.00               |                    |
+      | 2024     | 100.00           | 19.00                     | 0.00                        | 19.00               | 19.00              |
