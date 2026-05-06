@@ -356,7 +356,7 @@ def _ignored_sheet(ds: TaxDataset, year: int) -> TrailSheet:
 
 
 def _vat_advance_sheet(ds: TaxDataset, year: int) -> TrailSheet:
-    invalid = [p for p in ds if p.tax_role == "vat_advance" and p.amount != ZERO and p.tax_period_year == 0]
+    invalid = [p for p in ds if p.tax_role == "vat_advance" and p.amount != ZERO and not p.tax_period]
     if invalid:
         examples = ", ".join(
             f"{p.posting_date} {p.description} ({p.source_account} -> {p.counter_account})" for p in invalid[:3]
@@ -379,7 +379,7 @@ def _vat_advance_sheet(ds: TaxDataset, year: int) -> TrailSheet:
                     [
                         _bank_label(p),
                         str(p.posting_date),
-                        str(p.tax_period_year),
+                        p.tax_period,
                         p.description,
                         _fmt(_q(amount)),
                     ],

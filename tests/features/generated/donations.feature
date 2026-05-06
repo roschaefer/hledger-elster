@@ -3,6 +3,13 @@
 
 Feature: Donations
 
+  Background:
+    Given a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
+
   Scenario: Donations are exported to Einkommensteuer
     Given a file named "journal.journal" with content:
       """
@@ -23,11 +30,6 @@ Feature: Donations
       2024-12-02 Example political party donation
           expenses:politics:party    100.00 EUR
           assets:bank:checking      -100.00 EUR
-      """
-    And a file named "elster.toml" with content:
-      """
-      [euer.home_office_pauschale]
-      enabled = false
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:

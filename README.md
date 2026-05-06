@@ -72,13 +72,13 @@ contract and links back to the source files.
 
 Executable specifications:
 
-- [Business accounts](./docs/specs/business-accounts.md)
 - [Configuration](./docs/specs/configuration.md)
-- [Donations](./docs/specs/donations.md)
 - [Export hygiene](./docs/specs/export-hygiene.md)
-- [Form, section, and item tags](./docs/specs/form-section-item-tags.md)
+- [Business expenses and income](./docs/specs/form-section-item-tags.md)
+- [VAT payments and settlements](./docs/specs/vat.md)
+- [Business vs. private accounts](./docs/specs/business-accounts.md)
 - [Health care and insurance](./docs/specs/health-care.md)
-- [VAT payments](./docs/specs/vat.md)
+- [Donations](./docs/specs/donations.md)
 
 Run them with:
 

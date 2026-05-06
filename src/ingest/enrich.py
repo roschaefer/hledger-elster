@@ -70,6 +70,19 @@ def _to_decimal(value: str | None, default: str = "0") -> Decimal:
     return Decimal(value or default)
 
 
+def _parse_tax_period(value: str) -> tuple[str, int]:
+    if not value:
+        return "", 0
+    if match := re.fullmatch(r"(\d{4})", value):
+        return value, int(match.group(1))
+    if match := re.fullmatch(r"(\d{4})-Q([1-4])", value):
+        year, quarter = match.groups()
+        return f"{year} Q{quarter}", int(year)
+    if match := re.fullmatch(r"(\d{4})-(0[1-9]|1[0-2])", value):
+        return value, int(match.group(1))
+    raise ValueError(f"Unsupported elster_period: {value}. Use YYYY, YYYY-Qn, or YYYY-MM.")
+
+
 def _comment_has_ignore(*comments: str) -> bool:
     pattern = re.compile(r"(^|[,\s])elster_role\s*:\s*ignore($|[,\s])")
     return any(pattern.search(comment or "") for comment in comments)
@@ -134,6 +147,7 @@ def _enrich_posting(
             label="",
             source_label=source_label,
             section="",
+            tax_period="",
             tax_period_year=0,
             source_is_business=source_tags.get("elster_account") == "business",
         )
@@ -158,7 +172,7 @@ def _enrich_posting(
     label = tags.get("elster_item", "")
     section = tags.get("elster_section", "")
     tax_period_raw = tags.get("elster_period", "")
-    tax_period_year = int(tax_period_raw) if tax_period_raw else 0
+    tax_period, tax_period_year = _parse_tax_period(tax_period_raw)
 
     # GWG: elster_afa_years always overrides inherited elster_deduction
     if afa_years > 0:
@@ -197,6 +211,7 @@ def _enrich_posting(
         label=label,
         source_label=source_label,
         section=section,
+        tax_period=tax_period,
         tax_period_year=tax_period_year,
         source_is_business=source_tags.get("elster_account") == "business",
     )

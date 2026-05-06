@@ -19,10 +19,10 @@ just acceptance
 
 Specifications:
 
-- [Business accounts](./business-accounts.md)
 - [Configuration](./configuration.md)
-- [Donations](./donations.md)
 - [Export hygiene](./export-hygiene.md)
-- [Form, section, and item tags](./form-section-item-tags.md)
+- [Business expenses and income](./form-section-item-tags.md)
+- [VAT payments and settlements](./vat.md)
+- [Business vs. private accounts](./business-accounts.md)
 - [Health care and insurance](./health-care.md)
-- [VAT payments](./vat.md)
+- [Donations](./donations.md)

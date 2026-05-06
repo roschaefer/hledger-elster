@@ -1,49 +1,13 @@
 # Generated from docs/specs/vat.md
 # Run: python scripts/generate_features.py
 
-Feature: VAT payments
+Feature: VAT cash settlement
 
-  Scenario: VAT advance reversals reduce the amount already paid
-    Given a file named "journal.journal" with content:
-      """
-      account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-      account expenses:taxes:umsatzsteuer:vorauszahlung  ; elster_role:vat_advance, elster_item:USt-Vorauszahlung
-      account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
-
-      2024-02-15 VAT advance
-          expenses:taxes:umsatzsteuer:vorauszahlung:2024  100.00 EUR
-          assets:bank:business                           -100.00 EUR
-
-      2024-03-01 VAT advance reversal
-          expenses:taxes:umsatzsteuer:vorauszahlung:2024  -40.00 EUR
-          assets:bank:business                             40.00 EUR
-      """
-    And a file named "elster.toml" with content:
+  Background:
+    Given a file named "elster.toml" with content:
       """
       [euer.home_office_pauschale]
       enabled = false
-      """
-    When I run "hledger elster -f journal.journal --config elster.toml -o export"
-    Then the file "export/2024/steuererklaerung/umsatzsteuer.csv" should contain exactly:
-      """
-      Zeitraum,Einnahme (Netto),Vereinnahmte Umsatzsteuer,Abziehbare Vorsteuerbeträge,Vorauszahlungssoll,Bereits Entrichtet
-      2024-01,0.00,0.00,0.00,0.00,
-      2024-02,0.00,0.00,0.00,0.00,
-      2024-03,0.00,0.00,0.00,0.00,
-      2024-04,0.00,0.00,0.00,0.00,
-      2024-05,0.00,0.00,0.00,0.00,
-      2024-06,0.00,0.00,0.00,0.00,
-      2024-07,0.00,0.00,0.00,0.00,
-      2024-08,0.00,0.00,0.00,0.00,
-      2024-09,0.00,0.00,0.00,0.00,
-      2024-10,0.00,0.00,0.00,0.00,
-      2024-11,0.00,0.00,0.00,0.00,
-      2024-12,0.00,0.00,0.00,0.00,
-      2024 Q1,0.00,0.00,0.00,0.00,
-      2024 Q2,0.00,0.00,0.00,0.00,
-      2024 Q3,0.00,0.00,0.00,0.00,
-      2024 Q4,0.00,0.00,0.00,0.00,
-      2024,0.00,0.00,0.00,0.00,60.00
       """
 
   Scenario: Booking year and VAT period are evaluated independently
@@ -82,11 +46,6 @@ Feature: VAT payments
       2025-09-01 VAT final payment 2025
           expenses:taxes:umsatzsteuer   80.00 EUR
           assets:bank:business         -80.00 EUR
-      """
-    And a file named "elster.toml" with content:
-      """
-      [euer.home_office_pauschale]
-      enabled = false
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:

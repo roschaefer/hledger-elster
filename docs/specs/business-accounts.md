@@ -1,4 +1,4 @@
-# Business Accounts
+# Business Vs. Private Accounts
 
 Business income is identified by the combination of account metadata and the
 counterposting account:
@@ -13,8 +13,18 @@ counterposting account:
   `elster_role:ignore` on internal funding movements when the actual business
   expense is booked in a separate transaction.
 
+In the EÜR output, `Entnahmen` are owner draws from the business sphere into the
+private sphere. `Einlagen` are owner contributions into the business sphere.
+
 ```gherkin
-Feature: Business accounts
+Feature: Business vs. private accounts
+
+  Background:
+    Given a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
 
   Scenario: Business account postings classify income, owner draws, and owner contributions
     Given a file named "journal.journal" with content:
@@ -39,11 +49,6 @@ Feature: Business accounts
       2024-09-03 Internal transfer  ; elster_role:ignore
           transfers:clearing      75.00 EUR
           assets:bank:business   -75.00 EUR
-      """
-    And a file named "elster.toml" with content:
-      """
-      [euer.home_office_pauschale]
-      enabled = false
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:

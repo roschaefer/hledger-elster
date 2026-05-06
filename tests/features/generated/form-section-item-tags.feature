@@ -1,7 +1,14 @@
 # Generated from docs/specs/form-section-item-tags.md
 # Run: python scripts/generate_features.py
 
-Feature: Form, section, and item tags
+Feature: Business expenses and income
+
+  Background:
+    Given a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
 
   Scenario: Form tags select exports and item tags translate or aggregate accounts
     Given a file named "journal.journal" with content:
@@ -24,11 +31,6 @@ Feature: Form, section, and item tags
       2024-02-02 International donation
           expenses:charity:international   30.00 EUR
           assets:bank:private             -30.00 EUR
-      """
-    And a file named "elster.toml" with content:
-      """
-      [euer.home_office_pauschale]
-      enabled = false
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:

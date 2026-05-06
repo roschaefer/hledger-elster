@@ -7,6 +7,13 @@ export tree can be mistaken for current tax artifacts.
 ```gherkin
 Feature: Export hygiene
 
+  Background:
+    Given a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
+
   Scenario: Stale files in the export directory are reported
     Given a file named "journal.journal" with content:
       """
@@ -20,11 +27,6 @@ Feature: Export hygiene
     And a file named "export/2024/steuererklaerung/stale.csv" with content:
       """
       stale
-      """
-    And a file named "elster.toml" with content:
-      """
-      [euer.home_office_pauschale]
-      enabled = false
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then stderr should contain:

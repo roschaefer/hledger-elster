@@ -13,6 +13,13 @@ contract is:
 ```gherkin
 Feature: Health care and insurance
 
+  Background:
+    Given a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = false
+      """
+
   Scenario: Non-deductible Vorsorgeaufwand rows are listed but not included in deductible totals
     Given a file named "journal.journal" with content:
       """
@@ -41,11 +48,6 @@ Feature: Health care and insurance
       2024-06-15 Liability insurance
           expenses:insurance:liability:haftpflicht   57.88 EUR
           assets:bank:checking                       -57.88 EUR
-      """
-    And a file named "elster.toml" with content:
-      """
-      [euer.home_office_pauschale]
-      enabled = false
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:

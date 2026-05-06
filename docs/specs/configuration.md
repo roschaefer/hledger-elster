@@ -3,14 +3,7 @@
 `hledger-elster` uses a TOML config file for user-specific tax assumptions that
 are not ledger transactions. The tool defaults the Home-Office-Pauschale to the
 maximum legal amount for the year, because human users are likely to forget this
-adjustment. Acceptance tests that focus on journal-derived behavior pass an
-explicit config file with the adjustment disabled.
-
-The Home-Office-Pauschale config stores days, not amounts. The tool applies the
-calendar-year policy:
-
-- 2020-2022: 5 EUR per day, capped at 600 EUR.
-- 2023 and later: 6 EUR per day, capped at 1260 EUR.
+adjustment.
 
 ```gherkin
 Feature: Configuration
@@ -64,6 +57,19 @@ Feature: Configuration
       [euer.home_office_pauschale.days]
       # 2024 = 210
       """
+```
+
+The Home-Office-Pauschale config stores days, not amounts. The tool applies the
+calendar-year policy:
+
+- 2020-2022: 5 EUR per day, capped at 600 EUR.
+- 2023 and later: 6 EUR per day, capped at 1260 EUR.
+
+Acceptance tests that focus on journal-derived behavior pass an explicit config
+file with the adjustment disabled.
+
+```gherkin
+Feature: Home-Office-Pauschale configuration
 
   Scenario: A custom config changes the Home-Office-Pauschale
     Given a file named "journal.journal" with content:

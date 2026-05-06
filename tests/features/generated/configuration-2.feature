@@ -1,38 +1,26 @@
-# Generated from docs/specs/business-accounts.md
+# Generated from docs/specs/configuration.md
 # Run: python scripts/generate_features.py
 
-Feature: Business vs. private accounts
+Feature: Home-Office-Pauschale configuration
 
-  Background:
-    Given a file named "elster.toml" with content:
-      """
-      [euer.home_office_pauschale]
-      enabled = false
-      """
-
-  Scenario: Business account postings classify income, owner draws, and owner contributions
+  Scenario: A custom config changes the Home-Office-Pauschale
     Given a file named "journal.journal" with content:
       """
       account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-      account assets:bank:private   ; elster_account:private, elster_item:Girokonto
-      account transfers:clearing
       account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
 
-      2024-01-15 Client invoice
+      2024-01-10 Client invoice
           income:business       -119.00 EUR
           assets:bank:business   119.00 EUR
+      """
+    And a file named "elster.toml" with content:
+      """
+      [euer.home_office_pauschale]
+      enabled = true
+      default_days = "max"
 
-      2024-09-01 Owner draw
-          liabilities:owner       50.00 EUR
-          assets:bank:business   -50.00 EUR
-
-      2024-09-02 Owner contribution
-          liabilities:owner      -40.00 EUR
-          assets:bank:business    40.00 EUR
-
-      2024-09-03 Internal transfer  ; elster_role:ignore
-          transfers:clearing      75.00 EUR
-          assets:bank:business   -75.00 EUR
+      [euer.home_office_pauschale.days]
+      2024 = 10
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
     Then the file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
@@ -46,14 +34,15 @@ Feature: Business vs. private accounts
       ,
       # Betriebsausgaben,
       ,
+      Home-Office-Pauschale,60.00
       An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer,0.00
       Summe Betriebskosten,0.00
-      Summe Betriebsausgaben,0.00
+      Summe Betriebsausgaben,60.00
       ,
       # Ermittlung des Gewinns,
-      Steuerpflichtiger Gewinn/Verlust,119.00
+      Steuerpflichtiger Gewinn/Verlust,59.00
       ,
       # Zusätzliche Angaben bei Einzelunternehmen,
-      Entnahmen,50.00
-      Einlagen,40.00
+      Entnahmen,0.00
+      Einlagen,0.00
       """

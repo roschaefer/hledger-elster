@@ -37,7 +37,8 @@ class TaxPosting:
     label: str = ""  # Report item from elster_item tag on counter account
     source_label: str = ""  # Report item from elster_item tag on source account
     section: str = ""  # Section from elster_section tag (EÜR, ESt, ...)
-    tax_period_year: int = 0  # Fiscal year this posting belongs to (from elster_period tag); 0 = use transaction year
+    tax_period: str = ""  # Fiscal period this posting belongs to (from elster_period tag)
+    tax_period_year: int = 0  # Fiscal year from elster_period; 0 = use transaction year
     source_is_business: bool = False  # True when source account carries elster_account:business
 
     @property
