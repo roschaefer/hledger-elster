@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import os
 import shlex
 import subprocess
@@ -46,6 +47,13 @@ def file_should_contain_exactly(context, path: str) -> None:
     assert actual_path.read_text(encoding="utf-8") == _doc_string(context)
 
 
+@then(r'the CSV file "(?P<path>[^"]+)" should contain exactly:')
+def csv_file_should_contain_exactly(context, path: str) -> None:
+    actual_path = _resolve_work_path(context, path)
+    assert actual_path.exists(), f"Expected output file was not created: {path}"
+    assert _read_csv(actual_path) == _gherkin_table(context)
+
+
 @then(r"stderr should contain:")
 def stderr_should_contain(context) -> None:
     assert context.last_result is not None, "No command has been run"
@@ -69,3 +77,14 @@ def _resolve_work_path(context, path: str) -> Path:
 
 def _doc_string(context) -> str:
     return context.text + "\n"
+
+
+def _read_csv(path: Path) -> list[list[str]]:
+    with path.open(encoding="utf-8", newline="") as fh:
+        return list(csv.reader(fh))
+
+
+def _gherkin_table(context) -> list[list[str]]:
+    if context.table is None:
+        raise AssertionError("Expected a Gherkin table")
+    return [list(context.table.headings), *[list(row.cells) for row in context.table.rows]]

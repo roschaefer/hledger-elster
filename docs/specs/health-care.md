@@ -50,22 +50,20 @@ Feature: Health care and insurance
           assets:bank:checking                       -57.88 EUR
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
-    Then the file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:
-      """
-      Kennzahl,2024
-      # Vorsorgeaufwand,
-      Haftpflichtversicherung,57.88
-      Krankenversicherung,840.00
-      Kurzzeit-Auslandskrankenversicherung,9.50
-      Langzeit-Auslandskrankenversicherung,343.50
-      Pflegeversicherung,240.00
-      Zusatzbeitrag,120.00
-      ,
-      Summe privat gezahlt,1610.88
-      Abziehbar (Netto),0.00
-      Gezahlte Vorsteuer,0.00
-      Abziehbare Vorsteuer,0.00
-      Summe abziehbar,0.00
-      ,
-      """
+    Then the CSV file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:
+      | Kennzahl                             | 2024    |
+      | # Vorsorgeaufwand                    |         |
+      | Haftpflichtversicherung              | 57.88   |
+      | Krankenversicherung                  | 840.00  |
+      | Kurzzeit-Auslandskrankenversicherung | 9.50    |
+      | Langzeit-Auslandskrankenversicherung | 343.50  |
+      | Pflegeversicherung                   | 240.00  |
+      | Zusatzbeitrag                        | 120.00  |
+      |                                      |         |
+      | Summe privat gezahlt                 | 1610.88 |
+      | Abziehbar (Netto)                    | 0.00    |
+      | Gezahlte Vorsteuer                   | 0.00    |
+      | Abziehbare Vorsteuer                 | 0.00    |
+      | Summe abziehbar                      | 0.00    |
+      |                                      |         |
 ```

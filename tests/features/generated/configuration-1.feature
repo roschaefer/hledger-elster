@@ -14,30 +14,27 @@ Feature: Configuration
           assets:bank:business   119.00 EUR
       """
     When I run "hledger elster -f journal.journal -o export"
-    Then the file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
-      """
-      Kennzahl,2024
-      # Betriebseinnahmen,
-      Umsatzsteuerpflichtige Betriebseinnahmen,100.00
-      Vereinnahmte Umsatzsteuer,19.00
-      Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer,0.00
-      Summe Betriebseinnahmen,119.00
-      ,
-      # Betriebsausgaben,
-      ,
-      Home-Office-Pauschale,1260.00
-      An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer,0.00
-      Summe Betriebskosten,0.00
-      Summe Betriebsausgaben,1260.00
-      ,
-      # Ermittlung des Gewinns,
-      Steuerpflichtiger Gewinn/Verlust,-1141.00
-      ,
-      # Zusätzliche Angaben bei Einzelunternehmen,
-      Entnahmen,0.00
-      Einlagen,0.00
-      """
-
+    Then the CSV file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
+      | Kennzahl                                                    | 2024     |
+      | # Betriebseinnahmen                                         |          |
+      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 100.00   |
+      | Vereinnahmte Umsatzsteuer                                   | 19.00    |
+      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0.00     |
+      | Summe Betriebseinnahmen                                     | 119.00   |
+      |                                                             |          |
+      | # Betriebsausgaben                                          |          |
+      |                                                             |          |
+      | Home-Office-Pauschale                                       | 1260.00  |
+      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0.00     |
+      | Summe Betriebskosten                                        | 0.00     |
+      | Summe Betriebsausgaben                                      | 1260.00  |
+      |                                                             |          |
+      | # Ermittlung des Gewinns                                    |          |
+      | Steuerpflichtiger Gewinn/Verlust                            | -1141.00 |
+      |                                                             |          |
+      | # Zusätzliche Angaben bei Einzelunternehmen                 |          |
+      | Entnahmen                                                   | 0.00     |
+      | Einlagen                                                    | 0.00     |
   Scenario: The default config can be generated
     When I run "hledger-elster init-config --output elster.toml"
     Then the file "elster.toml" should contain exactly:

@@ -33,60 +33,54 @@ Feature: Business expenses and income
           assets:bank:private             -30.00 EUR
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
-    Then the file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
-      """
-      Kennzahl,2024
-      # Betriebseinnahmen,
-      Umsatzsteuerpflichtige Betriebseinnahmen,100.00
-      Vereinnahmte Umsatzsteuer,19.00
-      Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer,0.00
-      Summe Betriebseinnahmen,119.00
-      ,
-      # Betriebsausgaben,
-      ,
-      An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer,0.00
-      Summe Betriebskosten,0.00
-      Summe Betriebsausgaben,0.00
-      ,
-      # Ermittlung des Gewinns,
-      Steuerpflichtiger Gewinn/Verlust,119.00
-      ,
-      # Zusätzliche Angaben bei Einzelunternehmen,
-      Entnahmen,0.00
-      Einlagen,0.00
-      """
-    And the file "export/2024/steuererklaerung/umsatzsteuer.csv" should contain exactly:
-      """
-      Zeitraum,Einnahme (Netto),Vereinnahmte Umsatzsteuer,Abziehbare Vorsteuerbeträge,Vorauszahlungssoll,Bereits Entrichtet
-      2024-01,100.00,19.00,0.00,19.00,
-      2024-02,0.00,0.00,0.00,0.00,
-      2024-03,0.00,0.00,0.00,0.00,
-      2024-04,0.00,0.00,0.00,0.00,
-      2024-05,0.00,0.00,0.00,0.00,
-      2024-06,0.00,0.00,0.00,0.00,
-      2024-07,0.00,0.00,0.00,0.00,
-      2024-08,0.00,0.00,0.00,0.00,
-      2024-09,0.00,0.00,0.00,0.00,
-      2024-10,0.00,0.00,0.00,0.00,
-      2024-11,0.00,0.00,0.00,0.00,
-      2024-12,0.00,0.00,0.00,0.00,
-      2024 Q1,100.00,19.00,0.00,19.00,
-      2024 Q2,0.00,0.00,0.00,0.00,
-      2024 Q3,0.00,0.00,0.00,0.00,
-      2024 Q4,0.00,0.00,0.00,0.00,
-      2024,100.00,19.00,0.00,19.00,0.00
-      """
-    And the file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:
-      """
-      Kennzahl,2024
-      # Sonderausgaben,
-      Internationale Hilfe,30.00
-      Spenden,50.00
-      ,
-      Summe privat gezahlt,80.00
-      Abziehbar (Netto),80.00
-      Gezahlte Vorsteuer,0.00
-      Abziehbare Vorsteuer,0.00
-      Summe abziehbar,80.00
-      ,
-      """
+    Then the CSV file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
+      | Kennzahl                                                    | 2024   |
+      | # Betriebseinnahmen                                         |        |
+      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 100.00 |
+      | Vereinnahmte Umsatzsteuer                                   | 19.00  |
+      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0.00   |
+      | Summe Betriebseinnahmen                                     | 119.00 |
+      |                                                             |        |
+      | # Betriebsausgaben                                          |        |
+      |                                                             |        |
+      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0.00   |
+      | Summe Betriebskosten                                        | 0.00   |
+      | Summe Betriebsausgaben                                      | 0.00   |
+      |                                                             |        |
+      | # Ermittlung des Gewinns                                    |        |
+      | Steuerpflichtiger Gewinn/Verlust                            | 119.00 |
+      |                                                             |        |
+      | # Zusätzliche Angaben bei Einzelunternehmen                 |        |
+      | Entnahmen                                                   | 0.00   |
+      | Einlagen                                                    | 0.00   |
+    And the CSV file "export/2024/steuererklaerung/umsatzsteuer.csv" should contain exactly:
+      | Zeitraum | Einnahme (Netto) | Vereinnahmte Umsatzsteuer | Abziehbare Vorsteuerbeträge | Vorauszahlungssoll | Bereits Entrichtet |
+      | 2024-01  | 100.00           | 19.00                     | 0.00                        | 19.00              |                    |
+      | 2024-02  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-03  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-04  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-05  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-06  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-07  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-08  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-09  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-10  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-11  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-12  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024 Q1  | 100.00           | 19.00                     | 0.00                        | 19.00              |                    |
+      | 2024 Q2  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024 Q3  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024 Q4  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024     | 100.00           | 19.00                     | 0.00                        | 19.00              | 0.00               |
+    And the CSV file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:
+      | Kennzahl             | 2024  |
+      | # Sonderausgaben     |       |
+      | Internationale Hilfe | 30.00 |
+      | Spenden              | 50.00 |
+      |                      |       |
+      | Summe privat gezahlt | 80.00 |
+      | Abziehbar (Netto)    | 80.00 |
+      | Gezahlte Vorsteuer   | 0.00  |
+      | Abziehbare Vorsteuer | 0.00  |
+      | Summe abziehbar      | 80.00 |
+      |                      |       |

@@ -32,32 +32,26 @@ Feature: Donations
           assets:bank:checking      -100.00 EUR
       """
     When I run "hledger elster -f journal.journal --config elster.toml -o export"
-    Then the file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:
-      """
-      Kennzahl,2024
-      # Sonderausgaben,
-      Parteispende (§34g/§10b manuell berechnen),MANUAL
-      Spenden,75.00
-      ,
-      Summe privat gezahlt,75.00
-      Abziehbar (Netto),75.00
-      Gezahlte Vorsteuer,0.00
-      Abziehbare Vorsteuer,0.00
-      Summe abziehbar,75.00
-      ,
-      """
-    And the file "export/2024/herleitung/einkommensteuer/spenden.csv" should contain exactly:
-      """
-      Konto,Datum,Beschreibung,Betrag
-      Girokonto,2024-12-01,Example charity donation,50.00
-      Girokonto,2024-12-02,Another charity donation,25.00
-      Σ Girokonto,,,75.00
-      GESAMT,,,75.00
-      """
-    And the file "export/2024/herleitung/einkommensteuer/parteispende-(§34g-§10b-manuell.csv" should contain exactly:
-      """
-      Konto,Datum,Beschreibung,Betrag
-      Girokonto,2024-12-02,Example political party donation,100.00
-      Σ Girokonto,,,100.00
-      GESAMT,,,100.00
-      """
+    Then the CSV file "export/2024/steuererklaerung/einkommensteuer.csv" should contain exactly:
+      | Kennzahl                                   | 2024   |
+      | # Sonderausgaben                           |        |
+      | Parteispende (§34g/§10b manuell berechnen) | MANUAL |
+      | Spenden                                    | 75.00  |
+      |                                            |        |
+      | Summe privat gezahlt                       | 75.00  |
+      | Abziehbar (Netto)                          | 75.00  |
+      | Gezahlte Vorsteuer                         | 0.00   |
+      | Abziehbare Vorsteuer                       | 0.00   |
+      | Summe abziehbar                            | 75.00  |
+      |                                            |        |
+    And the CSV file "export/2024/herleitung/einkommensteuer/spenden.csv" should contain exactly:
+      | Konto       | Datum      | Beschreibung             | Betrag |
+      | Girokonto   | 2024-12-01 | Example charity donation | 50.00  |
+      | Girokonto   | 2024-12-02 | Another charity donation | 25.00  |
+      | Σ Girokonto |            |                          | 75.00  |
+      | GESAMT      |            |                          | 75.00  |
+    And the CSV file "export/2024/herleitung/einkommensteuer/parteispende-(§34g-§10b-manuell.csv" should contain exactly:
+      | Konto       | Datum      | Beschreibung                     | Betrag |
+      | Girokonto   | 2024-12-02 | Example political party donation | 100.00 |
+      | Σ Girokonto |            |                                  | 100.00 |
+      | GESAMT      |            |                                  | 100.00 |
