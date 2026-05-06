@@ -13,6 +13,8 @@ three core tags:
 - `elster_item` is the report row. It can translate a technical account name into
   a user-facing row name and it also controls aggregation: child accounts inherit
   the closest parent item unless they define their own item.
+- `elster_deduction:non_deductible` keeps an EÜR expense visible as a row while
+  contributing `0.00` to deductible business expenses and input VAT.
 
 ```gherkin
 Feature: Business expenses and income
@@ -30,6 +32,7 @@ Feature: Business expenses and income
       account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
       account assets:bank:private   ; elster_account:private, elster_item:Girokonto
       account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+      account expenses:business:penalty  ; elster_form:einnahmenueberschussrechnung, elster_deduction:non_deductible, elster_item:Nicht abzugsfähige Betriebsausgabe, elster_section:Arbeitsmittel
       account expenses:charity      ; elster_form:einkommensteuer, elster_item:Spenden, elster_section:Sonderausgaben
       account expenses:charity:local
       account expenses:charity:international  ; elster_item:Internationale Hilfe
@@ -37,6 +40,10 @@ Feature: Business expenses and income
       2024-01-10 Client invoice
           income:business       -119.00 EUR
           assets:bank:business   119.00 EUR
+
+      2024-01-20 Non-deductible business penalty
+          expenses:business:penalty   40.00 EUR
+          assets:bank:business       -40.00 EUR
 
       2024-02-01 Local donation
           expenses:charity:local   50.00 EUR
@@ -56,6 +63,8 @@ Feature: Business expenses and income
       | Summe Betriebseinnahmen                                     | 119.00 |
       |                                                             |        |
       | # Betriebsausgaben                                          |        |
+      | # Arbeitsmittel                                             |        |
+      | Nicht abzugsfähige Betriebsausgabe                          | 0.00   |
       |                                                             |        |
       | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0.00   |
       | Summe Betriebskosten                                        | 0.00   |
@@ -91,11 +100,4 @@ Feature: Business expenses and income
       | # Sonderausgaben     |       |
       | Internationale Hilfe | 30.00 |
       | Spenden              | 50.00 |
-      |                      |       |
-      | Summe privat gezahlt | 80.00 |
-      | Abziehbar (Netto)    | 80.00 |
-      | Gezahlte Vorsteuer   | 0.00  |
-      | Abziehbare Vorsteuer | 0.00  |
-      | Summe abziehbar      | 80.00 |
-      |                      |       |
 ```

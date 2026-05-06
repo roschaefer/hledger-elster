@@ -119,7 +119,7 @@ account expenses:phone                ; elster_form:einnahmenueberschussrechnung
 account expenses:business:hardware:computer ; elster_form:einnahmenueberschussrechnung, elster_afa_years:3, elster_item:Computer-Kauf, elster_section:Arbeitsmittel
 
 ; ── Private expenses (ESt) ────────────────────────────────────────────────────
-account expenses:insurance            ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig
+account expenses:insurance            ; elster_form:einkommensteuer
 account expenses:insurance:health:kv  ; elster_item:Krankenversicherung,  elster_section:Vorsorgeaufwand
 account expenses:insurance:health:pv  ; elster_item:Pflegeversicherung,   elster_section:Vorsorgeaufwand
 
@@ -195,12 +195,12 @@ maximum does not match your situation.
 | `elster_vat_rate` | `0.19` \| `0.07` \| `0.00` | VAT rate used to split gross amounts into net + VAT. On income accounts, determines collected VAT. On expense accounts, determines deductible input VAT (subject to `elster_vat_share`). |
 | `elster_deduction` | `full` | The full net amount is deductible as a business expense. |
 | `elster_deduction` | `proportional` | Only the business-use fraction is deductible. Set `elster_expense_share` and `elster_vat_share` to the business-use percentage. |
-| `elster_deduction` | `nicht_abzugsfaehig` | Not deductible as a business expense (e.g. private insurance). The gross amount is still reported on the ESt form. |
+| `elster_deduction` | `non_deductible` | Show an EÜR expense row but count `0.00` toward deductible business expenses and input VAT. |
 | `elster_deduction` | `afa` | Triggers straight-line depreciation. Set `elster_afa_years` to the useful life. Net cost above €800 is depreciated; at or below €800 it is treated as `full` (GWG). |
 | `elster_expense_share` | decimal (e.g. `0.20`) | Fraction of the net amount that is a deductible business expense. Only effective when `elster_deduction:proportional`. |
 | `elster_vat_share` | decimal (e.g. `0.20`) | Fraction of input VAT that is deductible. Only effective when `elster_deduction:proportional`. |
 | `elster_afa_years` | integer (e.g. `3`) | Useful life in years for straight-line depreciation. Only effective when `elster_deduction:afa`. |
-| `elster_calculation` | `manual` | Lists the account in the form but writes `MANUAL` instead of a calculated amount. Manual rows are excluded from calculated ESt summary totals; the Herleitung still shows the booked payment amount. Use this for unimplemented or externally calculated cases such as political party donations. |
+| `elster_calculation` | `manual` | Lists the account in the form but writes `MANUAL` instead of a calculated amount. The Herleitung still shows the booked payment amount. Use this for unimplemented or externally calculated cases such as political party donations. |
 
 ---
 

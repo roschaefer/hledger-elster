@@ -7,8 +7,6 @@ contract is:
 - `elster_section:Vorsorgeaufwand` groups the labels under the Vorsorgeaufwand
   section.
 - `elster_item` becomes the visible row name in the CSV.
-- `elster_deduction:nicht_abzugsfaehig` keeps the booked payments visible while
-  excluding them from the calculated deductible totals.
 
 ```gherkin
 Feature: Health care and insurance
@@ -20,16 +18,16 @@ Feature: Health care and insurance
       enabled = false
       """
 
-  Scenario: Non-deductible Vorsorgeaufwand rows are listed but not included in deductible totals
+  Scenario: Vorsorgeaufwand rows are listed for the income tax declaration
     Given a file named "journal.journal" with content:
       """
       account assets:bank:checking  ; elster_account:private, elster_item:Girokonto
-      account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Krankenversicherung, elster_section:Vorsorgeaufwand
-      account expenses:private:health-care:pv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Pflegeversicherung, elster_section:Vorsorgeaufwand
-      account expenses:private:health-care:zb  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Zusatzbeitrag, elster_section:Vorsorgeaufwand
-      account expenses:insurance:travel:long-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Langzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
-      account expenses:insurance:travel:short-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Kurzzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
-      account expenses:insurance:liability:haftpflicht  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Haftpflichtversicherung, elster_section:Vorsorgeaufwand
+      account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_item:Krankenversicherung, elster_section:Vorsorgeaufwand
+      account expenses:private:health-care:pv  ; elster_form:einkommensteuer, elster_item:Pflegeversicherung, elster_section:Vorsorgeaufwand
+      account expenses:private:health-care:zb  ; elster_form:einkommensteuer, elster_item:Zusatzbeitrag, elster_section:Vorsorgeaufwand
+      account expenses:insurance:travel:long-term-health-care  ; elster_form:einkommensteuer, elster_item:Langzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
+      account expenses:insurance:travel:short-term-health-care  ; elster_form:einkommensteuer, elster_item:Kurzzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
+      account expenses:insurance:liability:haftpflicht  ; elster_form:einkommensteuer, elster_item:Haftpflichtversicherung, elster_section:Vorsorgeaufwand
 
       2024-06-01 Health care contribution
           expenses:private:health-care:kv   840.00 EUR
@@ -59,11 +57,4 @@ Feature: Health care and insurance
       | Langzeit-Auslandskrankenversicherung | 343.50  |
       | Pflegeversicherung                   | 240.00  |
       | Zusatzbeitrag                        | 120.00  |
-      |                                      |         |
-      | Summe privat gezahlt                 | 1610.88 |
-      | Abziehbar (Netto)                    | 0.00    |
-      | Gezahlte Vorsteuer                   | 0.00    |
-      | Abziehbare Vorsteuer                 | 0.00    |
-      | Summe abziehbar                      | 0.00    |
-      |                                      |         |
 ```

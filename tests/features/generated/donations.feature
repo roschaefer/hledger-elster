@@ -37,13 +37,6 @@ Feature: Donations
       | # Sonderausgaben                           |        |
       | Parteispende (§34g/§10b manuell berechnen) | MANUAL |
       | Spenden                                    | 75.00  |
-      |                                            |        |
-      | Summe privat gezahlt                       | 75.00  |
-      | Abziehbar (Netto)                          | 75.00  |
-      | Gezahlte Vorsteuer                         | 0.00   |
-      | Abziehbare Vorsteuer                       | 0.00   |
-      | Summe abziehbar                            | 75.00  |
-      |                                            |        |
     And the CSV file "export/2024/herleitung/einkommensteuer/spenden.csv" should contain exactly:
       | Konto       | Datum      | Beschreibung             | Betrag |
       | Girokonto   | 2024-12-01 | Example charity donation | 50.00  |

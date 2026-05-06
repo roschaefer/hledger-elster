@@ -43,7 +43,6 @@ def test_generate_report_writes_expected_example_outputs(monkeypatch, tmp_path: 
     )
     assert next(row for row in est_2024 if row["Kennzahl"] == "Kurzzeit-Auslandskrankenversicherung")["2024"] == "9.50"
     assert next(row for row in est_2024 if row["Kennzahl"] == "Haftpflichtversicherung")["2024"] == "57.88"
-    assert next(row for row in est_2024 if row["Kennzahl"] == "Summe privat gezahlt")["2024"] == "1610.88"
     assert next(row for row in est_2025 if row["Kennzahl"] == "Krankenversicherung")["2025"] == "910.00"
     assert next(row for row in est_2025 if row["Kennzahl"] == "Pflegeversicherung")["2025"] == "260.00"
     assert next(row for row in est_2025 if row["Kennzahl"] == "Zusatzbeitrag")["2025"] == "130.00"

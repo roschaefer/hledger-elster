@@ -11,13 +11,13 @@ account expenses:business:education:conferences  ; elster_item:Konferenzen, elst
 account expenses:business:banking  ; elster_item:Kontofuehrungsgebuehren, elster_section:Arbeitsmittel
 account expenses:business:hardware:computer  ; elster_form:einnahmenueberschussrechnung, elster_afa_years:3, elster_item:Computer-Kauf
 account expenses:phone  ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat_share:0.20, elster_vat_rate:0.19, elster_item:Mobiltelefon, elster_section:Arbeitsmittel
-account expenses:insurance  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig
-account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Krankenversicherung, elster_section:Vorsorgeaufwand
-account expenses:private:health-care:pv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Pflegeversicherung, elster_section:Vorsorgeaufwand
-account expenses:private:health-care:zb  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Zusatzbeitrag, elster_section:Vorsorgeaufwand
-account expenses:insurance:travel:long-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Langzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
-account expenses:insurance:travel:short-term-health-care  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Kurzzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
-account expenses:insurance:liability:haftpflicht  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Haftpflichtversicherung, elster_section:Vorsorgeaufwand
+account expenses:insurance  ; elster_form:einkommensteuer
+account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_item:Krankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:private:health-care:pv  ; elster_form:einkommensteuer, elster_item:Pflegeversicherung, elster_section:Vorsorgeaufwand
+account expenses:private:health-care:zb  ; elster_form:einkommensteuer, elster_item:Zusatzbeitrag, elster_section:Vorsorgeaufwand
+account expenses:insurance:travel:long-term-health-care  ; elster_form:einkommensteuer, elster_item:Langzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:insurance:travel:short-term-health-care  ; elster_form:einkommensteuer, elster_item:Kurzzeit-Auslandskrankenversicherung, elster_section:Vorsorgeaufwand
+account expenses:insurance:liability:haftpflicht  ; elster_form:einkommensteuer, elster_item:Haftpflichtversicherung, elster_section:Vorsorgeaufwand
 account expenses:taxes:einkommensteuer:vorauszahlung  ; elster_role:income_tax_advance, elster_item:ESt-Vorauszahlung
 account expenses:taxes:einkommensteuer:abschlusszahlung  ; elster_role:income_tax_final, elster_item:ESt-Abschlusszahlung
 account expenses:taxes:umsatzsteuer:vorauszahlung  ; elster_role:vat_advance, elster_item:USt-Vorauszahlung

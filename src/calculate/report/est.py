@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import Decimal
 
 from calculate import aggregates
 from calculate.report.periods import aggregate_periods, annual_labels, blank_row, fmt, section_row
 from domain.dataset import TaxDataset
 
-TWOPLACES = Decimal("0.01")
 ZERO = Decimal("0.00")
 MANUAL_PLACEHOLDER = "MANUAL"
 
@@ -63,8 +62,6 @@ def est_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
         by_section[p.section][_posting_label(p)].append(p)
 
     section_rows: list[dict[str, str]] = []
-    summe_totals: dict[str, Decimal] = {lbl: ZERO for lbl in labels}
-    abziehbar_totals: dict[str, Decimal] = {lbl: ZERO for lbl in labels}
 
     for sec_name in sorted(by_section.keys()):
         if sec_name:
@@ -72,7 +69,6 @@ def est_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
         for label in sorted(by_section[sec_name].keys()):
             acc_ds = TaxDataset(by_section[sec_name][label])
             totals = aggregate_periods(acc_ds, year, aggregates.signed_total, labels)
-            deductible_totals = aggregate_periods(acc_ds, year, aggregates.deductible_net, labels)
             row = {"Kennzahl": label}
             manual = _requires_manual_calculation(acc_ds)
             for lbl in labels:
@@ -81,42 +77,11 @@ def est_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
                     continue
                 v = totals[lbl]
                 row[lbl] = fmt(v)
-                summe_totals[lbl] += v
-                abziehbar_totals[lbl] += deductible_totals[lbl]
             section_rows.append(row)
-
-    for lbl in labels:
-        summe_totals[lbl] = summe_totals[lbl].quantize(TWOPLACES, rounding=ROUND_HALF_UP)
-        abziehbar_totals[lbl] = abziehbar_totals[lbl].quantize(TWOPLACES, rounding=ROUND_HALF_UP)
-
-    # ── summary ───────────────────────────────────────────────────────────
-    summe_row = {"Kennzahl": "Summe privat gezahlt"}
-    abziehbar_row = {"Kennzahl": "Abziehbar (Netto)"}
-    vorsteuer_row = {"Kennzahl": "Gezahlte Vorsteuer"}
-    abziehbare_vorsteuer_row = {"Kennzahl": "Abziehbare Vorsteuer"}
-    summe_abziehbar_row = {"Kennzahl": "Summe abziehbar"}
-
-    for lbl in labels:
-        summe_row[lbl] = fmt(summe_totals[lbl])
-        abziehbar_row[lbl] = fmt(abziehbar_totals[lbl])
-        vorsteuer_row[lbl] = fmt(ZERO)
-        abziehbare_vorsteuer_row[lbl] = fmt(ZERO)
-        summe_abziehbar_row[lbl] = fmt(abziehbar_totals[lbl])
 
     rows: list[dict[str, str]] = []
     if tax_rows:
         rows.extend(tax_rows)
         rows.append(blank_row(labels))
     rows.extend(section_rows)
-    rows.extend(
-        [
-            blank_row(labels),
-            summe_row,
-            abziehbar_row,
-            vorsteuer_row,
-            abziehbare_vorsteuer_row,
-            summe_abziehbar_row,
-            blank_row(labels),
-        ]
-    )
     return rows

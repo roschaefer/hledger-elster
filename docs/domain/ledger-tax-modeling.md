@@ -148,7 +148,7 @@ Examples:
 ```hledger
 account expenses:phone  ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat_share:0.20, elster_vat_rate:0.19
 
-account expenses:insurance:travel:hansemerkur  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig
+account expenses:insurance:travel:hansemerkur  ; elster_form:einkommensteuer
 ```
 
 This is preferable when the account is an exception to the default rules.
@@ -290,7 +290,7 @@ account expenses:phone  ; tax_form:einnahmenueberschussrechnung, tax_deduction:p
 ### Insurance relevant for income tax
 
 ```hledger
-account expenses:insurance:health:aok  ; tax_form:einkommensteuer, tax_deduction:nicht_abzugsfaehig
+account expenses:insurance:health:aok  ; elster_form:einkommensteuer
 
 2024-01-15 AOK Rheinland / Hamburg
     assets:dkb:girokonto             EUR-300.00

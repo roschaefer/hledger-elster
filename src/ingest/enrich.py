@@ -22,6 +22,24 @@ def _posting_tags(posting: dict) -> dict[str, str]:
     return result
 
 
+def _posting_tag_values(posting: dict, key: str) -> list[str]:
+    values: list[str] = []
+    for tag_key, value in posting.get("ptags") or []:
+        if tag_key == key and value not in values:
+            values.append(value)
+    return values
+
+
+def _validate_posting_tags(posting: dict) -> None:
+    forms = _posting_tag_values(posting, "elster_form")
+    if len(forms) > 1:
+        account = posting["paccount"]
+        raise ValueError(
+            f'Conflicting elster_form tags for account "{account}": {", ".join(forms)}. '
+            "A posting can be routed to either EÜR or ESt, not both."
+        )
+
+
 def _source_posting(transaction: dict) -> dict | None:
     business_sources = [
         posting
@@ -120,6 +138,7 @@ def _enrich_posting(
     posting_date = date.fromisoformat(posting_date_raw if posting_date_raw else transaction_date)
 
     tags = _posting_tags(posting)
+    _validate_posting_tags(posting)
     source_label = source_tags.get("elster_item", "")
 
     if _comment_has_ignore(transaction_comment, posting_comment):
@@ -184,8 +203,10 @@ def _enrich_posting(
             tax_deduction = "full"
             afa_years = 0
 
-    # für nicht_abzugsfaehig: full gross is what gets reported to ESt
     if tax_deduction == "nicht_abzugsfaehig":
+        raise ValueError('Unsupported elster_deduction:nicht_abzugsfaehig. Use "non_deductible" instead.')
+
+    if tax_deduction == "non_deductible":
         expense_share = Decimal("0")
         vat_share = Decimal("0")
 

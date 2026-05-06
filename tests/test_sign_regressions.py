@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from calculate.report.est import est_rows
 from calculate.report.euer import euer_rows
 from calculate.report.herleitung import herleitung_sheets
@@ -122,6 +124,23 @@ def test_euer_income_with_vat_is_not_vorsteuer(tmp_path: Path) -> None:
     assert vorsteuer.rows[-2].cells == ["Σ Geschäftskonto", "", "", "11.90", "1.90", "", "1.90"]
 
 
+def test_euer_non_deductible_expense_is_visible_but_not_counted(tmp_path: Path) -> None:
+    dataset = _build_dataset(
+        tmp_path,
+        [
+            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_item:Geschäftskonto",
+            "account expenses:business:penalty  ;elster_form:einnahmenueberschussrechnung, elster_deduction:non_deductible, elster_item:Nicht abzugsfähig",
+        ],
+        [
+            _posting("1", "2024-01-10", "Business penalty", "expenses:business:penalty", "100.00"),
+        ],
+    )
+
+    euer = euer_rows(dataset, 2024, TaxConfig())
+    assert next(row for row in euer if row["Kennzahl"] == "Nicht abzugsfähig")["2024"] == "0.00"
+    assert next(row for row in euer if row["Kennzahl"] == "Summe Betriebskosten")["2024"] == "0.00"
+
+
 def test_income_tax_reversal_nets_out_in_est_summary(tmp_path: Path) -> None:
     dataset = _build_dataset(
         tmp_path,
@@ -217,12 +236,32 @@ def test_est_sonderausgaben_donations_are_exported_from_section_metadata(tmp_pat
 
     est = est_rows(dataset, 2024)
     assert next(row for row in est if row["Kennzahl"] == "Spenden")["2024"] == "50.00"
-    assert next(row for row in est if row["Kennzahl"] == "Summe privat gezahlt")["2024"] == "50.00"
-    assert next(row for row in est if row["Kennzahl"] == "Abziehbar (Netto)")["2024"] == "50.00"
-    assert next(row for row in est if row["Kennzahl"] == "Summe abziehbar")["2024"] == "50.00"
+    assert "Summe privat gezahlt" not in {row["Kennzahl"] for row in est}
 
     est_sheets = herleitung_sheets(dataset, 2024)["einkommensteuer"]
     assert {sheet.name for sheet in est_sheets} >= {"Spenden"}
+
+
+def test_conflicting_elster_form_tags_are_rejected(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="Conflicting elster_form tags"):
+        _build_dataset(
+            tmp_path,
+            [
+                "account assets:dkb:girokonto  ;elster_account:private, elster_item:Girokonto",
+                "account expenses:mixed  ;elster_form:einkommensteuer",
+                "account expenses:mixed:position  ;elster_form:einnahmenueberschussrechnung, elster_item:Mixed",
+            ],
+            [
+                _posting(
+                    "1",
+                    "2024-12-01",
+                    "Mixed posting",
+                    "expenses:mixed:position",
+                    "50.00",
+                    source_account="assets:dkb:girokonto",
+                ),
+            ],
+        )
 
 
 def test_est_sections_are_user_defined_groupings(tmp_path: Path) -> None:

@@ -14,7 +14,7 @@ Feature: Export hygiene
     Given a file named "journal.journal" with content:
       """
       account assets:bank:checking  ; elster_account:private, elster_item:Girokonto
-      account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_deduction:nicht_abzugsfaehig, elster_item:Krankenversicherung, elster_section:Vorsorgeaufwand
+      account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_item:Krankenversicherung, elster_section:Vorsorgeaufwand
 
       2024-06-01 Health care contribution
           expenses:private:health-care:kv   840.00 EUR
