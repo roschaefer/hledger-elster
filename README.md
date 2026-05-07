@@ -78,6 +78,7 @@ Executable specifications:
 - [VAT payments and settlements](./docs/specs/vat.md)
 - [Business vs. private accounts](./docs/specs/business-accounts.md)
 - [Health care and insurance](./docs/specs/health-care.md)
+- [GWG and AfA](./docs/specs/afa.md)
 - [Donations](./docs/specs/donations.md)
 
 Run them with:

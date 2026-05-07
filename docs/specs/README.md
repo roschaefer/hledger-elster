@@ -25,4 +25,5 @@ Specifications:
 - [VAT payments and settlements](./vat.md)
 - [Business vs. private accounts](./business-accounts.md)
 - [Health care and insurance](./health-care.md)
+- [GWG and AfA](./afa.md)
 - [Donations](./donations.md)
