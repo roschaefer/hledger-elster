@@ -4,6 +4,7 @@ import csv
 import io
 import re
 import sys
+import unicodedata
 import zipfile
 from pathlib import Path
 
@@ -52,6 +53,7 @@ _ELSTER_FORMS = {
     "einkommensteuer": ("ESt", "einkommensteuer"),
 }
 _INVALID_SHEET_TITLE_CHARS = re.compile(r"[\[\]:*?/\\]")
+_NON_ALNUM_FILENAME_CHARS = re.compile(r"[^a-z0-9]+")
 
 
 # ── ZIP stabilisation ─────────────────────────────────────────────────────────
@@ -96,7 +98,10 @@ def _write_trail_csv(path: Path, sheet: TrailSheet, touched_files: set[Path]) ->
 
 
 def _tab_csv_name(sheet_name: str) -> str:
-    return _INVALID_SHEET_TITLE_CHARS.sub("-", sheet_name).lower().replace(" ", "-") + ".csv"
+    normalized = unicodedata.normalize("NFKD", sheet_name)
+    ascii_name = normalized.encode("ascii", "ignore").decode("ascii").lower()
+    stem = _NON_ALNUM_FILENAME_CHARS.sub("-", ascii_name).strip("-")
+    return f"{stem or 'sheet'}.csv"
 
 
 def _xlsx_sheet_title(sheet_name: str) -> str:

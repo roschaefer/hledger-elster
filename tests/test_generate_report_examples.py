@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import csv
+import re
 from pathlib import Path
 
 import openpyxl
@@ -15,6 +16,10 @@ def _read_rows(path: Path) -> list[dict[str, str]]:
 
 def _rgb(color) -> str:
     return color.rgb[-6:]
+
+
+def _relative_csv_paths(root: Path) -> list[str]:
+    return sorted(path.relative_to(root).as_posix() for path in root.rglob("*.csv"))
 
 
 def test_generate_report_writes_expected_example_outputs(monkeypatch, tmp_path: Path) -> None:
@@ -48,6 +53,8 @@ def test_generate_report_writes_expected_example_outputs(monkeypatch, tmp_path: 
     assert next(row for row in est_2025 if row["Kennzahl"] == "Zusatzbeitrag")["2025"] == "130.00"
     assert next(row for row in est_2025 if row["Kennzahl"] == "ESt-Abschlusszahlung")["2025"] == "50.00"
     assert next(row for row in ust_2024 if row["Zeitraum"] == "2024")["Bereits Entrichtet"] == "190.00"
+    assert "2024/herleitung/einkommensteuer/langzeit-auslandskrankenversich.csv" in _relative_csv_paths(tmp_path)
+    assert all(re.fullmatch(r"[ -~]+", path) for path in _relative_csv_paths(tmp_path))
 
     workbook = openpyxl.load_workbook(tmp_path / "2024" / "steuererklaerung.xlsx")
     euer_sheet = workbook["EÜR"]

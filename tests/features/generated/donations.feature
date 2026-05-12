@@ -43,7 +43,7 @@ Feature: Donations
       | Girokonto   | 2024-12-02 | Another charity donation | 25.00  |
       | Σ Girokonto |            |                          | 75.00  |
       | GESAMT      |            |                          | 75.00  |
-    And the CSV file "export/2024/herleitung/einkommensteuer/parteispende-(§34g-§10b-manuell.csv" should contain exactly:
+    And the CSV file "export/2024/herleitung/einkommensteuer/parteispende-34g-10b-manuell.csv" should contain exactly:
       | Konto       | Datum      | Beschreibung                     | Betrag |
       | Girokonto   | 2024-12-02 | Example political party donation | 100.00 |
       | Σ Girokonto |            |                                  | 100.00 |
