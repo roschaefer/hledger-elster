@@ -34,6 +34,7 @@ def ust_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
     income_ds = euer_income(dataset)
     euer_ds = euer_expenses(dataset)
     vat_advance_payments = _vat_advance_payments(dataset)
+    has_reverse_charge = any(p.vat_mode.startswith("reverse_charge_") for p in euer_ds.for_year(year))
 
     col_vorauszahlungssoll = "Bereits Entrichtet"
 
@@ -42,9 +43,14 @@ def ust_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
         euer_p = filter_period(euer_ds, year, lbl)
         net = aggregates.net_amount(income_p)
         collected = aggregates.collected_vat(income_p)
-        vorsteuer = aggregates.deductible_vat(euer_p)
-        uberschuss = (collected - vorsteuer).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
-        return {
+        reverse_charge_eu_base = aggregates.reverse_charge_base(euer_p, "eu")
+        reverse_charge_eu_vat = aggregates.reverse_charge_vat(euer_p, "eu")
+        reverse_charge_non_eu_base = aggregates.reverse_charge_base(euer_p, "non_eu")
+        reverse_charge_non_eu_vat = aggregates.reverse_charge_vat(euer_p, "non_eu")
+        reverse_charge_vat = reverse_charge_eu_vat + reverse_charge_non_eu_vat
+        vorsteuer = aggregates.deductible_vat(euer_p) + aggregates.reverse_charge_input_vat(euer_p)
+        uberschuss = (collected + reverse_charge_vat - vorsteuer).quantize(TWOPLACES, rounding=ROUND_HALF_UP)
+        row = {
             "Zeitraum": lbl,
             "Einnahme (Netto)": fmt(net),
             "Vereinnahmte Umsatzsteuer": fmt(collected),
@@ -54,6 +60,20 @@ def ust_rows(dataset: TaxDataset, year: int) -> list[dict[str, str]]:
                 fmt(aggregates.signed_total(for_vorauszahlung)) if for_vorauszahlung is not None else ""
             ),
         }
+        if has_reverse_charge:
+            row = {
+                "Zeitraum": row["Zeitraum"],
+                "Einnahme (Netto)": row["Einnahme (Netto)"],
+                "Vereinnahmte Umsatzsteuer": row["Vereinnahmte Umsatzsteuer"],
+                "§13b EU Leistung (Netto)": fmt(reverse_charge_eu_base),
+                "§13b EU Umsatzsteuer": fmt(reverse_charge_eu_vat),
+                "§13b Non-EU Leistung (Netto)": fmt(reverse_charge_non_eu_base),
+                "§13b Non-EU Umsatzsteuer": fmt(reverse_charge_non_eu_vat),
+                "Abziehbare Vorsteuerbeträge": row["Abziehbare Vorsteuerbeträge"],
+                "Vorauszahlungssoll": row["Vorauszahlungssoll"],
+                col_vorauszahlungssoll: row[col_vorauszahlungssoll],
+            }
+        return row
 
     rows: list[dict[str, str]] = []
 

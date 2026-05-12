@@ -5,7 +5,8 @@ counterposting account:
 
 - `elster_form:einnahmenueberschussrechnung` marks business income or expenses
   for the EÜR.
-- `elster_vat_rate:0.19` splits gross income into net income and collected VAT.
+- `elster_vat:contains_vat, elster_vat_rate:0.19` splits gross income
+  into net income and collected VAT.
 - `elster_account:business` identifies the bank account that makes owner draws
   and contributions visible even when the other posting uses an untagged owner
   equity account.
@@ -32,7 +33,7 @@ Feature: Business vs. private accounts
       account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
       account assets:bank:private   ; elster_account:private, elster_item:Girokonto
       account transfers:clearing
-      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
 
       2024-01-15 Client invoice
           income:business       -119.00 EUR

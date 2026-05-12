@@ -146,7 +146,7 @@ Good tag use cases:
 Examples:
 
 ```hledger
-account expenses:phone  ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat_share:0.20, elster_vat_rate:0.19
+account expenses:phone  ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat:contains_vat, elster_input_vat_share:0.20, elster_vat_rate:0.19
 
 account expenses:insurance:travel:hansemerkur  ; elster_form:einkommensteuer
 ```
@@ -266,7 +266,7 @@ No extra tag is required if the default rule for `expenses:business:*` is suffic
 ### Special partial deduction
 
 ```hledger
-account expenses:phone  ; tax_form:einnahmenueberschussrechnung, tax_deduction:proportional, tax_expense_share:0.20, tax_vat_share:0.20, tax_vat_rate:0.19
+account expenses:phone  ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat:contains_vat, elster_input_vat_share:0.20, elster_vat_rate:0.19
 
 2024-03-15 klarmobil GmbH
     assets:dkb:girokonto  EUR-11.90

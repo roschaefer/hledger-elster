@@ -12,9 +12,9 @@ def _quantize(value: Decimal) -> Decimal:
 
 
 def net_cost(posting: TaxPosting) -> Decimal:
-    """Net acquisition cost (gross / (1 + vat_rate))."""
+    """Net acquisition cost."""
     gross = abs(posting.amount)
-    if posting.vat_rate > Decimal("0"):
+    if posting.vat_mode == "contains_vat" and posting.vat_rate > Decimal("0"):
         return gross / (Decimal("1") + posting.vat_rate)
     return gross
 

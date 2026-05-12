@@ -133,7 +133,7 @@ Feature: VAT cash settlement
     Given a file named "journal.journal" with content:
       """
       account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
       account expenses:taxes:umsatzsteuer:vorauszahlung  ; elster_role:vat_advance
       account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
 

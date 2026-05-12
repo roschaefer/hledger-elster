@@ -10,6 +10,10 @@ from pathlib import Path
 from domain.dataset import TaxDataset
 from domain.posting import TaxPosting
 
+EUER_FORM = "einnahmenueberschussrechnung"
+VAT_MODES = {"contains_vat", "reverse_charge_eu", "reverse_charge_non_eu", "not_applicable"}
+VAT_MODES_REQUIRING_RATE = {"contains_vat", "reverse_charge_eu", "reverse_charge_non_eu"}
+
 # ── hledger ingestion ──────────────────────────────────────────────────────
 
 
@@ -31,13 +35,45 @@ def _posting_tag_values(posting: dict, key: str) -> list[str]:
 
 
 def _validate_posting_tags(posting: dict) -> None:
+    tags = _posting_tags(posting)
+    account = posting["paccount"]
+    if tags.get("elster_vat_share"):
+        raise ValueError(f'Unsupported elster_vat_share for account "{account}". Use elster_input_vat_share instead.')
+    if tags.get("elster_reverse_charge"):
+        raise ValueError(
+            f'Unsupported elster_reverse_charge for account "{account}". '
+            "Use elster_vat:reverse_charge_eu or elster_vat:reverse_charge_non_eu instead."
+        )
+    if tags.get("elster_reverse_charge_rate"):
+        raise ValueError(
+            f'Unsupported elster_reverse_charge_rate for account "{account}". Use elster_vat_rate instead.'
+        )
+
     forms = _posting_tag_values(posting, "elster_form")
     if len(forms) > 1:
-        account = posting["paccount"]
         raise ValueError(
             f'Conflicting elster_form tags for account "{account}": {", ".join(forms)}. '
             "A posting can be routed to either EÜR or ESt, not both."
         )
+
+    vat_mode = tags.get("elster_vat", "")
+    if vat_mode and vat_mode not in VAT_MODES:
+        raise ValueError(
+            f'Unsupported elster_vat:{vat_mode} for account "{account}". '
+            'Use "contains_vat", "reverse_charge_eu", "reverse_charge_non_eu", or "not_applicable".'
+        )
+    if tags.get("elster_form") == EUER_FORM and not vat_mode:
+        raise ValueError(f'elster_form:{EUER_FORM} for account "{account}" requires elster_vat.')
+    if vat_mode in VAT_MODES_REQUIRING_RATE and not tags.get("elster_vat_rate"):
+        raise ValueError(f'elster_vat:{vat_mode} for account "{account}" requires elster_vat_rate.')
+    if vat_mode == "not_applicable" and tags.get("elster_vat_rate"):
+        raise ValueError(f'elster_vat:not_applicable for account "{account}" cannot be combined with elster_vat_rate.')
+    if vat_mode == "not_applicable" and tags.get("elster_input_vat_share"):
+        raise ValueError(
+            f'elster_vat:not_applicable for account "{account}" cannot be combined with elster_input_vat_share.'
+        )
+    if vat_mode.startswith("reverse_charge_") and tags.get("elster_form") != EUER_FORM:
+        raise ValueError(f'elster_vat:{vat_mode} for account "{account}" requires elster_form:{EUER_FORM}.')
 
 
 def _source_posting(transaction: dict) -> dict | None:
@@ -158,9 +194,10 @@ def _enrich_posting(
             tax_deduction="",
             tax_role="ignore",
             calculation="",
+            vat_mode="",
             vat_rate=Decimal("0"),
             expense_share=Decimal("1"),
-            vat_share=Decimal("0"),
+            input_vat_share=Decimal("0"),
             afa_years=0,
             derived_kind="",
             label="",
@@ -183,9 +220,10 @@ def _enrich_posting(
     tax_form = tags.get("elster_form", "")
     tax_role = tags.get("elster_role", "")
     calculation = tags.get("elster_calculation", "")
+    vat_mode = tags.get("elster_vat", "")
     vat_rate = _to_decimal(tags.get("elster_vat_rate"))
     expense_share = _to_decimal(tags.get("elster_expense_share"), "1")
-    vat_share = _to_decimal(tags.get("elster_vat_share"), "0")
+    input_vat_share = _to_decimal(tags.get("elster_input_vat_share"), str(expense_share))
     afa_years_raw = tags.get("elster_afa_years")
     afa_years = int(afa_years_raw) if afa_years_raw else 0
     label = tags.get("elster_item", "")
@@ -196,7 +234,7 @@ def _enrich_posting(
     # GWG: elster_afa_years always overrides inherited elster_deduction
     if afa_years > 0:
         gross = abs(amount)
-        net_cost = gross / (1 + vat_rate) if vat_rate > Decimal("0") else gross
+        net_cost = gross / (1 + vat_rate) if vat_mode == "contains_vat" and vat_rate > Decimal("0") else gross
         if net_cost > Decimal("800"):
             tax_deduction = "afa"
         else:
@@ -208,7 +246,7 @@ def _enrich_posting(
 
     if tax_deduction == "non_deductible":
         expense_share = Decimal("0")
-        vat_share = Decimal("0")
+        input_vat_share = Decimal("0")
 
     return TaxPosting(
         posting_date=posting_date,
@@ -224,9 +262,10 @@ def _enrich_posting(
         tax_deduction=tax_deduction,
         tax_role=tax_role,
         calculation=calculation,
+        vat_mode=vat_mode,
         vat_rate=vat_rate,
         expense_share=expense_share,
-        vat_share=vat_share,
+        input_vat_share=input_vat_share,
         afa_years=afa_years,
         derived_kind="",
         label=label,

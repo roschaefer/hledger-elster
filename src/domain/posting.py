@@ -23,9 +23,10 @@ class TaxPosting:
     tax_deduction: str  # "full" | "proportional" | "non_deductible" | "afa" | ""
     tax_role: str  # "tax_payment" | "income_tax" | "vat_payment" | "vat_advance" | "income_tax_advance" | "income_tax_final" | "drawing" | "contribution" | "ignore" | ""
     calculation: str  # "" | "manual"
+    vat_mode: str  # "contains_vat" | "reverse_charge_eu" | "reverse_charge_non_eu" | "not_applicable" | ""
     vat_rate: Decimal  # 0.19 / 0.07 / 0.00
     expense_share: Decimal
-    vat_share: Decimal
+    input_vat_share: Decimal
 
     # AfA metadata — only set when tax_deduction == "afa"
     afa_years: int  # 0 if not AfA

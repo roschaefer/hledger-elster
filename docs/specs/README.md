@@ -23,6 +23,7 @@ Specifications:
 - [Export hygiene](./export-hygiene.md)
 - [Business expenses and income](./form-section-item-tags.md)
 - [VAT payments and settlements](./vat.md)
+- [VAT reverse charge](./vat-reverse-charge.md)
 - [Business vs. private accounts](./business-accounts.md)
 - [Health care and insurance](./health-care.md)
 - [GWG and AfA](./afa.md)

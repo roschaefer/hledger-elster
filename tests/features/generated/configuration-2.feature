@@ -7,7 +7,7 @@ Feature: Home-Office-Pauschale configuration
     Given a file named "journal.journal" with content:
       """
       account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
 
       2024-01-10 Client invoice
           income:business       -119.00 EUR

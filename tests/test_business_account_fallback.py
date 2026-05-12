@@ -14,7 +14,7 @@ def test_business_account_fallback_classifies_unmapped_postings_as_drawings_and_
         "\n".join(
             [
                 "account assets:kontist:geschaeftskonto  ; elster_account:business, elster_item:Geschäftskonto",
-                "account income:business  ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen",
+                "account income:business  ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen",
                 "",
             ]
         )

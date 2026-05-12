@@ -49,7 +49,7 @@ def _signed_gross(p: TaxPosting) -> Decimal:
 
 def _net(p: TaxPosting) -> Decimal:
     g = abs(p.amount)
-    if p.vat_rate > ZERO:
+    if p.vat_mode == "contains_vat" and p.vat_rate > ZERO:
         return _q(g / (1 + p.vat_rate))
     return _q(g)
 
@@ -59,7 +59,7 @@ def _vat_amount(p: TaxPosting) -> Decimal:
 
 
 def _signed_net(p: TaxPosting) -> Decimal:
-    if p.vat_rate > ZERO:
+    if p.vat_mode == "contains_vat" and p.vat_rate > ZERO:
         return _q(p.amount / (1 + p.vat_rate))
     return _q(p.amount)
 
@@ -73,7 +73,7 @@ def _deductible_net(p: TaxPosting) -> Decimal:
 
 
 def _deductible_vat(p: TaxPosting) -> Decimal:
-    return _q(_vat_amount(p) * p.vat_share)
+    return _q(_vat_amount(p) * p.input_vat_share)
 
 
 def _signed_deductible_net(p: TaxPosting) -> Decimal:
@@ -81,7 +81,15 @@ def _signed_deductible_net(p: TaxPosting) -> Decimal:
 
 
 def _signed_deductible_vat(p: TaxPosting) -> Decimal:
-    return _q(_signed_vat_amount(p) * p.vat_share)
+    return _q(_signed_vat_amount(p) * p.input_vat_share)
+
+
+def _reverse_charge_vat(p: TaxPosting) -> Decimal:
+    return _q(p.amount * p.vat_rate)
+
+
+def _deductible_reverse_charge_vat(p: TaxPosting) -> Decimal:
+    return _q(_reverse_charge_vat(p) * p.input_vat_share)
 
 
 def _short(account: str) -> str:
@@ -226,7 +234,7 @@ def _input_vat_sheet(ds: TaxDataset) -> TrailSheet:
     """Abziehbare Vorsteuer for EÜR expense postings."""
     headers = ["Konto", "Datum", "Beschreibung", "Brutto", "USt-Betrag", "USt-Anteil", "Abziehbar"]
     rows: list[TrailRow] = []
-    postings = [p for p in ds if p.vat_rate > ZERO]
+    postings = [p for p in ds if p.vat_mode == "contains_vat" and p.vat_rate > ZERO]
     t_gross = t_vat = t_ded = ZERO
 
     for _bank_acct, ps in _by_bank(postings).items():
@@ -235,7 +243,15 @@ def _input_vat_sheet(ds: TaxDataset) -> TrailSheet:
             g, v, d = _signed_gross(p), _signed_vat_amount(p), _signed_deductible_vat(p)
             rows.append(
                 TrailRow(
-                    [_bank_label(p), str(p.posting_date), p.description, _fmt(g), _fmt(v), _fmt(p.vat_share), _fmt(d)],
+                    [
+                        _bank_label(p),
+                        str(p.posting_date),
+                        p.description,
+                        _fmt(g),
+                        _fmt(v),
+                        _fmt(p.input_vat_share),
+                        _fmt(d),
+                    ],
                     2,
                 )
             )
@@ -263,6 +279,68 @@ def _input_vat_sheet(ds: TaxDataset) -> TrailSheet:
         )
     )
     return TrailSheet("Vorsteuer", headers, rows)
+
+
+def _reverse_charge_sheet(ds: TaxDataset) -> TrailSheet:
+    headers = [
+        "Konto",
+        "Datum",
+        "Beschreibung",
+        "Art",
+        "Netto",
+        "USt-Satz",
+        "USt-Schuld",
+        "Abziehbare Vorsteuer",
+    ]
+    rows: list[TrailRow] = []
+    postings = [p for p in ds if p.vat_mode.startswith("reverse_charge_")]
+    t_net = t_vat = t_ded = ZERO
+
+    for _bank_acct, ps in _by_bank(postings).items():
+        b_net = b_vat = b_ded = ZERO
+        for p in ps:
+            net = _q(p.amount)
+            vat = _reverse_charge_vat(p)
+            deductible = _deductible_reverse_charge_vat(p)
+            rows.append(
+                TrailRow(
+                    [
+                        _bank_label(p),
+                        str(p.posting_date),
+                        p.description,
+                        p.vat_mode.removeprefix("reverse_charge_"),
+                        _fmt(net),
+                        _fmt(p.vat_rate),
+                        _fmt(vat),
+                        _fmt(deductible),
+                    ],
+                    2,
+                )
+            )
+            b_net += net
+            b_vat += vat
+            b_ded += deductible
+        rows.append(
+            TrailRow(
+                [_bank_subtotal_label(ps), "", "", "", _fmt(_q(b_net)), "", _fmt(_q(b_vat)), _fmt(_q(b_ded))],
+                1,
+                bold=True,
+                fill="subtotal",
+            )
+        )
+        t_net += b_net
+        t_vat += b_vat
+        t_ded += b_ded
+
+    rows.append(
+        TrailRow(
+            ["GESAMT", "", "", "", _fmt(_q(t_net)), "", _fmt(_q(t_vat)), _fmt(_q(t_ded))],
+            0,
+            bold=True,
+            fill="total",
+        )
+    )
+    return TrailSheet("§13b Reverse Charge", headers, rows)
 
 
 def _afa_sheet(postings: list[TaxPosting], account: str, year: int) -> TrailSheet:
@@ -465,6 +543,7 @@ def _ust_sheets(dataset: TaxDataset, year: int) -> list[TrailSheet]:
 
     euer_ds = euer_expenses(dataset)
     add(_input_vat_sheet(euer_ds.for_year(year)))
+    add(_reverse_charge_sheet(euer_ds.for_year(year)))
 
     return result
 

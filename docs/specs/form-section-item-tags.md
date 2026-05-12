@@ -5,7 +5,8 @@ three core tags:
 
 - `elster_form:einnahmenueberschussrechnung` routes business income and expenses
   into the EÜR export. The USt export is derived from these EÜR postings when
-  they carry VAT metadata such as `elster_vat_rate`, plus VAT payment roles.
+  they carry VAT metadata such as `elster_vat:contains_vat` and
+  `elster_vat_rate`, plus VAT payment roles.
 - `elster_form:einkommensteuer` routes private tax-relevant expenses into the
   ESt export.
 - `elster_section` is a user-defined heading inside a form. The tool preserves
@@ -15,6 +16,9 @@ three core tags:
   the closest parent item unless they define their own item.
 - `elster_deduction:non_deductible` keeps an EÜR expense visible as a row while
   contributing `0.00` to deductible business expenses and input VAT.
+- `elster_expense_share` controls the deductible net expense share in EÜR.
+- `elster_input_vat_share` controls the deductible input VAT share in USt. If it
+  is omitted, it defaults to `elster_expense_share`.
 
 ```gherkin
 Feature: Business expenses and income
@@ -31,8 +35,8 @@ Feature: Business expenses and income
       """
       account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
       account assets:bank:private   ; elster_account:private, elster_item:Girokonto
-      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
-      account expenses:business:penalty  ; elster_form:einnahmenueberschussrechnung, elster_deduction:non_deductible, elster_item:Nicht abzugsfähige Betriebsausgabe, elster_section:Arbeitsmittel
+      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+      account expenses:business:penalty  ; elster_form:einnahmenueberschussrechnung, elster_vat:not_applicable, elster_deduction:non_deductible, elster_item:Nicht abzugsfähige Betriebsausgabe, elster_section:Arbeitsmittel
       account expenses:charity      ; elster_form:einkommensteuer, elster_item:Spenden, elster_section:Sonderausgaben
       account expenses:charity:local
       account expenses:charity:international  ; elster_item:Internationale Hilfe
@@ -100,4 +104,57 @@ Feature: Business expenses and income
       | # Sonderausgaben     |       |
       | Internationale Hilfe | 30.00 |
       | Spenden              | 50.00 |
+
+  Scenario: Expense and input VAT shares can differ for hospitality
+    Given a file named "journal.journal" with content:
+      """
+      account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
+      account expenses:business:hospitality  ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.70, elster_vat:contains_vat, elster_vat_rate:0.19, elster_input_vat_share:1.00, elster_item:Bewirtung, elster_section:Bewirtungskosten
+
+      2024-04-10 Business dinner
+          expenses:business:hospitality   119.00 EUR
+          assets:bank:business           -119.00 EUR
+      """
+    When I run "hledger elster -f journal.journal --config elster.toml -o export"
+    Then the CSV file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
+      | Kennzahl                                                    | 2024   |
+      | # Betriebseinnahmen                                         |        |
+      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 0.00   |
+      | Vereinnahmte Umsatzsteuer                                   | 0.00   |
+      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0.00   |
+      | Summe Betriebseinnahmen                                     | 0.00   |
+      |                                                             |        |
+      | # Betriebsausgaben                                          |        |
+      | # Bewirtungskosten                                          |        |
+      | Bewirtung                                                   | 70.00  |
+      |                                                             |        |
+      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0.00   |
+      | Summe Betriebskosten                                        | 70.00  |
+      | Summe Betriebsausgaben                                      | 70.00  |
+      |                                                             |        |
+      | # Ermittlung des Gewinns                                    |        |
+      | Steuerpflichtiger Gewinn/Verlust                            | -70.00 |
+      |                                                             |        |
+      | # Zusätzliche Angaben bei Einzelunternehmen                 |        |
+      | Entnahmen                                                   | 0.00   |
+      | Einlagen                                                    | 0.00   |
+    And the CSV file "export/2024/steuererklaerung/umsatzsteuer.csv" should contain exactly:
+      | Zeitraum | Einnahme (Netto) | Vereinnahmte Umsatzsteuer | Abziehbare Vorsteuerbeträge | Vorauszahlungssoll | Bereits Entrichtet |
+      | 2024-01  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-02  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-03  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-04  | 0.00             | 0.00                      | 19.00                       | -19.00             |                    |
+      | 2024-05  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-06  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-07  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-08  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-09  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-10  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-11  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024-12  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024 Q1  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024 Q2  | 0.00             | 0.00                      | 19.00                       | -19.00             |                    |
+      | 2024 Q3  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024 Q4  | 0.00             | 0.00                      | 0.00                        | 0.00               |                    |
+      | 2024     | 0.00             | 0.00                      | 19.00                       | -19.00             | 0.00               |
 ```

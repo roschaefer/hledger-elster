@@ -14,7 +14,7 @@ Feature: GWG and AfA
     Given a file named "journal.journal" with content:
       """
       account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-      account expenses:business:hardware:laptop  ; elster_form:einnahmenueberschussrechnung, elster_afa_years:1, elster_item:Laptop, elster_section:Arbeitsmittel
+      account expenses:business:hardware:laptop  ; elster_form:einnahmenueberschussrechnung, elster_vat:not_applicable, elster_afa_years:1, elster_item:Laptop, elster_section:Arbeitsmittel
 
       2024-01-01 Laptop digital AfA
           expenses:business:hardware:laptop   1200.00 EUR
@@ -52,7 +52,7 @@ Feature: GWG and AfA
     Given a file named "journal.journal" with content:
       """
       account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-      account expenses:business:hardware:camera  ; elster_form:einnahmenueberschussrechnung, elster_afa_years:7, elster_item:Kamera, elster_section:Arbeitsmittel
+      account expenses:business:hardware:camera  ; elster_form:einnahmenueberschussrechnung, elster_vat:not_applicable, elster_afa_years:7, elster_item:Kamera, elster_section:Arbeitsmittel
 
       2024-01-01 Camera AfA
           expenses:business:hardware:camera   1400.00 EUR

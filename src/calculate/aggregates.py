@@ -13,9 +13,9 @@ def _quantize(value: Decimal) -> Decimal:
 
 
 def _net(posting: TaxPosting) -> Decimal:
-    """Net amount for a single posting (gross / (1 + vat_rate))."""
+    """Net amount for a single posting."""
     gross = abs(posting.amount)
-    if posting.vat_rate > Decimal("0"):
+    if posting.vat_mode == "contains_vat" and posting.vat_rate > Decimal("0"):
         return gross / (Decimal("1") + posting.vat_rate)
     return gross
 
@@ -44,7 +44,7 @@ def net_amount(dataset: TaxDataset) -> Decimal:
 
 def _signed_net(posting: TaxPosting) -> Decimal:
     """Net amount preserving sign — for expense aggregations where refunds should reduce the total."""
-    if posting.vat_rate > Decimal("0"):
+    if posting.vat_mode == "contains_vat" and posting.vat_rate > Decimal("0"):
         return posting.amount / (Decimal("1") + posting.vat_rate)
     return posting.amount
 
@@ -70,12 +70,12 @@ def deductible_vat(dataset: TaxDataset) -> Decimal:
     """
     Sum of deductible input VAT amounts.
 
-    For each posting: vat * vat_share, rounded per posting, then summed.
+    For each posting: vat * input_vat_share, rounded per posting, then summed.
     Sign is preserved so VAT refunds correctly reduce the total.
     """
     total = Decimal("0")
     for p in dataset:
-        total += _quantize(_signed_vat(p) * p.vat_share)
+        total += _quantize(_signed_vat(p) * p.input_vat_share)
     return _quantize(total)
 
 
@@ -88,4 +88,37 @@ def collected_vat(dataset: TaxDataset) -> Decimal:
     total = Decimal("0")
     for p in dataset:
         total += _quantize(_vat(p))
+    return _quantize(total)
+
+
+def reverse_charge_base(dataset: TaxDataset, kind: str) -> Decimal:
+    """Sum net reverse-charge bases preserving signs for refunds/corrections."""
+    mode = f"reverse_charge_{kind}"
+    total = Decimal("0")
+    for p in dataset:
+        if p.vat_mode == mode:
+            total += p.amount
+    return _quantize(total)
+
+
+def reverse_charge_vat(dataset: TaxDataset, kind: str) -> Decimal:
+    """VAT owed by the recipient for reverse-charge postings."""
+    mode = f"reverse_charge_{kind}"
+    total = Decimal("0")
+    for p in dataset:
+        if p.vat_mode == mode:
+            total += _quantize(p.amount * p.vat_rate)
+    return _quantize(total)
+
+
+def reverse_charge_input_vat(dataset: TaxDataset) -> Decimal:
+    """Deductible input VAT for reverse-charge postings.
+
+    Reverse-charge invoices are booked net. The recipient owes German VAT and,
+    when the expense is business-deductible, deducts that same VAT as input VAT.
+    """
+    total = Decimal("0")
+    for p in dataset:
+        if p.vat_mode.startswith("reverse_charge_"):
+            total += _quantize(p.amount * p.vat_rate * p.input_vat_share)
     return _quantize(total)

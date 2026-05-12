@@ -53,7 +53,7 @@ def test_reimbursements_reduce_euer_and_vorsteuer_totals(tmp_path: Path) -> None
         tmp_path,
         [
             "account assets:dkb:kreditkarte  ;elster_account:private, elster_item:Kreditkartenkonto",
-            "account expenses:business  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00",
+            "account expenses:business  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:contains_vat, elster_vat_rate:0.19, elster_input_vat_share:1.00",
             "account expenses:business:hosting:aws  ;elster_item:AWS",
         ],
         [
@@ -100,8 +100,8 @@ def test_euer_income_with_vat_is_not_vorsteuer(tmp_path: Path) -> None:
         tmp_path,
         [
             "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_item:Geschäftskonto",
-            "account income:business:consulting  ;elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen",
-            "account expenses:business:hosting:aws  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00, elster_item:AWS",
+            "account income:business:consulting  ;elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen",
+            "account expenses:business:hosting:aws  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:contains_vat, elster_vat_rate:0.19, elster_input_vat_share:1.00, elster_item:AWS",
         ],
         [
             _posting("1", "2024-01-10", "Customer invoice", "income:business:consulting", "-119.00"),
@@ -124,12 +124,89 @@ def test_euer_income_with_vat_is_not_vorsteuer(tmp_path: Path) -> None:
     assert vorsteuer.rows[-2].cells == ["Σ Geschäftskonto", "", "", "11.90", "1.90", "", "1.90"]
 
 
+def test_hospitality_expense_and_input_vat_shares_can_differ(tmp_path: Path) -> None:
+    dataset = _build_dataset(
+        tmp_path,
+        [
+            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_item:Geschäftskonto",
+            "account expenses:business:hospitality  ;elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.70, elster_vat:contains_vat, elster_vat_rate:0.19, elster_input_vat_share:1.00, elster_item:Bewirtung",
+        ],
+        [_posting("1", "2024-04-10", "Business dinner", "expenses:business:hospitality", "119.00")],
+    )
+
+    euer = euer_rows(dataset, 2024, TaxConfig())
+    assert next(row for row in euer if row["Kennzahl"] == "Bewirtung")["2024"] == "70.00"
+
+    ust = ust_rows(dataset, 2024)
+    annual = next(row for row in ust if row["Zeitraum"] == "2024")
+    assert annual["Abziehbare Vorsteuerbeträge"] == "19.00"
+    assert annual["Vorauszahlungssoll"] == "-19.00"
+
+
+def test_reverse_charge_keeps_expense_net_and_reports_owed_and_deductible_vat(tmp_path: Path) -> None:
+    dataset = _build_dataset(
+        tmp_path,
+        [
+            "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_item:Geschäftskonto",
+            "account expenses:business  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19",
+            "account expenses:business:hosting:eu  ;elster_item:EU Hosting, elster_vat:reverse_charge_eu",
+            "account expenses:business:hosting:us  ;elster_item:US Hosting, elster_vat:reverse_charge_non_eu",
+        ],
+        [
+            _posting("1", "2024-03-15", "EU SaaS invoice", "expenses:business:hosting:eu", "100.00"),
+            _posting("2", "2024-03-16", "US SaaS invoice", "expenses:business:hosting:us", "50.00"),
+        ],
+    )
+
+    euer = euer_rows(dataset, 2024, TaxConfig())
+    assert next(row for row in euer if row["Kennzahl"] == "EU Hosting")["2024"] == "100.00"
+    assert next(row for row in euer if row["Kennzahl"] == "US Hosting")["2024"] == "50.00"
+
+    ust = ust_rows(dataset, 2024)
+    annual = next(row for row in ust if row["Zeitraum"] == "2024")
+    assert annual["§13b EU Leistung (Netto)"] == "100.00"
+    assert annual["§13b EU Umsatzsteuer"] == "19.00"
+    assert annual["§13b Non-EU Leistung (Netto)"] == "50.00"
+    assert annual["§13b Non-EU Umsatzsteuer"] == "9.50"
+    assert annual["Abziehbare Vorsteuerbeträge"] == "28.50"
+    assert annual["Vorauszahlungssoll"] == "0.00"
+
+    reverse_charge = next(
+        sheet for sheet in herleitung_sheets(dataset, 2024)["umsatzsteuer"] if sheet.name == "§13b Reverse Charge"
+    )
+    assert reverse_charge.rows[-1].cells == ["GESAMT", "", "", "", "150.00", "", "28.50", "28.50"]
+
+
+def test_removed_reverse_charge_tags_are_rejected(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="Unsupported elster_reverse_charge"):
+        _build_dataset(
+            tmp_path,
+            [
+                "account assets:kontist:geschaeftskonto  ;elster_account:business",
+                "account expenses:business:hosting  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_reverse_charge:eu, elster_vat_rate:0.19",
+            ],
+            [_posting("1", "2024-03-15", "EU SaaS invoice", "expenses:business:hosting", "100.00")],
+        )
+
+
+def test_euer_postings_require_explicit_vat_mode(tmp_path: Path) -> None:
+    with pytest.raises(ValueError, match="requires elster_vat"):
+        _build_dataset(
+            tmp_path,
+            [
+                "account assets:kontist:geschaeftskonto  ;elster_account:business",
+                "account expenses:business:hosting  ;elster_form:einnahmenueberschussrechnung, elster_deduction:full",
+            ],
+            [_posting("1", "2024-03-15", "Hosting invoice", "expenses:business:hosting", "100.00")],
+        )
+
+
 def test_euer_non_deductible_expense_is_visible_but_not_counted(tmp_path: Path) -> None:
     dataset = _build_dataset(
         tmp_path,
         [
             "account assets:kontist:geschaeftskonto  ;elster_account:business, elster_item:Geschäftskonto",
-            "account expenses:business:penalty  ;elster_form:einnahmenueberschussrechnung, elster_deduction:non_deductible, elster_item:Nicht abzugsfähig",
+            "account expenses:business:penalty  ;elster_form:einnahmenueberschussrechnung, elster_vat:not_applicable, elster_deduction:non_deductible, elster_item:Nicht abzugsfähig",
         ],
         [
             _posting("1", "2024-01-10", "Business penalty", "expenses:business:penalty", "100.00"),

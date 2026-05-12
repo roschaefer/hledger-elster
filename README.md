@@ -76,6 +76,7 @@ Executable specifications:
 - [Export hygiene](./docs/specs/export-hygiene.md)
 - [Business expenses and income](./docs/specs/form-section-item-tags.md)
 - [VAT payments and settlements](./docs/specs/vat.md)
+- [VAT reverse charge](./docs/specs/vat-reverse-charge.md)
 - [Business vs. private accounts](./docs/specs/business-accounts.md)
 - [Health care and insurance](./docs/specs/health-care.md)
 - [GWG and AfA](./docs/specs/afa.md)
@@ -105,19 +106,19 @@ account assets:bank:business          ; elster_account:business, elster_item:Ges
 account assets:bank:private           ; elster_account:private,  elster_item:Girokonto
 
 ; ── Business income (EÜR + USt) ───────────────────────────────────────────────
-account income:business               ; elster_form:einnahmenueberschussrechnung, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+account income:business               ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
 
 ; ── Business expenses (EÜR) ───────────────────────────────────────────────────
 ; Base account sets defaults; sub-accounts inherit and override.
-account expenses:business             ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat_rate:0.19, elster_vat_share:1.00
+account expenses:business             ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:contains_vat, elster_vat_rate:0.19, elster_input_vat_share:1.00
 account expenses:business:hosting     ; elster_item:Serverkosten, elster_section:Bezogene Fremdleistungen
 account expenses:business:education   ; elster_item:Fortbildung,  elster_section:Fortbildungskosten
 
 ; Proportional deduction (e.g. phone: 20 % business use)
-account expenses:phone                ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat_share:0.20, elster_vat_rate:0.19, elster_item:Mobiltelefon, elster_section:Arbeitsmittel
+account expenses:phone                ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat:contains_vat, elster_input_vat_share:0.20, elster_vat_rate:0.19, elster_item:Mobiltelefon, elster_section:Arbeitsmittel
 
 ; Depreciable asset (AfA)
-account expenses:business:hardware:computer ; elster_form:einnahmenueberschussrechnung, elster_afa_years:3, elster_item:Computer-Kauf, elster_section:Arbeitsmittel
+account expenses:hardware:computer          ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_afa_years:3, elster_item:Computer-Kauf, elster_section:Arbeitsmittel
 
 ; ── Private expenses (ESt) ────────────────────────────────────────────────────
 account expenses:insurance            ; elster_form:einkommensteuer
@@ -181,7 +182,7 @@ maximum does not match your situation.
 | `elster_role` | `tax_payment` | Generic parent role for all tax payments. Prevents tax outflows from being counted as Entnahmen in the EÜR. |
 | `elster_role` | `vat_payment` | Marks USt Abschlusszahlung accounts. Postings flow into the EÜR (line 57: gezahlte Umsatzsteuer) and the USt report. |
 | `elster_role` | `vat_advance` | Marks USt Vorauszahlung accounts. Requires `elster_period` on sub-accounts for correct fiscal-year attribution. |
-| `elster_form` | `einnahmenueberschussrechnung` | Marks an account as belonging to the EÜR. Income accounts flow into Betriebseinnahmen; expense accounts flow into Betriebsausgaben. Net/VAT split is controlled by `elster_vat_rate`; deduction treatment by the calculation tags below. The USt export is derived from these EÜR VAT fields and VAT payment roles. |
+| `elster_form` | `einnahmenueberschussrechnung` | Marks an account as belonging to the EÜR. Income accounts flow into Betriebseinnahmen; expense accounts flow into Betriebsausgaben. VAT handling is controlled by `elster_vat` and `elster_vat_rate`; deduction treatment by the calculation tags below. The USt export is derived from these EÜR VAT fields and VAT payment roles. |
 | `elster_form` | `einkommensteuer` | Marks an account as belonging to the ESt. The account appears under the user-defined `elster_section`; postings from a `business` source account are additionally counted as Entnahmen in the EÜR. |
 | `elster_section` | free text | User-defined grouping within a form (for example `Sonderausgaben` for donations or `Arbeitsmittel` for EÜR expenses). The code does not interpret specific section names. |
 | `elster_item` | free text | Report item shown as an output row. Use it to translate technical account names and to define aggregation boundaries: child accounts without their own `elster_item` are summed into the inherited parent item; child accounts with their own `elster_item` appear separately. |
@@ -193,13 +194,16 @@ maximum does not match your situation.
 
 | Tag | Values | Meaning |
 |-----|--------|---------|
-| `elster_vat_rate` | `0.19` \| `0.07` \| `0.00` | VAT rate used to split gross amounts into net + VAT. On income accounts, determines collected VAT. On expense accounts, determines deductible input VAT (subject to `elster_vat_share`). |
+| `elster_vat` | `contains_vat` | The booked amount is gross and contains VAT. `elster_vat_rate` splits the amount into net and VAT. |
+| `elster_vat` | `reverse_charge_eu` \| `reverse_charge_non_eu` | The booked amount is net. `elster_vat_rate` calculates German VAT on top for the USt reverse-charge rows. |
+| `elster_vat` | `not_applicable` | No VAT calculation applies. Do not set `elster_vat_rate` or `elster_input_vat_share`. |
+| `elster_vat_rate` | `0.19` \| `0.07` | German VAT rate used by `elster_vat:contains_vat` and reverse-charge modes. |
 | `elster_deduction` | `full` | The full net amount is deductible as a business expense. |
-| `elster_deduction` | `proportional` | Only the business-use fraction is deductible. Set `elster_expense_share` and `elster_vat_share` to the business-use percentage. |
+| `elster_deduction` | `proportional` | Only a fraction is deductible. Set `elster_expense_share`; set `elster_input_vat_share` too when the deductible input VAT share differs. |
 | `elster_deduction` | `non_deductible` | Show an EÜR expense row but count `0.00` toward deductible business expenses and input VAT. |
 | `elster_deduction` | `afa` | Triggers straight-line depreciation. Set `elster_afa_years` to the useful life. Net cost above €800 is depreciated; at or below €800 it is treated as `full` (GWG). |
 | `elster_expense_share` | decimal (e.g. `0.20`) | Fraction of the net amount that is a deductible business expense. Only effective when `elster_deduction:proportional`. |
-| `elster_vat_share` | decimal (e.g. `0.20`) | Fraction of input VAT that is deductible. Only effective when `elster_deduction:proportional`. |
+| `elster_input_vat_share` | decimal (e.g. `0.20`) | Fraction of input VAT that is deductible. Defaults to `elster_expense_share` when omitted. Hospitality can use `elster_expense_share:0.70` with `elster_input_vat_share:1.00`. |
 | `elster_afa_years` | integer (e.g. `3`) | Useful life in years for straight-line depreciation. Only effective when `elster_deduction:afa`. |
 | `elster_calculation` | `manual` | Lists the account in the form but writes `MANUAL` instead of a calculated amount. The Herleitung still shows the booked payment amount. Use this for unimplemented or externally calculated cases such as political party donations. |
 
