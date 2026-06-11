@@ -4,9 +4,14 @@
 
 `hledger-elster/` contains the publishable ELSTER tool:
 
-- `src/`: tax calculation and export code
+- `src/cli.py`: CLI entrypoint
+- `src/calculate/`: tax calculation and report export code
+- `src/domain/`: normalized posting and dataset model
+- `src/ingest/`: hledger ingestion and enrichment
 - `tests/`: public tests
+- `tests/features/generated/`: generated Behave features
 - `examples/`: sanitized example journals
+- `docs/specs/`: Markdown specifications that generate Behave features
 - `docs/`: ELSTER-specific design and migration notes
 
 Private data and private tests stay outside this repository.
