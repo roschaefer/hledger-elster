@@ -6,16 +6,20 @@
 
 Required tools:
 
-- Python 3.12 or newer
-- [`uv`](https://docs.astral.sh/uv/)
-- [`just`](https://just.systems/)
 - [`hledger`](https://hledger.org/) 1.52.1
 
-Install the Python dependencies:
+Download the standalone executable for your platform from the
+[latest release](https://github.com/roschaefer/hledger-elster/releases/tag/latest)
+and put it on `PATH`:
 
 ```bash
-just sync
+curl -L \
+  -o /tmp/hledger-elster \
+  https://github.com/roschaefer/hledger-elster/releases/download/latest/hledger-elster-linux-x86_64
+install -m 0755 /tmp/hledger-elster ~/.local/bin/hledger-elster
 ```
+
+For macOS on Apple Silicon, use the `hledger-elster-macos-arm64` asset instead.
 
 ## Usage
 
@@ -29,12 +33,10 @@ Workbook export convention:
 - every `name.xlsx` workbook has a sibling `name/` directory
 - each workbook tab is also exported there as a CSV with the corresponding derived filename
 
-Run the tool through `just`:
-
 ```bash
-just hledger-elster
-just hledger-elster -f examples/ledger/hledger.journal
-just hledger-elster -f examples/ledger/hledger.journal --config elster.toml -o /tmp/elster-out
+hledger-elster
+hledger-elster -f examples/ledger/hledger.journal
+hledger-elster -f examples/ledger/hledger.journal --config elster.toml -o /tmp/elster-out
 ```
 
 Arguments:
@@ -42,12 +44,6 @@ Arguments:
 - `-f`, `--file`: input journal, with the same meaning as `hledger -f`
 - `-o`, `--output-dir`: output directory for generated tax artifacts
 - `--config`: TOML config file for user-specific tax adjustments
-
-Typical development commands:
-
-```bash
-just check
-```
 
 Sanitized public fixtures live under [`examples/`](./examples). Keep real journals,
 tax filings, and verification data outside this repository.
@@ -65,29 +61,39 @@ scenarios. The goal is to cover more cases over time through executable examples
 ## Specification By Example
 
 The acceptance tests are written as Markdown specifications. Each fenced
-`gherkin` block is generated into a Behave feature file, and pytest checks that
-the generated files do not drift from the Markdown source. The
-[specification index](./docs/specs/) explains the Markdown-to-feature generation
-contract and links back to the source files.
+`gherkin` block is compiled into a Cucumber feature at build time by `build.rs`
+(see `tests/cucumber.rs` for step definitions) — nothing is committed, so
+documentation and executed features cannot drift. The
+[specification index](./specs/) links back to the source files.
 
 Executable specifications:
 
-- [Configuration](./docs/specs/configuration.md)
-- [Export hygiene](./docs/specs/export-hygiene.md)
-- [Business expenses and income](./docs/specs/form-section-item-tags.md)
-- [VAT payments and settlements](./docs/specs/vat.md)
-- [VAT reverse charge](./docs/specs/vat-reverse-charge.md)
-- [Business vs. private accounts](./docs/specs/business-accounts.md)
-- [Health care and insurance](./docs/specs/health-care.md)
-- [GWG and AfA](./docs/specs/afa.md)
-- [Donations](./docs/specs/donations.md)
+- [Configuration](./specs/00-configuration.md)
+- [Export hygiene](./specs/01-export-hygiene.md)
+- [Business expenses and income](./specs/02-form-section-item-tags.md)
+- [VAT payments and settlements](./specs/03-vat.md)
+- [VAT reverse charge](./specs/04-vat-reverse-charge.md)
+- [Business vs. private accounts](./specs/05-business-accounts.md)
+- [Health care and insurance](./specs/06-health-care.md)
+- [GWG and AfA](./specs/07-afa.md)
+- [Donations](./specs/08-donations.md)
 
 Run them with:
 
 ```bash
-just generate-features
-just acceptance
+cargo test --test cucumber
 ```
+
+## Development
+
+```bash
+git clone git@github.com:roschaefer/hledger-elster.git
+cd hledger-elster
+cargo build --release
+cargo test
+```
+
+`just check` runs the same formatting, lint, and test gates as CI.
 
 ## Documentation
 
@@ -150,7 +156,7 @@ User-specific tax assumptions that are not ledger transactions live in a TOML
 config file. Generate the default config with:
 
 ```bash
-just hledger-elster init-config --output elster.toml
+hledger-elster init-config --output elster.toml
 ```
 
 The default config enables the Home-Office-Pauschale and uses the maximum number
