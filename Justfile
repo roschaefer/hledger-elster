@@ -1,5 +1,4 @@
 set shell := ["bash", "-cu"]
-export UV_CACHE_DIR := ".uv-cache"
 
 default:
     @just --list
@@ -7,34 +6,22 @@ default:
 help:
     @just --list
 
-sync:
-    uv sync --extra test
+build:
+    cargo build --release
 
-hledger-elster *args="":
-    uv run python src/cli.py {{args}}
+run *args="":
+    @args="{{args}}"; args="${args#-- }"; cargo run -- $args
 
 test:
-    uv run pytest tests/ -v
+    cargo test
 
-lint:
-    uv run ruff check .
+fmt:
+    cargo fmt --all
 
-format:
-    uv run ruff format .
+fmt-check:
+    cargo fmt --all -- --check
 
-check-format:
-    uv run ruff format --check .
+clippy:
+    cargo clippy --all-targets -- -D warnings
 
-typecheck:
-    uv run ty check --exclude tests/features/steps
-
-generate-features:
-    uv run python scripts/generate_features.py
-
-check-generated-features: generate-features
-    git diff --exit-code -- tests/features/generated
-
-acceptance: generate-features
-    uv run behave tests/features
-
-check: check-format lint typecheck test check-generated-features acceptance
+check: fmt-check clippy test
