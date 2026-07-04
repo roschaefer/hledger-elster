@@ -21,6 +21,7 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(
     name = "hledger-elster",
+    version,
     about = "Generate ELSTER-oriented tax exports from an hledger journal."
 )]
 struct GenerateArgs {
@@ -37,6 +38,7 @@ struct GenerateArgs {
 #[derive(Parser)]
 #[command(
     name = "hledger-elster init-config",
+    version,
     about = "Write a default hledger-elster TOML config file."
 )]
 struct InitConfigArgs {
