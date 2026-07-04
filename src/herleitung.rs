@@ -19,7 +19,10 @@ fn fmt(v: Decimal) -> String {
 #[derive(Debug, Clone)]
 pub struct TrailRow {
     pub cells: Vec<String>,
-    /// 0 = total, 1 = bank subtotal, 2 = transaction (used for styling only).
+    /// 0 = total, 1 = bank subtotal, 2 = transaction. Not consumed by the xlsx
+    /// writer (styling there is driven by `fill`); kept as row-hierarchy
+    /// metadata asserted by tests, matching the Python dataclass's own comment.
+    #[allow(dead_code)]
     pub outline_level: i32,
     pub bold: bool,
     /// "" | "subtotal" | "total"
@@ -86,14 +89,6 @@ fn signed_net(p: &TaxPosting) -> Decimal {
 
 fn signed_vat_amount(p: &TaxPosting) -> Decimal {
     q(signed_gross(p) - signed_net(p))
-}
-
-fn deductible_net(p: &TaxPosting) -> Decimal {
-    q(net(p) * p.expense_share)
-}
-
-fn deductible_vat(p: &TaxPosting) -> Decimal {
-    q(vat_amount(p) * p.input_vat_share)
 }
 
 fn signed_deductible_net(p: &TaxPosting) -> Decimal {

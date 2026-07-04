@@ -50,13 +50,15 @@ pub fn elster_config_path() -> Option<PathBuf> {
         .map(|v| resolve(Path::new(&v)))
 }
 
+// Environment variables are process-global, so any test across the crate that
+// touches FINANCES_LEDGER_JOURNAL / FINANCES_TAX_DATA_DIR / HLEDGER_ELSTER_CONFIG
+// (or spawns the pipeline that reads them) must serialize on this lock.
+#[cfg(test)]
+pub(crate) static ENV_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::Mutex;
-
-    // Environment variables are process-global, so serialize tests that touch them.
-    static ENV_LOCK: Mutex<()> = Mutex::new(());
 
     #[test]
     fn resolve_leaves_absolute_paths_untouched() {

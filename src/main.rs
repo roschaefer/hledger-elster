@@ -12,6 +12,7 @@ mod journal;
 mod paths;
 mod periods;
 mod posting;
+mod report_writer;
 mod ust;
 
 use clap::Parser;
@@ -84,8 +85,11 @@ fn run_generate(args: &GenerateArgs) -> anyhow::Result<()> {
     if let Some(config) = &args.config {
         std::env::set_var("HLEDGER_ELSTER_CONFIG", paths::resolve(config));
     }
-    // TODO(Phase 5): wire up ingest::build_dataset + report_writer::generate_report.
-    anyhow::bail!("not yet implemented");
+    let exit_code = report_writer::generate_report()?;
+    if exit_code != 0 {
+        std::process::exit(exit_code);
+    }
+    Ok(())
 }
 
 #[cfg(test)]

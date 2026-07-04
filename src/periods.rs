@@ -7,17 +7,6 @@ use rust_decimal::Decimal;
 /// USt gains reverse-charge columns only when needed).
 pub type ReportRow = IndexMap<String, String>;
 
-pub fn period_labels(year: i32) -> Vec<String> {
-    let mut labels = vec![year.to_string()];
-    for q in 1..=4 {
-        labels.push(format!("{year} Q{q}"));
-    }
-    for m in 1..=12 {
-        labels.push(format!("{year}-{m:02}"));
-    }
-    labels
-}
-
 pub fn annual_labels(year: i32) -> Vec<String> {
     vec![year.to_string()]
 }
@@ -73,16 +62,6 @@ mod tests {
     use super::*;
     use crate::posting::test_support::posting;
     use std::str::FromStr;
-
-    #[test]
-    fn period_labels_lists_year_quarters_then_months() {
-        let labels = period_labels(2024);
-        assert_eq!(labels[0], "2024");
-        assert_eq!(&labels[1..5], &["2024 Q1", "2024 Q2", "2024 Q3", "2024 Q4"]);
-        assert_eq!(labels[5], "2024-01");
-        assert_eq!(labels[16], "2024-12");
-        assert_eq!(labels.len(), 17);
-    }
 
     #[test]
     fn filter_period_dispatches_on_label_shape() {

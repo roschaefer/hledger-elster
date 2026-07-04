@@ -915,6 +915,7 @@ dependencies = [
  "tokio",
  "toml",
  "unicode-normalization",
+ "walkdir",
  "zip 2.4.2",
 ]
 
