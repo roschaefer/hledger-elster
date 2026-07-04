@@ -1,5 +1,7 @@
 mod config;
 mod dataset;
+mod enrich;
+mod journal;
 mod paths;
 mod posting;
 
