@@ -24,4 +24,10 @@ fmt-check:
 clippy:
     cargo clippy --all-targets -- -D warnings
 
-check: fmt-check clippy test
+machete:
+    cargo machete
+
+audit:
+    cargo audit
+
+check: fmt-check clippy machete audit test

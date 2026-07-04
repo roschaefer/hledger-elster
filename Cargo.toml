@@ -27,7 +27,6 @@ walkdir = "2"
 zip = "2"
 
 [dev-dependencies]
-calamine = "0.26"
 cucumber = { version = "0.21", features = ["macros"] }
 tempfile = "3"
 tokio = { version = "1", features = ["macros", "process", "rt-multi-thread", "time"] }

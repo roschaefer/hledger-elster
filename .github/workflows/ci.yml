@@ -32,6 +32,11 @@ jobs:
       - name: Set up just
         uses: extractions/setup-just@v3
 
+      - name: Install cargo-audit and cargo-machete
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-audit,cargo-machete
+
       - name: Install hledger (Linux)
         if: runner.os == 'Linux'
         run: |
@@ -51,11 +56,17 @@ jobs:
       - name: Lint
         run: just clippy
 
+      - name: Check for unused dependencies
+        run: just machete
+
+      - name: Security audit
+        run: just audit
+
       - name: Build release binary
         run: cargo build --release
 
-      - name: Run checks
-        run: just check
+      - name: Run tests
+        run: just test
 
       - name: Copy release binary
         run: cp target/release/hledger-elster ${{ matrix.asset_name }}
