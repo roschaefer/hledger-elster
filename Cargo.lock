@@ -904,6 +904,7 @@ dependencies = [
  "clap",
  "csv",
  "cucumber",
+ "indexmap",
  "regex",
  "rust_decimal",
  "rust_xlsxwriter",

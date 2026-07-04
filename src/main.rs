@@ -1,16 +1,10 @@
+mod config;
+mod dataset;
+mod paths;
+mod posting;
+
 use clap::Parser;
 use std::path::PathBuf;
-
-const DEFAULT_CONFIG_TEXT: &str = r#"[euer.home_office_pauschale]
-enabled = true
-default_days = "max"
-# Set per-year days when the default does not match your situation.
-# 2020-2022: 5 EUR/day, capped at 600 EUR.
-# 2023+: 6 EUR/day, capped at 1260 EUR.
-
-[euer.home_office_pauschale.days]
-# 2024 = 210
-"#;
 
 #[derive(Parser)]
 #[command(
@@ -64,21 +58,22 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn run_init_config(args: &InitConfigArgs) -> anyhow::Result<()> {
-    let path = args
-        .output
-        .canonicalize()
-        .unwrap_or_else(|_| args.output.clone());
-    if path.exists() && !args.force {
-        anyhow::bail!("Config already exists: {}", path.display());
-    }
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    std::fs::write(&path, DEFAULT_CONFIG_TEXT)?;
+    let path = paths::resolve(&args.output);
+    config::write_default_config(&path, args.force)?;
     Ok(())
 }
 
-fn run_generate(_args: &GenerateArgs) -> anyhow::Result<()> {
+fn run_generate(args: &GenerateArgs) -> anyhow::Result<()> {
+    if let Some(file) = &args.file {
+        std::env::set_var("FINANCES_LEDGER_JOURNAL", paths::resolve(file));
+    }
+    if let Some(output_dir) = &args.output_dir {
+        std::env::set_var("FINANCES_TAX_DATA_DIR", paths::resolve(output_dir));
+    }
+    if let Some(config) = &args.config {
+        std::env::set_var("HLEDGER_ELSTER_CONFIG", paths::resolve(config));
+    }
+    // TODO(Phase 5): wire up ingest::build_dataset + report_writer::generate_report.
     anyhow::bail!("not yet implemented");
 }
 
