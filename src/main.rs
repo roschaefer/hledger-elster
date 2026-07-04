@@ -1,5 +1,9 @@
+mod afa;
+mod aggregates;
+mod classification;
 mod config;
 mod dataset;
+mod drawing;
 mod enrich;
 mod journal;
 mod paths;
