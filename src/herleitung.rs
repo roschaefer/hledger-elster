@@ -13,7 +13,7 @@ fn q(v: Decimal) -> Decimal {
 }
 
 fn fmt(v: Decimal) -> String {
-    format!("{v:.2}")
+    format!("{:.2}", q(v))
 }
 
 #[derive(Debug, Clone)]
@@ -530,7 +530,7 @@ fn afa_sheet(postings: &[TaxPosting], account: &str, year: i32) -> TrailSheet {
             vec![
                 p.description.clone(),
                 p.posting_date.to_string(),
-                fmt(cost),
+                fmt(q(cost)),
                 p.afa_years.to_string(),
                 fmt(monthly),
                 fmt(annual),
@@ -1052,6 +1052,31 @@ mod tests {
         assert_eq!(afa.rows[0].outline_level, 1);
         assert_eq!(afa.rows.last().unwrap().outline_level, 0);
         assert_eq!(afa.rows.last().unwrap().cells[5], "222.22");
+    }
+
+    #[test]
+    fn afa_sheet_rounds_net_cost_half_up_instead_of_truncating() {
+        use crate::posting::test_support::posting;
+        use std::str::FromStr;
+
+        // 1150.30 / 1.19 = 966.6386...5, which must round up to 966.64 for display.
+        // A naive `format!("{v:.2}")` on the unrounded rust_decimal::Decimal truncates
+        // to 966.63 instead, silently corrupting the Herleitung audit trail even though
+        // the actual filed AfA figures (which round only their final yearly total) stay
+        // correct.
+        let mut p = posting(
+            "2020-12-30",
+            "assets:bank",
+            "expenses:hardware:computer",
+            "1150.30",
+        );
+        p.vat_mode = "contains_vat".to_string();
+        p.vat_rate = Decimal::from_str("0.19").unwrap();
+        p.afa_years = 3;
+        p.tax_deduction = "afa".to_string();
+
+        let sheet = afa_sheet(&[p], "expenses:hardware:computer", 2020);
+        assert_eq!(sheet.rows[0].cells[2], "966.64");
     }
 
     #[test]
