@@ -16,7 +16,7 @@ fn fmt(v: Decimal) -> String {
     format!("{:.2}", q(v))
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TrailRow {
     pub cells: Vec<String>,
     /// 0 = total, 1 = bank subtotal, 2 = transaction. Not consumed by the xlsx
@@ -49,7 +49,7 @@ impl TrailRow {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct TrailSheet {
     pub name: String,
     pub headers: Vec<String>,

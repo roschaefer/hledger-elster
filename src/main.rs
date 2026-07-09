@@ -1,21 +1,5 @@
-mod afa;
-mod aggregates;
-mod classification;
-mod config;
-mod dataset;
-mod drawing;
-mod enrich;
-mod est;
-mod euer;
-mod herleitung;
-mod journal;
-mod paths;
-mod periods;
-mod posting;
-mod report_writer;
-mod ust;
-
 use clap::Parser;
+use hledger_elster::{config, paths, report_writer};
 use std::path::PathBuf;
 
 #[derive(Parser)]

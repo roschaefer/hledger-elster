@@ -62,7 +62,6 @@ impl TaxPosting {
     }
 }
 
-#[cfg(test)]
 pub mod test_support {
     use super::TaxPosting;
     use chrono::NaiveDate;
@@ -70,6 +69,8 @@ pub mod test_support {
 
     /// Builds a minimal `TaxPosting` with sensible empty/zero defaults, mirroring
     /// the small `_posting`/`_journal_entry` test builders in the Python test suite.
+    /// Not `#[cfg(test)]`-gated: downstream crates depending on `hledger-elster`
+    /// as a library can use this to build fixtures for their own tests.
     pub fn posting(
         date: &str,
         source_account: &str,

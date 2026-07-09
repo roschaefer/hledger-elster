@@ -599,20 +599,13 @@ mod tests {
 
         assert_eq!(exit_code, 0);
 
-        let read_csv = |path: PathBuf| -> Vec<std::collections::HashMap<String, String>> {
-            let mut reader = csv::Reader::from_path(path).unwrap();
-            reader
-                .deserialize::<std::collections::HashMap<String, String>>()
-                .map(|r| r.unwrap())
-                .collect()
-        };
-
-        let euer_2024 = read_csv(
-            out_dir
+        let euer_2024 = crate::csv_import::read_report_rows(
+            &out_dir
                 .path()
                 .join("2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv"),
-        );
-        let row = |rows: &[std::collections::HashMap<String, String>], label: &str| {
+        )
+        .unwrap();
+        let row = |rows: &[ReportRow], label: &str| {
             rows.iter()
                 .find(|r| r.get("Kennzahl").map(String::as_str) == Some(label))
                 .unwrap()
@@ -627,11 +620,12 @@ mod tests {
             "-824.22"
         );
 
-        let ust_2024 = read_csv(
-            out_dir
+        let ust_2024 = crate::csv_import::read_report_rows(
+            &out_dir
                 .path()
                 .join("2024/steuererklaerung/umsatzsteuer.csv"),
-        );
+        )
+        .unwrap();
         let annual = ust_2024
             .iter()
             .find(|r| r.get("Zeitraum").map(String::as_str) == Some("2024"))
@@ -661,6 +655,67 @@ mod tests {
                 "non-ASCII path: {name}"
             );
         }
+    }
+
+    #[test]
+    fn csv_round_trip_preserves_report_rows_and_trail_sheets() {
+        let manifest_dir = Path::new(env!("CARGO_MANIFEST_DIR"));
+        let journal = manifest_dir.join("examples/ledger/hledger.journal");
+        let out_dir = tempfile::tempdir().unwrap();
+        let year = 2024;
+
+        let config = config::load_config(None).unwrap();
+        let dataset = enrich::build_dataset(&journal).unwrap();
+
+        let euer = euer_rows(&dataset, year, &config);
+        let ust = ust_rows(&dataset, year).unwrap();
+        let est = est_rows(&dataset, year);
+        let all_herleitung = herleitung::herleitung_sheets(&dataset, year).unwrap();
+
+        let mut touched = HashSet::new();
+
+        let euer_path = out_dir.path().join("euer.csv");
+        write_rows_csv(&euer_path, &euer, &mut touched).unwrap();
+        assert_eq!(
+            crate::csv_import::read_report_rows(&euer_path).unwrap(),
+            euer
+        );
+
+        let ust_path = out_dir.path().join("ust.csv");
+        write_rows_csv(&ust_path, &ust, &mut touched).unwrap();
+        assert_eq!(crate::csv_import::read_report_rows(&ust_path).unwrap(), ust);
+
+        if !est.is_empty() {
+            let est_path = out_dir.path().join("est.csv");
+            write_rows_csv(&est_path, &est, &mut touched).unwrap();
+            assert_eq!(crate::csv_import::read_report_rows(&est_path).unwrap(), est);
+        }
+
+        let mut checked_any_trail_sheet = false;
+        for (form_key, sheets) in all_herleitung.iter() {
+            for sheet in sheets {
+                let path = out_dir
+                    .path()
+                    .join(format!("{form_key}-{}.csv", sheet.name));
+                write_trail_csv(&path, sheet, &mut touched).unwrap();
+                let read_back =
+                    crate::csv_import::read_trail_sheet(&path, sheet.name.clone()).unwrap();
+                // `outline_level` is dead-code row-hierarchy metadata that is
+                // never written to CSV (see csv_import::read_trail_sheet) and
+                // therefore can't round-trip -- everything else must match
+                // exactly.
+                let mut expected = sheet.clone();
+                for row in &mut expected.rows {
+                    row.outline_level = 0;
+                }
+                assert_eq!(read_back, expected);
+                checked_any_trail_sheet = true;
+            }
+        }
+        assert!(
+            checked_any_trail_sheet,
+            "expected at least one Herleitung sheet in the example journal"
+        );
     }
 
     #[test]

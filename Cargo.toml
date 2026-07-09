@@ -5,6 +5,10 @@ edition = "2021"
 license = "MIT"
 description = "German tax calculation and ELSTER-oriented exports for hledger"
 
+[lib]
+name = "hledger_elster"
+path = "src/lib.rs"
+
 [[bin]]
 name = "hledger-elster"
 path = "src/main.rs"

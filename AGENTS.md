@@ -19,6 +19,7 @@
 - `src/periods.rs`: period-label generation and per-period aggregation
 - `src/euer.rs` / `src/est.rs` / `src/ust.rs`: the three ELSTER form builders
 - `src/herleitung.rs`: per-form audit-trail ("Herleitung") sheet builders
+- `src/csv_import.rs`: reads the CSV files this tool writes back into `ReportRow`/`TrailSheet` — the read-back half of the CSV/xlsx equivalence invariant (see below)
 - `src/report_writer.rs`: xlsx/CSV writing, sheet-name/filename sanitization, deterministic zip output, export-hygiene tracking
 - `specs/`: Markdown specifications; fenced `gherkin` blocks are compiled into cucumber features at build time by `build.rs` (see `tests/cucumber.rs` for step definitions)
 - `examples/`: sanitized example journals
@@ -59,3 +60,23 @@ the same change so that EÜR ↔ Herleitung, ESt ↔ Herleitung, and USt ↔ Her
 consistent. Entnahmen and Einlagen follow the same rule: both the EÜR totals and the
 Herleitung sheets use the shared `is_drawing` / `is_contribution` predicates from
 `src/drawing.rs` so they can never diverge.
+
+## CSV/xlsx equivalence invariant
+
+Every sheet in `src/report_writer.rs` is written from a single already-computed
+in-memory value (`ReportRow` or `herleitung::TrailSheet`) to both an xlsx workbook
+and a CSV file. There is intentionally only one computation path: xlsx formatting
+(bold/fill/section-header styling) is derived from the row content itself (a
+`"GESAMT"` first cell, a `"Σ "`-prefixed label, a `"# "`-prefixed `Kennzahl`) rather
+than from separately maintained styling data, and the CSV is written from the exact
+same values with no independent recomputation.
+
+`src/csv_import.rs` reads those CSV files back into `ReportRow`/`TrailSheet` values
+and exists specifically to make CSV the authoritative, round-trippable representation
+on disk — the CSV is the source of truth for what was computed; the xlsx is a pure
+rendering of it. Any test or downstream consumer that wants to assert against
+exported data should read the CSV via `csv_import`, not re-derive values from the
+xlsx or hand-parse CSV. This is a permanent design goal: future contributors must
+not introduce a second computation path (e.g. an xlsx-only styling model, or a CSV
+writer that formats values differently from the xlsx writer) that could let the two
+output formats drift apart.
