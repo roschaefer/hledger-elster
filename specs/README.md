@@ -27,3 +27,4 @@ Specifications:
 - [Health care and insurance](./06-health-care.md)
 - [GWG and AfA](./07-afa.md)
 - [Donations](./08-donations.md)
+- [Command-line help](./09-cli-help.md)

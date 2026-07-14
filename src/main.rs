@@ -1,6 +1,6 @@
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use hledger_elster::{config, paths, report_writer};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
 #[command(
@@ -8,6 +8,27 @@ use std::path::PathBuf;
     version,
     about = "Generate ELSTER-oriented tax exports from an hledger journal."
 )]
+struct Cli {
+    #[command(flatten)]
+    generate: GenerateArgs,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand)]
+enum Commands {
+    /// Write a default hledger-elster TOML config file.
+    InitConfig {
+        #[arg(long)]
+        output: PathBuf,
+
+        #[arg(long)]
+        force: bool,
+    },
+}
+
+#[derive(clap::Args)]
 struct GenerateArgs {
     #[arg(short = 'f', long = "file")]
     file: Option<PathBuf>,
@@ -19,45 +40,24 @@ struct GenerateArgs {
     config: Option<PathBuf>,
 }
 
-#[derive(Parser)]
-#[command(
-    name = "hledger-elster init-config",
-    version,
-    about = "Write a default hledger-elster TOML config file."
-)]
-struct InitConfigArgs {
-    #[arg(long)]
-    output: PathBuf,
-
-    #[arg(long)]
-    force: bool,
-}
-
 fn main() -> anyhow::Result<()> {
-    let raw_args: Vec<String> = std::env::args().collect();
+    let cli = Cli::parse();
 
-    if raw_args.get(1).map(String::as_str) == Some("init-config") {
-        let args = InitConfigArgs::parse_from(
-            std::iter::once(raw_args[0].clone()).chain(raw_args[2..].iter().cloned()),
-        );
-        if let Err(err) = run_init_config(&args) {
-            eprintln!("Error: {err}");
-            std::process::exit(1);
-        }
-        return Ok(());
-    }
+    let result = match cli.command {
+        Some(Commands::InitConfig { output, force }) => run_init_config(&output, force),
+        None => run_generate(&cli.generate),
+    };
 
-    let args = GenerateArgs::parse();
-    if let Err(err) = run_generate(&args) {
+    if let Err(err) = result {
         eprintln!("Error: {err}");
         std::process::exit(1);
     }
     Ok(())
 }
 
-fn run_init_config(args: &InitConfigArgs) -> anyhow::Result<()> {
-    let path = paths::resolve(&args.output);
-    config::write_default_config(&path, args.force)?;
+fn run_init_config(output: &Path, force: bool) -> anyhow::Result<()> {
+    let path = paths::resolve(output);
+    config::write_default_config(&path, force)?;
     Ok(())
 }
 
