@@ -54,6 +54,14 @@ Feature: Configuration
       [euer.home_office_pauschale.days]
       # 2024 = 210
       """
+
+  Scenario: --help lists the init-config subcommand
+    When I run "hledger-elster --help"
+    Then stdout should contain:
+      """
+      Commands:
+        init-config  Write a default hledger-elster TOML config file
+      """
 ```
 
 The Home-Office-Pauschale config stores days, not amounts. The tool applies the
