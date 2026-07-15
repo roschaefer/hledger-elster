@@ -60,13 +60,13 @@ scenarios. The goal is to cover more cases over time through executable examples
 
 ## Specification By Example
 
-The acceptance tests are written as Markdown specifications. Each fenced
-`gherkin` block is compiled into a Cucumber feature at build time by `build.rs`
-(see `tests/cucumber.rs` for step definitions) — nothing is committed, so
-documentation and executed features cannot drift. The
-[specification index](./specs/) links back to the source files.
+Executable specifications in [`specs/`](./specs/) — run them with:
 
-Executable specifications:
+```bash
+cargo test --test cucumber
+```
+
+Specs:
 
 - [Configuration](./specs/00-configuration.md)
 - [Export hygiene](./specs/01-export-hygiene.md)
@@ -77,12 +77,6 @@ Executable specifications:
 - [Health care and insurance](./specs/06-health-care.md)
 - [GWG and AfA](./specs/07-afa.md)
 - [Donations](./specs/08-donations.md)
-
-Run them with:
-
-```bash
-cargo test --test cucumber
-```
 
 ## Development
 

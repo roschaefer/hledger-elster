@@ -871,6 +871,7 @@ dependencies = [
  "csv",
  "cucumber",
  "indexmap",
+ "markdown-to-cucumber",
  "regex",
  "rust_decimal",
  "rust_xlsxwriter",
@@ -1098,6 +1099,11 @@ dependencies = [
  "libc",
  "pkg-config",
 ]
+
+[[package]]
+name = "markdown-to-cucumber"
+version = "0.1.0"
+source = "git+https://github.com/roschaefer/markdown-to-cucumber.git?branch=main#24285266e3913da89cf837d308d9aca8f7eb4e3d"
 
 [[package]]
 name = "memchr"

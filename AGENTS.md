@@ -21,7 +21,11 @@
 - `src/herleitung.rs`: per-form audit-trail ("Herleitung") sheet builders
 - `src/csv_import.rs`: reads the CSV files this tool writes back into `ReportRow`/`TrailSheet` — the read-back half of the CSV/xlsx equivalence invariant (see below)
 - `src/report_writer.rs`: xlsx/CSV writing, sheet-name/filename sanitization, deterministic zip output, export-hygiene tracking
-- `specs/`: Markdown specifications; fenced `gherkin` blocks are compiled into cucumber features at build time by `build.rs` (see `tests/cucumber.rs` for step definitions)
+- `specs/`: Markdown specifications; fenced `gherkin` blocks are compiled into
+  cucumber features at build time by `build.rs`, via the shared
+  [markdown-to-cucumber](https://github.com/roschaefer/markdown-to-cucumber)
+  crate (see `tests/cucumber.rs` for step definitions, which stay local to
+  this crate)
 - `examples/`: sanitized example journals
 - `docs/`: ELSTER-specific design and migration notes
 
