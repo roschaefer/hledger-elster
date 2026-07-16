@@ -14,26 +14,26 @@ name = "hledger-elster"
 path = "src/main.rs"
 
 [dependencies]
-anyhow = "1"
-chrono = { version = "0.4", features = ["serde"] }
-clap = { version = "4", features = ["derive"] }
-csv = "1"
-indexmap = "2"
-regex = "1"
-rust_decimal = "1"
-rust_xlsxwriter = "0.8"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
-thiserror = "2"
-toml = "0.8"
-unicode-normalization = "0.1"
-walkdir = "2"
-zip = "2"
+anyhow = "1.0.103"
+chrono = { version = "0.4.45", features = ["serde"] }
+clap = { version = "4.6.2", features = ["derive"] }
+csv = "1.4.0"
+indexmap = "2.14.0"
+regex = "1.13.1"
+rust_decimal = "1.42.1"
+rust_xlsxwriter = "0.96.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+thiserror = "2.0.18"
+toml = "0.9.12"
+unicode-normalization = "0.1.25"
+walkdir = "2.5.0"
+zip = "2.4.2"
 
 [dev-dependencies]
-cucumber = { version = "0.21", features = ["macros"] }
-tempfile = "3"
-tokio = { version = "1", features = ["macros", "process", "rt-multi-thread", "time"] }
+cucumber = { version = "0.23.0", features = ["macros"] }
+tempfile = "3.27.0"
+tokio = { version = "1.52.4", features = ["macros", "process", "rt-multi-thread", "time"] }
 
 [build-dependencies]
 markdown-to-cucumber = { git = "https://github.com/roschaefer/markdown-to-cucumber.git", branch = "main" }
