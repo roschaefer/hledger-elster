@@ -1,0 +1,44 @@
+[package]
+name = "hledger-elster"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "German tax calculation and ELSTER-oriented exports for hledger"
+
+[lib]
+name = "hledger_elster"
+path = "src/lib.rs"
+
+[[bin]]
+name = "hledger-elster"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+clap = { version = "4", features = ["derive"] }
+csv = "1"
+indexmap = "2"
+regex = "1"
+rust_decimal = "1"
+rust_xlsxwriter = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+thiserror = "2"
+toml = "0.8"
+unicode-normalization = "0.1"
+walkdir = "2"
+zip = "2"
+
+[dev-dependencies]
+calamine = "0.36.0"
+cucumber = { version = "0.21", features = ["macros"] }
+tempfile = "3"
+tokio = { version = "1", features = ["macros", "process", "rt-multi-thread", "time"] }
+
+[build-dependencies]
+markdown-to-cucumber = { git = "https://github.com/roschaefer/markdown-to-cucumber.git", branch = "main" }
+
+[[test]]
+name = "cucumber"
+harness = false
