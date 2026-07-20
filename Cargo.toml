@@ -21,18 +21,18 @@ csv = "1"
 indexmap = "2"
 regex = "1"
 rust_decimal = "1"
-rust_xlsxwriter = "0.8"
+rust_xlsxwriter = "0.96"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 thiserror = "2"
-toml = "0.8"
+toml = "1.1"
 unicode-normalization = "0.1"
 walkdir = "2"
-zip = "2"
+zip = "8"
 
 [dev-dependencies]
 calamine = "0.36.0"
-cucumber = { version = "0.21", features = ["macros"] }
+cucumber = { version = "0.23", features = ["macros"] }
 tempfile = "3"
 tokio = { version = "1", features = ["macros", "process", "rt-multi-thread", "time"] }
 
