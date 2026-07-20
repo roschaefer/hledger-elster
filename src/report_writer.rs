@@ -7,7 +7,7 @@ use crate::paths;
 use crate::periods::ReportRow;
 use crate::ust::ust_rows;
 use anyhow::Result;
-use rust_xlsxwriter::{Format, Workbook, Worksheet, XlsxAlign, XlsxColor};
+use rust_xlsxwriter::{Color, Format, FormatAlign, Workbook, Worksheet};
 use std::collections::HashSet;
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
@@ -57,16 +57,16 @@ fn stabilize_xlsx(data: Vec<u8>) -> Result<Vec<u8>> {
 
 fn default_format() -> Format {
     Format::new()
-        .set_font_color(XlsxColor::RGB(0x000000))
-        .set_background_color(XlsxColor::RGB(0xFFFFFF))
+        .set_font_color(Color::RGB(0x000000))
+        .set_background_color(Color::RGB(0xFFFFFF))
 }
 
 fn header_format() -> Format {
     Format::new()
         .set_bold()
-        .set_font_color(XlsxColor::RGB(0x000000))
-        .set_background_color(XlsxColor::RGB(0xD9E1F2))
-        .set_align(XlsxAlign::Center)
+        .set_font_color(Color::RGB(0x000000))
+        .set_background_color(Color::RGB(0xD9E1F2))
+        .set_align(FormatAlign::Center)
 }
 
 /// Same as `header_format` but without center alignment -- matches
@@ -76,42 +76,42 @@ fn header_format() -> Format {
 fn header_format_plain() -> Format {
     Format::new()
         .set_bold()
-        .set_font_color(XlsxColor::RGB(0x000000))
-        .set_background_color(XlsxColor::RGB(0xD9E1F2))
+        .set_font_color(Color::RGB(0x000000))
+        .set_background_color(Color::RGB(0xD9E1F2))
 }
 
 fn bold_format() -> Format {
     Format::new()
         .set_bold()
-        .set_font_color(XlsxColor::RGB(0x000000))
-        .set_background_color(XlsxColor::RGB(0xFFFFFF))
+        .set_font_color(Color::RGB(0x000000))
+        .set_background_color(Color::RGB(0xFFFFFF))
 }
 
 fn section_format() -> Format {
     Format::new()
         .set_bold()
-        .set_font_color(XlsxColor::RGB(0x000000))
-        .set_background_color(XlsxColor::RGB(0xE9EFF7))
+        .set_font_color(Color::RGB(0x000000))
+        .set_background_color(Color::RGB(0xE9EFF7))
 }
 
 fn blank_format() -> Format {
     Format::new()
-        .set_font_color(XlsxColor::RGB(0x000000))
-        .set_background_color(XlsxColor::RGB(0xF2F2F2))
+        .set_font_color(Color::RGB(0x000000))
+        .set_background_color(Color::RGB(0xF2F2F2))
 }
 
 fn subtotal_format() -> Format {
     Format::new()
         .set_bold()
-        .set_font_color(XlsxColor::RGB(0x000000))
-        .set_background_color(XlsxColor::RGB(0xDDEBF7))
+        .set_font_color(Color::RGB(0x000000))
+        .set_background_color(Color::RGB(0xDDEBF7))
 }
 
 fn total_format() -> Format {
     Format::new()
         .set_bold()
-        .set_font_color(XlsxColor::RGB(0x000000))
-        .set_background_color(XlsxColor::RGB(0xFCE4D6))
+        .set_font_color(Color::RGB(0x000000))
+        .set_background_color(Color::RGB(0xFCE4D6))
 }
 
 fn char_len(s: &str) -> usize {
@@ -173,7 +173,7 @@ fn write_row(
 ) -> Result<()> {
     for (col_idx, header) in headers.iter().enumerate() {
         let value = row.get(header).map(String::as_str).unwrap_or("");
-        ws.write_string(row_idx, col_idx as u16, value, format)?;
+        ws.write_string_with_format(row_idx, col_idx as u16, value, format)?;
     }
     Ok(())
 }
@@ -202,7 +202,7 @@ fn write_summary_sheet(ws: &mut Worksheet, rows: &[ReportRow]) -> Result<()> {
     let headers: Vec<String> = rows[0].keys().cloned().collect();
     let header_fmt = header_format();
     for (col_idx, header) in headers.iter().enumerate() {
-        ws.write_string(0, col_idx as u16, header, &header_fmt)?;
+        ws.write_string_with_format(0, col_idx as u16, header, &header_fmt)?;
     }
 
     let default_fmt = default_format();
@@ -240,7 +240,7 @@ fn write_ust_sheet(ws: &mut Worksheet, rows: &[ReportRow]) -> Result<()> {
     let headers: Vec<String> = rows[0].keys().cloned().collect();
     let header_fmt = header_format();
     for (col_idx, header) in headers.iter().enumerate() {
-        ws.write_string(0, col_idx as u16, header, &header_fmt)?;
+        ws.write_string_with_format(0, col_idx as u16, header, &header_fmt)?;
     }
 
     let default_fmt = default_format();
@@ -269,7 +269,7 @@ fn write_ust_sheet(ws: &mut Worksheet, rows: &[ReportRow]) -> Result<()> {
 fn write_trail_sheet(ws: &mut Worksheet, sheet: &TrailSheet) -> Result<()> {
     let header_fmt = header_format_plain();
     for (col_idx, header) in sheet.headers.iter().enumerate() {
-        ws.write_string(0, col_idx as u16, header, &header_fmt)?;
+        ws.write_string_with_format(0, col_idx as u16, header, &header_fmt)?;
     }
 
     let default_fmt = default_format();
@@ -289,7 +289,7 @@ fn write_trail_sheet(ws: &mut Worksheet, sheet: &TrailSheet) -> Result<()> {
             _ => &default_fmt,
         };
         for (col_idx, cell) in trail_row.cells.iter().enumerate() {
-            ws.write_string(row_idx, col_idx as u16, cell, format)?;
+            ws.write_string_with_format(row_idx, col_idx as u16, cell, format)?;
         }
     }
 
@@ -365,7 +365,7 @@ fn save_xlsx(
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    let raw = workbook.close_to_buffer()?;
+    let raw = workbook.save_to_buffer()?;
     let stabilized = stabilize_xlsx(raw)?;
     std::fs::write(path, stabilized)?;
     touched_files.insert(path.canonicalize()?);
@@ -441,7 +441,7 @@ pub fn generate_report() -> Result<i32> {
         let ust = ust_rows(&dataset, year)?;
         let est = est_rows(&dataset, year);
 
-        let mut workbook = Workbook::new_from_buffer();
+        let mut workbook = Workbook::new();
         {
             let ws = workbook.add_worksheet();
             ws.set_name("EÜR")?;
@@ -490,10 +490,10 @@ pub fn generate_report() -> Result<i32> {
                 _ => continue,
             };
 
-            let mut workbook = Workbook::new_from_buffer();
+            let mut workbook = Workbook::new();
             for sheet in sheets {
                 let ws = workbook.add_worksheet();
-                ws.set_name(&xlsx_sheet_title(&sheet.name))?;
+                ws.set_name(xlsx_sheet_title(&sheet.name))?;
                 write_trail_sheet(ws, sheet)?;
             }
             save_xlsx(
@@ -516,10 +516,10 @@ pub fn generate_report() -> Result<i32> {
 
         let ignored_sheets = all_herleitung.get("ignoriert").cloned().unwrap_or_default();
         if !ignored_sheets.is_empty() {
-            let mut workbook = Workbook::new_from_buffer();
+            let mut workbook = Workbook::new();
             for sheet in &ignored_sheets {
                 let ws = workbook.add_worksheet();
-                ws.set_name(&xlsx_sheet_title(&sheet.name))?;
+                ws.set_name(xlsx_sheet_title(&sheet.name))?;
                 write_trail_sheet(ws, sheet)?;
             }
             save_xlsx(
@@ -726,12 +726,12 @@ mod tests {
 
     #[test]
     fn stabilize_xlsx_is_deterministic_across_runs() {
-        let mut workbook = Workbook::new_from_buffer();
+        let mut workbook = Workbook::new();
         let ws = workbook.add_worksheet();
         ws.set_name("Test").unwrap();
         let fmt = default_format();
-        ws.write_string(0, 0, "hello", &fmt).unwrap();
-        let raw = workbook.close_to_buffer().unwrap();
+        ws.write_string_with_format(0, 0, "hello", &fmt).unwrap();
+        let raw = workbook.save_to_buffer().unwrap();
         let first = stabilize_xlsx(raw.clone()).unwrap();
         // A second stabilization pass over the same raw bytes must be identical.
         let second = stabilize_xlsx(raw).unwrap();

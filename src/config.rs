@@ -102,7 +102,7 @@ pub fn load_config(path: Option<&Path>) -> Result<TaxConfig, ConfigError> {
         return Err(ConfigError::NotFound(path.display().to_string()));
     }
     let raw_text = std::fs::read_to_string(path)?;
-    let raw: toml::Value = raw_text.parse()?;
+    let raw: toml::Value = toml::from_str(&raw_text)?;
     parse_config(&raw)
 }
 
@@ -271,48 +271,45 @@ mod tests {
 
     #[test]
     fn parse_config_rejects_non_table_home_office_pauschale() {
-        let raw: toml::Value = "euer.home_office_pauschale = 1".parse().unwrap();
+        let raw: toml::Value = toml::from_str("euer.home_office_pauschale = 1").unwrap();
         let err = parse_config(&raw).unwrap_err();
         assert!(matches!(err, ConfigError::HomeOfficeNotATable));
     }
 
     #[test]
     fn parse_config_rejects_non_bool_enabled() {
-        let raw: toml::Value = "[euer.home_office_pauschale]\nenabled = 1".parse().unwrap();
+        let raw: toml::Value = toml::from_str("[euer.home_office_pauschale]\nenabled = 1").unwrap();
         let err = parse_config(&raw).unwrap_err();
         assert!(matches!(err, ConfigError::EnabledNotABool));
     }
 
     #[test]
     fn parse_config_rejects_invalid_default_days_string() {
-        let raw: toml::Value = "[euer.home_office_pauschale]\ndefault_days = \"lots\""
-            .parse()
-            .unwrap();
+        let raw: toml::Value =
+            toml::from_str("[euer.home_office_pauschale]\ndefault_days = \"lots\"").unwrap();
         let err = parse_config(&raw).unwrap_err();
         assert!(matches!(err, ConfigError::DefaultDaysInvalid));
     }
 
     #[test]
     fn parse_config_rejects_negative_default_days() {
-        let raw: toml::Value = "[euer.home_office_pauschale]\ndefault_days = -1"
-            .parse()
-            .unwrap();
+        let raw: toml::Value =
+            toml::from_str("[euer.home_office_pauschale]\ndefault_days = -1").unwrap();
         let err = parse_config(&raw).unwrap_err();
         assert!(matches!(err, ConfigError::DefaultDaysNegative));
     }
 
     #[test]
     fn parse_config_rejects_negative_days_value() {
-        let raw: toml::Value = "[euer.home_office_pauschale.days]\n\"2024\" = -5"
-            .parse()
-            .unwrap();
+        let raw: toml::Value =
+            toml::from_str("[euer.home_office_pauschale.days]\n\"2024\" = -5").unwrap();
         let err = parse_config(&raw).unwrap_err();
         assert!(matches!(err, ConfigError::DaysValueNegative(_)));
     }
 
     #[test]
     fn parse_config_accepts_full_example() {
-        let raw: toml::Value = DEFAULT_CONFIG_TEXT.parse().unwrap();
+        let raw: toml::Value = toml::from_str(DEFAULT_CONFIG_TEXT).unwrap();
         let config = parse_config(&raw).unwrap();
         assert!(config.home_office_pauschale.enabled);
         assert_eq!(config.home_office_pauschale.default_days, DefaultDays::Max);
@@ -320,9 +317,8 @@ mod tests {
 
     #[test]
     fn parse_config_reads_per_year_days() {
-        let raw: toml::Value = "[euer.home_office_pauschale.days]\n\"2024\" = 210"
-            .parse()
-            .unwrap();
+        let raw: toml::Value =
+            toml::from_str("[euer.home_office_pauschale.days]\n\"2024\" = 210").unwrap();
         let config = parse_config(&raw).unwrap();
         assert_eq!(
             config.home_office_pauschale.days_by_year.get(&2024),
