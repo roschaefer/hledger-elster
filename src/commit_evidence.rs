@@ -47,7 +47,12 @@ fn current_repository_root() -> Result<PathBuf, CommitEvidenceError> {
 
 pub fn current_git_metadata() -> Result<GitMetadata, CommitEvidenceError> {
     current_repository_root()?;
-    let status = run_git(&["status", "--porcelain", "--untracked-files=all"])?;
+    let status = run_git(&[
+        "status",
+        "--porcelain",
+        "--untracked-files=all",
+        "--ignore-submodules=none",
+    ])?;
     if !status.is_empty() {
         return Err(CommitEvidenceError::DirtyWorkingTree);
     }
