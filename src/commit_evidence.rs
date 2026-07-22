@@ -53,10 +53,16 @@ fn current_repository_root() -> Result<PathBuf, CommitEvidenceError> {
     ))
 }
 
-/// Callers must already have established that the current directory is
-/// inside a Git repository (e.g. via `current_repository_root`); this does
-/// not re-check, to avoid spawning a redundant `git rev-parse` per export.
 pub fn current_git_metadata() -> Result<GitMetadata, CommitEvidenceError> {
+    current_repository_root()?;
+    git_metadata_assuming_repository()
+}
+
+/// Skips the repository check `current_git_metadata` does, for callers
+/// (namely `write_commit_evidence`) that already established via
+/// `current_repository_root` that we're inside a Git repository, so they
+/// don't pay for a redundant `git rev-parse` per export.
+fn git_metadata_assuming_repository() -> Result<GitMetadata, CommitEvidenceError> {
     let status = run_git(&[
         "status",
         "--porcelain",
@@ -303,7 +309,7 @@ fn open_for_write(path: &Path, force: bool) -> Result<std::fs::File, CommitEvide
 pub fn write_commit_evidence(path: &Path, force: bool) -> Result<(), CommitEvidenceError> {
     let repository_root = current_repository_root()?;
     ensure_output_outside_repository(path, &repository_root)?;
-    let metadata = current_git_metadata()?;
+    let metadata = git_metadata_assuming_repository()?;
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|source| CommitEvidenceError::Write {
             path: path.to_path_buf(),
