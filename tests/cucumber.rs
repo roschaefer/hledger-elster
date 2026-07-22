@@ -20,10 +20,9 @@ pub struct ElsterWorld {
 impl ElsterWorld {
     async fn new() -> Self {
         let tmp = TempDir::new().unwrap();
-        let work_dir = tmp
-            .path()
-            .canonicalize()
-            .unwrap_or_else(|_| tmp.path().to_path_buf());
+        let work_dir = tmp.path().join("work");
+        std::fs::create_dir_all(&work_dir).unwrap();
+        let work_dir = work_dir.canonicalize().unwrap_or(work_dir);
         Self {
             _tmp: tmp,
             work_dir,
@@ -46,6 +45,18 @@ impl ElsterWorld {
             "Unsafe scenario path: {path}"
         );
         self.work_dir.join(relative)
+    }
+
+    fn resolve_outside_work_dir(&self, path: &str) -> PathBuf {
+        let relative = Path::new(path);
+        assert!(
+            !relative.is_absolute()
+                && !relative
+                    .components()
+                    .any(|c| c == std::path::Component::ParentDir),
+            "Unsafe scenario path: {path}"
+        );
+        self.work_dir.parent().unwrap().join(relative)
     }
 }
 
@@ -96,24 +107,16 @@ fn gherkin_table(step: &Step) -> Vec<Vec<String>> {
     table.rows.clone()
 }
 
-// ---------------------------------------------------------------------------
-// Given steps
-// ---------------------------------------------------------------------------
-
-#[given(regex = r#"^a file named "([^"]+)" with content:$"#)]
-async fn write_file(world: &mut ElsterWorld, step: &Step, path: String) {
-    let content = docstring(step);
-    let target = world.resolve(&path);
-    std::fs::create_dir_all(target.parent().unwrap()).unwrap();
-    std::fs::write(&target, format!("{content}\n")).unwrap();
+async fn run_git(world: &ElsterWorld, args: &[&str]) -> std::process::Output {
+    Command::new("git")
+        .args(args)
+        .current_dir(&world.work_dir)
+        .output()
+        .await
+        .unwrap_or_else(|e| panic!("failed to run git {args:?}: {e}"))
 }
 
-// ---------------------------------------------------------------------------
-// When steps
-// ---------------------------------------------------------------------------
-
-#[when(regex = r#"^I run "([^"]+)"$"#)]
-async fn run_command(world: &mut ElsterWorld, command: String) {
+async fn run_elster_command(world: &mut ElsterWorld, command: &str) -> bool {
     let args: Vec<&str> = command.split_whitespace().collect();
     let bin = PathBuf::from(env!("CARGO_BIN_EXE_hledger-elster"));
     let (program, rest): (PathBuf, &[&str]) =
@@ -136,18 +139,120 @@ async fn run_command(world: &mut ElsterWorld, command: String) {
     world.last_stderr = String::from_utf8_lossy(&output.stderr).into_owned();
     world.last_exit_code = output.status.code().unwrap_or(-1);
 
+    output.status.success()
+}
+
+// ---------------------------------------------------------------------------
+// Given steps
+// ---------------------------------------------------------------------------
+
+#[given(regex = r#"^a git repository$"#)]
+async fn git_repository(world: &mut ElsterWorld) {
+    let output = run_git(world, &["init"]).await;
     assert!(
         output.status.success(),
+        "git init failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    for args in [
+        ["config", "user.email", "cucumber@example.invalid"],
+        ["config", "user.name", "Cucumber Tests"],
+        ["config", "commit.gpgsign", "false"],
+    ] {
+        let output = run_git(world, &args).await;
+        assert!(
+            output.status.success(),
+            "git {args:?} failed:\n{}",
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+}
+
+#[given(regex = r#"^a file named "([^"]+)" with content:$"#)]
+async fn write_file(world: &mut ElsterWorld, step: &Step, path: String) {
+    let content = docstring(step);
+    let target = world.resolve(&path);
+    std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+    std::fs::write(&target, format!("{content}\n")).unwrap();
+}
+
+#[given(regex = r#"^I commit all files$"#)]
+async fn commit_all_files(world: &mut ElsterWorld) {
+    let output = run_git(world, &["add", "."]).await;
+    assert!(
+        output.status.success(),
+        "git add failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+
+    let output = run_git(world, &["commit", "-m", "scenario state"]).await;
+    assert!(
+        output.status.success(),
+        "git commit failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+// ---------------------------------------------------------------------------
+// When steps
+// ---------------------------------------------------------------------------
+
+#[when(regex = r#"^I run "([^"]+)"$"#)]
+async fn run_command(world: &mut ElsterWorld, command: String) {
+    let success = run_elster_command(world, &command).await;
+    assert!(
+        success,
         "command failed (exit {}): {command}\nstdout:\n{}\nstderr:\n{}",
-        world.last_exit_code,
-        world.last_stdout,
-        world.last_stderr,
+        world.last_exit_code, world.last_stdout, world.last_stderr,
+    );
+}
+
+#[when(regex = r#"^I run "([^"]+)" and it fails$"#)]
+async fn run_command_fails(world: &mut ElsterWorld, command: String) {
+    let success = run_elster_command(world, &command).await;
+    assert!(
+        !success,
+        "command unexpectedly succeeded: {command}\nstdout:\n{}\nstderr:\n{}",
+        world.last_stdout, world.last_stderr,
     );
 }
 
 // ---------------------------------------------------------------------------
 // Then steps
 // ---------------------------------------------------------------------------
+
+#[then(regex = r#"^the file "([^"]+)" should exist$"#)]
+async fn file_should_exist(world: &mut ElsterWorld, path: String) {
+    assert!(
+        world.resolve(&path).exists(),
+        "Expected output file was not created: {path}"
+    );
+}
+
+#[then(regex = r#"^the file "([^"]+)" should not exist$"#)]
+async fn file_should_not_exist(world: &mut ElsterWorld, path: String) {
+    assert!(
+        !world.resolve(&path).exists(),
+        "Expected output file not to exist: {path}"
+    );
+}
+
+#[then(regex = r#"^the file outside the repository "([^"]+)" should exist$"#)]
+async fn file_outside_repository_should_exist(world: &mut ElsterWorld, path: String) {
+    assert!(
+        world.resolve_outside_work_dir(&path).exists(),
+        "Expected output file outside repository was not created: {path}"
+    );
+}
+
+#[then(regex = r#"^the file outside the repository "([^"]+)" should not exist$"#)]
+async fn file_outside_repository_should_not_exist(world: &mut ElsterWorld, path: String) {
+    assert!(
+        !world.resolve_outside_work_dir(&path).exists(),
+        "Expected output file outside repository not to exist: {path}"
+    );
+}
 
 #[then(regex = r#"^the file "([^"]+)" should contain exactly:$"#)]
 async fn file_should_contain_exactly(world: &mut ElsterWorld, step: &Step, path: String) {
@@ -159,6 +264,60 @@ async fn file_should_contain_exactly(world: &mut ElsterWorld, step: &Step, path:
     );
     let actual = std::fs::read_to_string(&actual_path).unwrap();
     assert_eq!(actual, expected);
+}
+
+#[then(regex = r#"^the PDF file "([^"]+)" should contain the current git commit hash$"#)]
+async fn pdf_file_should_contain_current_git_commit_hash(world: &mut ElsterWorld, path: String) {
+    let output = run_git(world, &["rev-parse", "HEAD"]).await;
+    assert!(
+        output.status.success(),
+        "git rev-parse failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let hash = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let bytes = std::fs::read(world.resolve(&path)).unwrap();
+    let content = String::from_utf8_lossy(&bytes);
+    assert!(
+        content.contains(&hash),
+        "PDF file {path} did not contain current git commit hash {hash}"
+    );
+}
+
+#[then(
+    regex = r#"^the PDF file outside the repository "([^"]+)" should contain the current git commit hash$"#
+)]
+async fn pdf_file_outside_repository_should_contain_current_git_commit_hash(
+    world: &mut ElsterWorld,
+    path: String,
+) {
+    let output = run_git(world, &["rev-parse", "HEAD"]).await;
+    assert!(
+        output.status.success(),
+        "git rev-parse failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let hash = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    let bytes = std::fs::read(world.resolve_outside_work_dir(&path)).unwrap();
+    let content = String::from_utf8_lossy(&bytes);
+    assert!(
+        content.contains(&hash),
+        "PDF file outside repository {path} did not contain current git commit hash {hash}"
+    );
+}
+
+#[then(regex = r#"^the git working tree should be clean$"#)]
+async fn git_working_tree_should_be_clean(world: &mut ElsterWorld) {
+    let output = run_git(world, &["status", "--porcelain"]).await;
+    assert!(
+        output.status.success(),
+        "git status failed:\n{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let status = String::from_utf8_lossy(&output.stdout);
+    assert!(
+        status.trim().is_empty(),
+        "git working tree is dirty:\n{status}"
+    );
 }
 
 #[then(regex = r#"^the CSV file "([^"]+)" should contain exactly:$"#)]

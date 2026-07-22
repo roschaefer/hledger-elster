@@ -36,3 +36,4 @@ Specifications:
 - [Health care and insurance](./08-health-care.md)
 - [GWG and AfA](./09-afa.md)
 - [Donations](./10-donations.md)
+- [Git commit evidence](./11-commit-evidence.md)
