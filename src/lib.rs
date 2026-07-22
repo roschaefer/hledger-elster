@@ -1,6 +1,7 @@
 pub mod afa;
 pub mod aggregates;
 pub mod classification;
+pub mod commit_evidence;
 pub mod config;
 pub mod csv_import;
 pub mod dataset;

@@ -1,5 +1,5 @@
 use clap::{Parser, Subcommand};
-use hledger_elster::{config, paths, report_writer};
+use hledger_elster::{commit_evidence, config, paths, report_writer};
 use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
@@ -26,6 +26,11 @@ enum Commands {
         #[arg(long)]
         force: bool,
     },
+    /// Write a PDF identifying the current clean Git commit.
+    ExportCommitEvidence {
+        #[arg(long)]
+        output: PathBuf,
+    },
 }
 
 #[derive(clap::Args)]
@@ -45,6 +50,7 @@ fn main() -> anyhow::Result<()> {
 
     let result = match cli.command {
         Some(Commands::InitConfig { output, force }) => run_init_config(&output, force),
+        Some(Commands::ExportCommitEvidence { output }) => run_export_commit_evidence(&output),
         None => run_generate(&cli.generate),
     };
 
@@ -58,6 +64,12 @@ fn main() -> anyhow::Result<()> {
 fn run_init_config(output: &Path, force: bool) -> anyhow::Result<()> {
     let path = paths::resolve(output);
     config::write_default_config(&path, force)?;
+    Ok(())
+}
+
+fn run_export_commit_evidence(output: &Path) -> anyhow::Result<()> {
+    let path = paths::resolve(output);
+    commit_evidence::write_commit_evidence(&path)?;
     Ok(())
 }
 

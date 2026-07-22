@@ -60,7 +60,8 @@ Feature: Configuration
     Then stdout should contain:
       """
       Commands:
-        init-config  Write a default hledger-elster TOML config file
+        init-config             Write a default hledger-elster TOML config file
+        export-commit-evidence  Write a PDF identifying the current clean Git commit
       """
 ```
 
