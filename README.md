@@ -44,9 +44,6 @@ Arguments:
 - `-o`, `--output-dir`: output directory for generated tax artifacts
 - `--config`: TOML config file for user-specific tax adjustments
 
-Sanitized public fixtures live under [`examples/`](./examples). Keep real journals,
-tax filings, and verification data outside this repository.
-
 ## Audience
 
 This tool currently targets my own situation: I am a software developer working
@@ -78,6 +75,7 @@ Specs:
 - [Health care and insurance](./specs/08-health-care.md)
 - [GWG and AfA](./specs/09-afa.md)
 - [Donations](./specs/10-donations.md)
+- [Git commit evidence](./specs/11-commit-evidence.md)
 
 ## Development
 
@@ -177,7 +175,7 @@ maximum does not match your situation.
 ### Routing tags
 
 | Tag | Values | Meaning |
-|-----|--------|---------|
+| ----- | -------- | --------- |
 | `elster_account` | `business` \| `private` | Marks a payment account as belonging to the business or private sphere. Drives the drawing/contribution fallback: any unclassified outflow from a `business` account is counted as an Entnahme in the EÜR. |
 | `elster_role` | `income_tax_advance` \| `income_tax_final` | Marks ESt payment accounts. Postings appear in the ESt summary, separated by advance vs. final settlement. |
 | `elster_role` | `tax_payment` | Generic parent role for all tax payments. Prevents tax outflows from being counted as Entnahmen in the EÜR. |
@@ -194,7 +192,7 @@ maximum does not match your situation.
 ### Calculation tags
 
 | Tag | Values | Meaning |
-|-----|--------|---------|
+| ----- | -------- | --------- |
 | `elster_vat` | `contains_vat` | The booked amount is gross and contains VAT. `elster_vat_rate` splits the amount into net and VAT. |
 | `elster_vat` | `reverse_charge_eu` \| `reverse_charge_non_eu` | The booked amount is net. `elster_vat_rate` calculates German VAT on top for the USt reverse-charge rows. |
 | `elster_vat` | `not_applicable` | No VAT calculation applies. Do not set `elster_vat_rate` or `elster_input_vat_share`. |
