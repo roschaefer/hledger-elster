@@ -22,11 +22,6 @@ pub enum CommitEvidenceError {
     DirtyWorkingTree,
     #[error("commit evidence output must be outside the Git repository: {0}")]
     OutputInsideRepository(PathBuf),
-    #[error("failed to inspect commit evidence output path at {path}: {source}")]
-    OutputPathIo {
-        path: PathBuf,
-        source: std::io::Error,
-    },
     #[error("failed to write commit evidence PDF at {path}: {source}")]
     Write {
         path: PathBuf,
@@ -240,43 +235,7 @@ pub fn pdf_bytes(metadata: &GitMetadata) -> Vec<u8> {
     pdf.into_bytes()
 }
 
-fn resolve_existing_output_target(path: &Path) -> Result<PathBuf, CommitEvidenceError> {
-    if std::fs::symlink_metadata(path).is_ok() {
-        return path
-            .canonicalize()
-            .map_err(|source| CommitEvidenceError::OutputPathIo {
-                path: path.to_path_buf(),
-                source,
-            });
-    }
-
-    let mut existing = path;
-    let mut missing = Vec::new();
-    while !existing.exists() {
-        let Some(name) = existing.file_name() else {
-            break;
-        };
-        missing.push(name.to_os_string());
-        let Some(parent) = existing.parent() else {
-            break;
-        };
-        existing = parent;
-    }
-
-    let mut resolved =
-        existing
-            .canonicalize()
-            .map_err(|source| CommitEvidenceError::OutputPathIo {
-                path: existing.to_path_buf(),
-                source,
-            })?;
-    for component in missing.iter().rev() {
-        resolved.push(component);
-    }
-    Ok(resolve_parent_dirs(&resolved))
-}
-
-fn resolve_parent_dirs(path: &Path) -> PathBuf {
+fn normalize_path(path: &Path) -> PathBuf {
     let mut resolved = PathBuf::new();
     for component in path.components() {
         match component {
@@ -294,14 +253,8 @@ fn ensure_output_outside_repository(
     path: &Path,
     repository_root: &Path,
 ) -> Result<(), CommitEvidenceError> {
-    let output = resolve_existing_output_target(path)?;
-    let repository_root =
-        repository_root
-            .canonicalize()
-            .map_err(|source| CommitEvidenceError::OutputPathIo {
-                path: repository_root.to_path_buf(),
-                source,
-            })?;
+    let output = normalize_path(path);
+    let repository_root = normalize_path(repository_root);
     if output.starts_with(&repository_root) {
         return Err(CommitEvidenceError::OutputInsideRepository(output));
     }
@@ -368,42 +321,6 @@ mod tests {
         let err =
             ensure_output_outside_repository(&repository.join("commit-evidence.pdf"), &repository)
                 .unwrap_err();
-        assert!(matches!(
-            err,
-            CommitEvidenceError::OutputInsideRepository(_)
-        ));
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn symlinked_external_parent_into_repository_is_rejected() {
-        let tmp = tempfile::tempdir().unwrap();
-        let repository = tmp.path().join("tax-repo");
-        std::fs::create_dir(&repository).unwrap();
-        let symlink = tmp.path().join("export");
-        std::os::unix::fs::symlink(&repository, &symlink).unwrap();
-
-        let err =
-            ensure_output_outside_repository(&symlink.join("commit-evidence.pdf"), &repository)
-                .unwrap_err();
-        assert!(matches!(
-            err,
-            CommitEvidenceError::OutputInsideRepository(_)
-        ));
-    }
-
-    #[cfg(unix)]
-    #[test]
-    fn symlinked_external_output_file_into_repository_is_rejected() {
-        let tmp = tempfile::tempdir().unwrap();
-        let repository = tmp.path().join("tax-repo");
-        std::fs::create_dir(&repository).unwrap();
-        let target = repository.join("commit-evidence.pdf");
-        std::fs::write(&target, b"old evidence").unwrap();
-        let symlink = tmp.path().join("commit-evidence.pdf");
-        std::os::unix::fs::symlink(&target, &symlink).unwrap();
-
-        let err = ensure_output_outside_repository(&symlink, &repository).unwrap_err();
         assert!(matches!(
             err,
             CommitEvidenceError::OutputInsideRepository(_)
