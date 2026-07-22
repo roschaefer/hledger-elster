@@ -33,16 +33,21 @@ fn run_git(args: &[&str]) -> Result<String, CommitEvidenceError> {
     let output = Command::new("git").args(args).output()?;
     if !output.status.success() {
         let stderr = String::from_utf8_lossy(&output.stderr).trim().to_string();
-        if args == ["rev-parse", "--show-toplevel"] {
-            return Err(CommitEvidenceError::NotGitRepository);
-        }
         return Err(CommitEvidenceError::GitCommand(stderr));
     }
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
 fn current_repository_root() -> Result<PathBuf, CommitEvidenceError> {
-    Ok(PathBuf::from(run_git(&["rev-parse", "--show-toplevel"])?))
+    let output = Command::new("git")
+        .args(["rev-parse", "--show-toplevel"])
+        .output()?;
+    if !output.status.success() {
+        return Err(CommitEvidenceError::NotGitRepository);
+    }
+    Ok(PathBuf::from(
+        String::from_utf8_lossy(&output.stdout).trim().to_string(),
+    ))
 }
 
 pub fn current_git_metadata() -> Result<GitMetadata, CommitEvidenceError> {
