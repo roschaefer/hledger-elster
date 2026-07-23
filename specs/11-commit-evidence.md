@@ -85,6 +85,25 @@ Feature: Git commit evidence
       working tree has uncommitted changes
       """
     And the file outside the repository "commit-evidence.pdf" should not exist
+
+  Scenario: Existing commit evidence is not silently overwritten
+    Given a file outside the repository named "commit-evidence.pdf" with content:
+      """
+      previous evidence
+      """
+    When I run "hledger-elster export-commit-evidence --output ../commit-evidence.pdf" and it fails
+    Then stderr should contain:
+      """
+      commit evidence file already exists
+      """
+
+  Scenario: --force overwrites existing commit evidence
+    Given a file outside the repository named "commit-evidence.pdf" with content:
+      """
+      previous evidence
+      """
+    When I run "hledger-elster export-commit-evidence --output ../commit-evidence.pdf --force"
+    Then the PDF file outside the repository "commit-evidence.pdf" should contain the current git commit hash
 ```
 
 ## Third-Party Timestamp Evidence

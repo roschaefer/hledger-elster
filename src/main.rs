@@ -30,6 +30,9 @@ enum Commands {
     ExportCommitEvidence {
         #[arg(long)]
         output: PathBuf,
+
+        #[arg(long)]
+        force: bool,
     },
 }
 
@@ -50,7 +53,9 @@ fn main() -> anyhow::Result<()> {
 
     let result = match cli.command {
         Some(Commands::InitConfig { output, force }) => run_init_config(&output, force),
-        Some(Commands::ExportCommitEvidence { output }) => run_export_commit_evidence(&output),
+        Some(Commands::ExportCommitEvidence { output, force }) => {
+            run_export_commit_evidence(&output, force)
+        }
         None => run_generate(&cli.generate),
     };
 
@@ -67,9 +72,9 @@ fn run_init_config(output: &Path, force: bool) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn run_export_commit_evidence(output: &Path) -> anyhow::Result<()> {
+fn run_export_commit_evidence(output: &Path, force: bool) -> anyhow::Result<()> {
     let path = paths::resolve(output);
-    commit_evidence::write_commit_evidence(&path)?;
+    commit_evidence::write_commit_evidence(&path, force)?;
     Ok(())
 }
 

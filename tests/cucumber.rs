@@ -177,6 +177,14 @@ async fn write_file(world: &mut ElsterWorld, step: &Step, path: String) {
     std::fs::write(&target, format!("{content}\n")).unwrap();
 }
 
+#[given(regex = r#"^a file outside the repository named "([^"]+)" with content:$"#)]
+async fn write_file_outside_repository(world: &mut ElsterWorld, step: &Step, path: String) {
+    let content = docstring(step);
+    let target = world.resolve_outside_work_dir(&path);
+    std::fs::create_dir_all(target.parent().unwrap()).unwrap();
+    std::fs::write(&target, format!("{content}\n")).unwrap();
+}
+
 #[given(regex = r#"^I commit all files$"#)]
 async fn commit_all_files(world: &mut ElsterWorld) {
     let output = run_git(world, &["add", "."]).await;

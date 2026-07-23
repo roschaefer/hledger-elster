@@ -1,4 +1,5 @@
 use std::fmt::Write as _;
+use std::io::Write as _;
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
@@ -22,6 +23,8 @@ pub enum CommitEvidenceError {
     DirtyWorkingTree,
     #[error("commit evidence output must be outside the Git repository: {0}")]
     OutputInsideRepository(PathBuf),
+    #[error("commit evidence file already exists: {0} (use --force to overwrite)")]
+    AlreadyExists(PathBuf),
     #[error("failed to write commit evidence PDF at {path}: {source}")]
     Write {
         path: PathBuf,
@@ -271,7 +274,31 @@ fn ensure_output_outside_repository(
     Ok(())
 }
 
-pub fn write_commit_evidence(path: &Path) -> Result<(), CommitEvidenceError> {
+/// Opens `path` for writing without a separate existence check, so a
+/// non-force export can never race another invocation between "does the
+/// file exist" and "create the file": `create_new` fails atomically if the
+/// path already exists instead of silently truncating it.
+fn open_for_write(path: &Path, force: bool) -> Result<std::fs::File, CommitEvidenceError> {
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true);
+    if force {
+        options.create(true).truncate(true);
+    } else {
+        options.create_new(true);
+    }
+    options.open(path).map_err(|source| {
+        if !force && source.kind() == std::io::ErrorKind::AlreadyExists {
+            CommitEvidenceError::AlreadyExists(path.to_path_buf())
+        } else {
+            CommitEvidenceError::Write {
+                path: path.to_path_buf(),
+                source,
+            }
+        }
+    })
+}
+
+pub fn write_commit_evidence(path: &Path, force: bool) -> Result<(), CommitEvidenceError> {
     let repository_root = current_repository_root()?;
     ensure_output_outside_repository(path, &repository_root)?;
     let metadata = current_git_metadata()?;
@@ -281,10 +308,12 @@ pub fn write_commit_evidence(path: &Path) -> Result<(), CommitEvidenceError> {
             source,
         })?;
     }
-    std::fs::write(path, pdf_bytes(&metadata)).map_err(|source| CommitEvidenceError::Write {
-        path: path.to_path_buf(),
-        source,
-    })?;
+    let mut file = open_for_write(path, force)?;
+    file.write_all(&pdf_bytes(&metadata))
+        .map_err(|source| CommitEvidenceError::Write {
+            path: path.to_path_buf(),
+            source,
+        })?;
     Ok(())
 }
 
@@ -345,5 +374,39 @@ mod tests {
 
         ensure_output_outside_repository(&tmp.path().join("commit-evidence.pdf"), &repository)
             .unwrap();
+    }
+
+    #[test]
+    fn existing_output_is_rejected_without_force() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("commit-evidence.pdf");
+        std::fs::write(&path, b"previous evidence").unwrap();
+
+        let err = open_for_write(&path, false).unwrap_err();
+        assert!(matches!(err, CommitEvidenceError::AlreadyExists(p) if p == path));
+        assert_eq!(std::fs::read(&path).unwrap(), b"previous evidence");
+    }
+
+    #[test]
+    fn existing_output_is_allowed_with_force() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("commit-evidence.pdf");
+        std::fs::write(&path, b"previous evidence").unwrap();
+
+        let mut file = open_for_write(&path, true).unwrap();
+        file.write_all(b"new evidence").unwrap();
+        drop(file);
+        assert_eq!(std::fs::read(&path).unwrap(), b"new evidence");
+    }
+
+    #[test]
+    fn missing_output_is_allowed_without_force() {
+        let tmp = tempfile::tempdir().unwrap();
+        let path = tmp.path().join("commit-evidence.pdf");
+
+        let mut file = open_for_write(&path, false).unwrap();
+        file.write_all(b"evidence").unwrap();
+        drop(file);
+        assert_eq!(std::fs::read(&path).unwrap(), b"evidence");
     }
 }
