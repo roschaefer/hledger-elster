@@ -168,8 +168,8 @@ mod tests {
             .iter()
             .find(|r| r.get("Zeitraum").map(String::as_str) == Some("2024"))
             .unwrap();
-        assert_eq!(annual["Bereits Entrichtet"], "190.00");
-        assert_eq!(annual["Vereinnahmte Umsatzsteuer"], "190.00");
+        assert_eq!(annual["Bereits Entrichtet"], "190,00");
+        assert_eq!(annual["Vereinnahmte Umsatzsteuer"], "190,00");
     }
 
     #[test]

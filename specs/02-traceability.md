@@ -66,41 +66,41 @@ Feature: Traceability
     Then the CSV file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
       | Kennzahl                                                    | 2024   |
       | # Betriebseinnahmen                                         |        |
-      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 100.00 |
-      | Vereinnahmte Umsatzsteuer                                   | 19.00  |
-      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0.00   |
-      | Summe Betriebseinnahmen                                     | 119.00 |
+      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 100,00 |
+      | Vereinnahmte Umsatzsteuer                                   | 19,00  |
+      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0,00   |
+      | Summe Betriebseinnahmen                                     | 119,00 |
       |                                                             |        |
       | # Betriebsausgaben                                          |        |
       |                                                             |        |
-      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0.00   |
-      | Summe Betriebskosten                                        | 0.00   |
-      | Summe Betriebsausgaben                                      | 0.00   |
+      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0,00   |
+      | Summe Betriebskosten                                        | 0,00   |
+      | Summe Betriebsausgaben                                      | 0,00   |
       |                                                             |        |
       | # Ermittlung des Gewinns                                    |        |
-      | Steuerpflichtiger Gewinn/Verlust                            | 119.00 |
+      | Steuerpflichtiger Gewinn/Verlust                            | 119,00 |
       |                                                             |        |
       | # Zusätzliche Angaben bei Einzelunternehmen                 |        |
-      | Entnahmen                                                   | 50.00  |
-      | Einlagen                                                    | 40.00  |
+      | Entnahmen                                                   | 50,00  |
+      | Einlagen                                                    | 40,00  |
     And the CSV file "export/2024/herleitung/einnahmen-ueberschuss-rechnung/einnahmen.csv" should contain exactly:
       | Konto            | Datum      | Beschreibung   | Brutto | Netto  | USt-Betrag |
-      | Geschäftskonto   | 2024-01-15 | Client invoice | 119.00 | 100.00 | 19.00      |
-      | Σ Geschäftskonto |            |                | 119.00 | 100.00 | 19.00      |
-      | GESAMT           |            |                | 119.00 | 100.00 | 19.00      |
+      | Geschäftskonto   | 2024-01-15 | Client invoice | 119,00 | 100,00 | 19,00      |
+      | Σ Geschäftskonto |            |                | 119,00 | 100,00 | 19,00      |
+      | GESAMT           |            |                | 119,00 | 100,00 | 19,00      |
     And the CSV file "export/2024/herleitung/umsatzsteuer/einnahmen.csv" should contain exactly:
       | Konto            | Datum      | Beschreibung   | Brutto | Netto  | USt-Betrag |
-      | Geschäftskonto   | 2024-01-15 | Client invoice | 119.00 | 100.00 | 19.00      |
-      | Σ Geschäftskonto |            |                | 119.00 | 100.00 | 19.00      |
-      | GESAMT           |            |                | 119.00 | 100.00 | 19.00      |
+      | Geschäftskonto   | 2024-01-15 | Client invoice | 119,00 | 100,00 | 19,00      |
+      | Σ Geschäftskonto |            |                | 119,00 | 100,00 | 19,00      |
+      | GESAMT           |            |                | 119,00 | 100,00 | 19,00      |
     And the CSV file "export/2024/herleitung/einnahmen-ueberschuss-rechnung/entnahmen.csv" should contain exactly:
       | Konto            | Datum      | Beschreibung | Betrag |
-      | Geschäftskonto   | 2024-09-01 | Owner draw   | 50.00  |
-      | Σ Geschäftskonto |            |              | 50.00  |
-      | GESAMT           |            |              | 50.00  |
+      | Geschäftskonto   | 2024-09-01 | Owner draw   | 50,00  |
+      | Σ Geschäftskonto |            |              | 50,00  |
+      | GESAMT           |            |              | 50,00  |
     And the CSV file "export/2024/herleitung/einnahmen-ueberschuss-rechnung/einlagen.csv" should contain exactly:
       | Konto            | Datum      | Beschreibung        | Betrag |
-      | Geschäftskonto   | 2024-09-02 | Owner contribution  | 40.00  |
-      | Σ Geschäftskonto |            |                     | 40.00  |
-      | GESAMT           |            |                     | 40.00  |
+      | Geschäftskonto   | 2024-09-02 | Owner contribution  | 40,00  |
+      | Σ Geschäftskonto |            |                     | 40,00  |
+      | GESAMT           |            |                     | 40,00  |
 ```

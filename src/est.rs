@@ -141,19 +141,19 @@ mod tests {
         let dataset = example_dataset();
         let rows = est_rows(&dataset, 2024);
 
-        assert_eq!(row(&rows, "Krankenversicherung")["2024"], "840.00");
-        assert_eq!(row(&rows, "Pflegeversicherung")["2024"], "240.00");
-        assert_eq!(row(&rows, "Zusatzbeitrag")["2024"], "120.00");
+        assert_eq!(row(&rows, "Krankenversicherung")["2024"], "840,00");
+        assert_eq!(row(&rows, "Pflegeversicherung")["2024"], "240,00");
+        assert_eq!(row(&rows, "Zusatzbeitrag")["2024"], "120,00");
         assert_eq!(
             row(&rows, "Langzeit-Auslandskrankenversicherung")["2024"],
-            "343.50"
+            "343,50"
         );
         assert_eq!(
             row(&rows, "Kurzzeit-Auslandskrankenversicherung")["2024"],
-            "9.50"
+            "9,50"
         );
-        assert_eq!(row(&rows, "Haftpflichtversicherung")["2024"], "57.88");
-        assert_eq!(row(&rows, "ESt-Vorauszahlung")["2024"], "400.00");
+        assert_eq!(row(&rows, "Haftpflichtversicherung")["2024"], "57,88");
+        assert_eq!(row(&rows, "ESt-Vorauszahlung")["2024"], "400,00");
     }
 
     #[test]
@@ -161,10 +161,10 @@ mod tests {
         let dataset = example_dataset();
         let rows = est_rows(&dataset, 2025);
 
-        assert_eq!(row(&rows, "Krankenversicherung")["2025"], "910.00");
-        assert_eq!(row(&rows, "Pflegeversicherung")["2025"], "260.00");
-        assert_eq!(row(&rows, "Zusatzbeitrag")["2025"], "130.00");
-        assert_eq!(row(&rows, "ESt-Abschlusszahlung")["2025"], "50.00");
+        assert_eq!(row(&rows, "Krankenversicherung")["2025"], "910,00");
+        assert_eq!(row(&rows, "Pflegeversicherung")["2025"], "260,00");
+        assert_eq!(row(&rows, "Zusatzbeitrag")["2025"], "130,00");
+        assert_eq!(row(&rows, "ESt-Abschlusszahlung")["2025"], "50,00");
     }
 
     #[test]

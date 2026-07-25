@@ -13,7 +13,7 @@ fn q(v: Decimal) -> Decimal {
 }
 
 fn fmt(v: Decimal) -> String {
-    format!("{:.2}", q(v))
+    crate::periods::fmt(q(v))
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -1037,10 +1037,10 @@ mod tests {
         let euer = &sheets["einnahmen-ueberschuss-rechnung"];
         let income = find(euer, "Einnahmen");
         // GESAMT row's gross column (index 3) should match the golden 1190.00 gross income.
-        assert_eq!(income.rows.last().unwrap().cells[3], "1190.00");
+        assert_eq!(income.rows.last().unwrap().cells[3], "1190,00");
 
         let wasabi = find(euer, "Serverkosten Wasabi");
-        assert_eq!(wasabi.rows.last().unwrap().cells[6], "20.00");
+        assert_eq!(wasabi.rows.last().unwrap().cells[6], "20,00");
     }
 
     #[test]
@@ -1051,7 +1051,7 @@ mod tests {
         let afa = find(euer, "AfA Computer-Kauf");
         assert_eq!(afa.rows[0].outline_level, 1);
         assert_eq!(afa.rows.last().unwrap().outline_level, 0);
-        assert_eq!(afa.rows.last().unwrap().cells[5], "222.22");
+        assert_eq!(afa.rows.last().unwrap().cells[5], "222,22");
     }
 
     #[test]
@@ -1076,7 +1076,7 @@ mod tests {
         p.tax_deduction = "afa".to_string();
 
         let sheet = afa_sheet(&[p], "expenses:hardware:computer", 2020);
-        assert_eq!(sheet.rows[0].cells[2], "966.64");
+        assert_eq!(sheet.rows[0].cells[2], "966,64");
     }
 
     #[test]
@@ -1100,7 +1100,7 @@ mod tests {
         let sheets = herleitung_sheets(&dataset, 2024).unwrap();
         let est = &sheets["einkommensteuer"];
         let kv = find(est, "Krankenversicherung");
-        assert_eq!(kv.rows.last().unwrap().cells[3], "840.00");
+        assert_eq!(kv.rows.last().unwrap().cells[3], "840,00");
     }
 
     #[test]

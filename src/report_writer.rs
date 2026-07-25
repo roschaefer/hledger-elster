@@ -308,6 +308,11 @@ fn write_trail_sheet(ws: &mut Worksheet, sheet: &TrailSheet) -> Result<()> {
 }
 
 // ── CSV writers ──────────────────────────────────────────────────────────
+//
+// Semicolon-delimited, matching the German CSV convention (Excel/LibreOffice
+// in a German locale default to ';' precisely because ',' is the decimal
+// separator, per `periods::fmt`/`herleitung::fmt`) -- a plain ',' delimiter
+// would be ambiguous against comma decimals in the amount columns.
 
 fn write_rows_csv(
     path: &Path,
@@ -322,6 +327,7 @@ fn write_rows_csv(
     }
     let headers: Vec<String> = rows[0].keys().cloned().collect();
     let mut writer = csv::WriterBuilder::new()
+        .delimiter(b';')
         .terminator(csv::Terminator::Any(b'\n'))
         .from_path(path)?;
     writer.write_record(&headers)?;
@@ -346,6 +352,7 @@ fn write_trail_csv(
         std::fs::create_dir_all(parent)?;
     }
     let mut writer = csv::WriterBuilder::new()
+        .delimiter(b';')
         .terminator(csv::Terminator::Any(b'\n'))
         .from_path(path)?;
     writer.write_record(&sheet.headers)?;
@@ -619,11 +626,11 @@ mod tests {
         };
         assert_eq!(
             row(&euer_2024, "Umsatzsteuerpflichtige Betriebseinnahmen")["2024"],
-            "1000.00"
+            "1000,00"
         );
         assert_eq!(
             row(&euer_2024, "Steuerpflichtiger Gewinn/Verlust")["2024"],
-            "-824.22"
+            "-824,22"
         );
 
         let ust_2024 = crate::csv_import::read_report_rows(
@@ -636,7 +643,7 @@ mod tests {
             .iter()
             .find(|r| r.get("Zeitraum").map(String::as_str) == Some("2024"))
             .unwrap();
-        assert_eq!(annual["Bereits Entrichtet"], "190.00");
+        assert_eq!(annual["Bereits Entrichtet"], "190,00");
 
         assert!(out_dir
             .path()

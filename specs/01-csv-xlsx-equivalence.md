@@ -21,6 +21,19 @@ office, diffable by you:
 - Each `herleitung/<form>.xlsx` workbook has one tab per Herleitung sheet;
   each tab has a matching CSV under `herleitung/<form>/`.
 
+Both formats also render amounts with German number conventions -- `,` as the
+decimal separator (`1190,00`, not `1190.00`) -- the same convention ELSTER's
+own web forms use, so a figure can be copied straight out of either file and
+pasted into ELSTER without manually swapping the separator first. A `,`
+decimal collides with a `,` field delimiter, so every CSV in this project uses
+`;` to separate fields instead. This is the standard German locale convention
+for CSV: [Unicode CLDR](https://github.com/unicode-org/cldr-json/blob/main/cldr-json/cldr-numbers-full/main/de/numbers.json)
+-- the reference locale-data repository underlying ICU, Windows, and most
+platform number formatting -- defines, for `de`, `decimal: ","`, `group: "."`,
+and `list: ";"`; that `list` symbol is what Excel and LibreOffice use as the
+default CSV field separator, so a German-locale install of either already
+writes and expects `;`-delimited, `,`-decimal CSVs.
+
 There is intentionally only one computation path to get there, so the two
 representations cannot drift apart. One documented exception: a
 `"# "`-prefixed `Kennzahl` marks a section header. The CSV keeps the literal
