@@ -21,10 +21,13 @@ pub enum CsvImportError {
 }
 
 fn open(path: &Path) -> Result<csv::Reader<std::fs::File>, CsvImportError> {
-    csv::Reader::from_path(path).map_err(|source| CsvImportError::Csv {
-        path: path.to_path_buf(),
-        source,
-    })
+    csv::ReaderBuilder::new()
+        .delimiter(b';')
+        .from_path(path)
+        .map_err(|source| CsvImportError::Csv {
+            path: path.to_path_buf(),
+            source,
+        })
 }
 
 /// Reads a `ReportRow` CSV (as written by `report_writer::write_rows_csv`)
@@ -125,16 +128,16 @@ mod tests {
 
     #[test]
     fn read_report_rows_preserves_column_order() {
-        let f = write_temp_csv("Kennzahl,2024\nUmsatz,1000.00\n");
+        let f = write_temp_csv("Kennzahl;2024\nUmsatz;1000,00\n");
         let rows = read_report_rows(f.path()).unwrap();
         assert_eq!(rows.len(), 1);
         assert_eq!(rows[0].keys().collect::<Vec<_>>(), vec!["Kennzahl", "2024"]);
-        assert_eq!(rows[0]["2024"], "1000.00");
+        assert_eq!(rows[0]["2024"], "1000,00");
     }
 
     #[test]
     fn read_trail_sheet_reclassifies_gesamt_and_subtotal_rows() {
-        let f = write_temp_csv("Datum,Betrag\n2024-01-01,10.00\nΣ Bank,10.00\nGESAMT,10.00\n");
+        let f = write_temp_csv("Datum;Betrag\n2024-01-01;10,00\nΣ Bank;10,00\nGESAMT;10,00\n");
         let sheet = read_trail_sheet(f.path(), "Test").unwrap();
         assert_eq!(sheet.name, "Test");
         assert_eq!(

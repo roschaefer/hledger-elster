@@ -57,43 +57,43 @@ Feature: VAT reverse charge
     Then the CSV file "export/2026/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
       | Kennzahl                                                    | 2026    |
       | # Betriebseinnahmen                                         |         |
-      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 0.00    |
-      | Vereinnahmte Umsatzsteuer                                   | 0.00    |
-      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0.00    |
-      | Summe Betriebseinnahmen                                     | 0.00    |
+      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 0,00    |
+      | Vereinnahmte Umsatzsteuer                                   | 0,00    |
+      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0,00    |
+      | Summe Betriebseinnahmen                                     | 0,00    |
       |                                                             |         |
       | # Betriebsausgaben                                          |         |
       | # Bezogene Fremdleistungen                                  |         |
-      | EU Hosting                                                  | 100.00  |
-      | Non-EU Hosting                                              | 50.00   |
+      | EU Hosting                                                  | 100,00  |
+      | Non-EU Hosting                                              | 50,00   |
       |                                                             |         |
-      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0.00    |
-      | Summe Betriebskosten                                        | 150.00  |
-      | Summe Betriebsausgaben                                      | 150.00  |
+      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0,00    |
+      | Summe Betriebskosten                                        | 150,00  |
+      | Summe Betriebsausgaben                                      | 150,00  |
       |                                                             |         |
       | # Ermittlung des Gewinns                                    |         |
-      | Steuerpflichtiger Gewinn/Verlust                            | -150.00 |
+      | Steuerpflichtiger Gewinn/Verlust                            | -150,00 |
       |                                                             |         |
       | # Zusätzliche Angaben bei Einzelunternehmen                 |         |
-      | Entnahmen                                                   | 0.00    |
-      | Einlagen                                                    | 0.00    |
+      | Entnahmen                                                   | 0,00    |
+      | Einlagen                                                    | 0,00    |
     And the CSV file "export/2026/steuererklaerung/umsatzsteuer.csv" should contain exactly:
       | Zeitraum | Einnahme (Netto) | Vereinnahmte Umsatzsteuer | §13b EU Leistung (Netto) | §13b EU Umsatzsteuer | §13b Non-EU Leistung (Netto) | §13b Non-EU Umsatzsteuer | Abziehbare Vorsteuerbeträge | Vorauszahlungssoll | Bereits Entrichtet |
-      | 2026-01  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026-02  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026-03  | 0.00             | 0.00                      | 100.00                   | 19.00                | 50.00                        | 9.50                     | 28.50                       | 0.00               |                    |
-      | 2026-04  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026-05  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026-06  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026-07  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026-08  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026-09  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026-10  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026-11  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026-12  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026 Q1  | 0.00             | 0.00                      | 100.00                   | 19.00                | 50.00                        | 9.50                     | 28.50                       | 0.00               |                    |
-      | 2026 Q2  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026 Q3  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026 Q4  | 0.00             | 0.00                      | 0.00                     | 0.00                 | 0.00                         | 0.00                     | 0.00                        | 0.00               |                    |
-      | 2026     | 0.00             | 0.00                      | 100.00                   | 19.00                | 50.00                        | 9.50                     | 28.50                       | 0.00               | 0.00               |
+      | 2026-01  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026-02  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026-03  | 0,00             | 0,00                      | 100,00                   | 19,00                | 50,00                        | 9,50                     | 28,50                       | 0,00               |                    |
+      | 2026-04  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026-05  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026-06  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026-07  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026-08  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026-09  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026-10  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026-11  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026-12  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026 Q1  | 0,00             | 0,00                      | 100,00                   | 19,00                | 50,00                        | 9,50                     | 28,50                       | 0,00               |                    |
+      | 2026 Q2  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026 Q3  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026 Q4  | 0,00             | 0,00                      | 0,00                     | 0,00                 | 0,00                         | 0,00                     | 0,00                        | 0,00               |                    |
+      | 2026     | 0,00             | 0,00                      | 100,00                   | 19,00                | 50,00                        | 9,50                     | 28,50                       | 0,00               | 0,00               |
 ```

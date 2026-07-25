@@ -338,6 +338,7 @@ async fn csv_file_should_contain_exactly(world: &mut ElsterWorld, step: &Step, p
 
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
+        .delimiter(b';')
         .from_path(&actual_path)
         .unwrap();
     let actual: Vec<Vec<String>> = reader
@@ -371,6 +372,7 @@ async fn xlsx_tab_should_equal_csv(
     let csv_full = world.resolve(&csv_path);
     let mut reader = csv::ReaderBuilder::new()
         .has_headers(false)
+        .delimiter(b';')
         .from_path(&csv_full)
         .unwrap();
     let csv_rows: Vec<Vec<String>> = reader

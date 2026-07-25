@@ -21,6 +21,19 @@ office, diffable by you:
 - Each `herleitung/<form>.xlsx` workbook has one tab per Herleitung sheet;
   each tab has a matching CSV under `herleitung/<form>/`.
 
+Both formats also render amounts with German number conventions -- `,` as the
+decimal separator (`1190,00`, not `1190.00`) -- the same convention ELSTER's
+own web forms use, so a figure can be copied straight out of either file and
+pasted into ELSTER without manually swapping the separator first. A `,`
+decimal collides with a `,` field delimiter, so every CSV in this project uses
+`;` to separate fields instead: the same convention German-locale Excel/
+LibreOffice already default to for exactly this reason, since their CSV
+delimiter follows the OS's list-separator setting, which itself flips to `;`
+once the decimal separator is set to `,` -- see [Ablebits: How to change
+Excel CSV delimiter to comma or
+semicolon](https://www.ablebits.com/office-addins-blog/change-excel-csv-delimiter/)
+for a walkthrough of that relationship.
+
 There is intentionally only one computation path to get there, so the two
 representations cannot drift apart. One documented exception: a
 `"# "`-prefixed `Kennzahl` marks a section header. The CSV keeps the literal

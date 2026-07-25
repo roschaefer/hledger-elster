@@ -353,12 +353,12 @@ mod tests {
 
         assert_eq!(
             row(&rows, "Umsatzsteuerpflichtige Betriebseinnahmen")["2024"],
-            "1000.00"
+            "1000,00"
         );
-        assert_eq!(row(&rows, "Vereinnahmte Umsatzsteuer")["2024"], "190.00");
+        assert_eq!(row(&rows, "Vereinnahmte Umsatzsteuer")["2024"], "190,00");
         assert_eq!(
             row(&rows, "Steuerpflichtiger Gewinn/Verlust")["2024"],
-            "-824.22"
+            "-824,22"
         );
     }
 
@@ -367,9 +367,9 @@ mod tests {
         let dataset = example_dataset();
         let rows = euer_rows(&dataset, 2024, &TaxConfig::default());
 
-        assert_eq!(row(&rows, "Serverkosten Wasabi")["2024"], "20.00");
-        assert_eq!(row(&rows, "Mobiltelefon")["2024"], "2.00");
-        assert_eq!(row(&rows, "Steuerberatung")["2024"], "100.00");
+        assert_eq!(row(&rows, "Serverkosten Wasabi")["2024"], "20,00");
+        assert_eq!(row(&rows, "Mobiltelefon")["2024"], "2,00");
+        assert_eq!(row(&rows, "Steuerberatung")["2024"], "100,00");
     }
 
     #[test]
@@ -378,14 +378,14 @@ mod tests {
         let rows_2024 = euer_rows(&dataset, 2024, &TaxConfig::default());
         let rows_2025 = euer_rows(&dataset, 2025, &TaxConfig::default());
 
-        assert_eq!(row(&rows_2024, "AfA Computer-Kauf")["2024"], "222.22");
-        assert_eq!(row(&rows_2025, "AfA Computer-Kauf")["2025"], "333.33");
+        assert_eq!(row(&rows_2024, "AfA Computer-Kauf")["2024"], "222,22");
+        assert_eq!(row(&rows_2025, "AfA Computer-Kauf")["2025"], "333,33");
     }
 
     #[test]
     fn drawing_row_reflects_owner_draw_transaction() {
         let dataset = example_dataset();
         let rows = euer_rows(&dataset, 2024, &TaxConfig::default());
-        assert_eq!(row(&rows, "Entnahmen")["2024"], "500.00");
+        assert_eq!(row(&rows, "Entnahmen")["2024"], "500,00");
     }
 }

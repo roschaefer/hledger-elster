@@ -34,8 +34,11 @@ pub fn aggregate_periods(
         .collect()
 }
 
+/// Renders with German decimal notation (comma, not dot) -- every report this
+/// crate writes (xlsx and CSV alike) targets a German-only audience and is
+/// pasted straight into ELSTER's web forms, which expect that convention.
 pub fn fmt(value: Decimal) -> String {
-    format!("{value:.2}")
+    format!("{value:.2}").replace('.', ",")
 }
 
 pub fn blank_row(labels: &[String]) -> ReportRow {
@@ -76,8 +79,8 @@ mod tests {
 
     #[test]
     fn fmt_always_shows_two_decimal_places() {
-        assert_eq!(fmt(Decimal::from_str("5").unwrap()), "5.00");
-        assert_eq!(fmt(Decimal::from_str("-5.5").unwrap()), "-5.50");
+        assert_eq!(fmt(Decimal::from_str("5").unwrap()), "5,00");
+        assert_eq!(fmt(Decimal::from_str("-5.5").unwrap()), "-5,50");
     }
 
     #[test]
