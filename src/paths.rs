@@ -52,6 +52,14 @@ pub fn elster_config_path() -> Option<PathBuf> {
         .map(|v| resolve(Path::new(&v)))
 }
 
+/// Written by `report_writer::generate_report` at the root of every export it
+/// produces, listing every file it touched during that run (relative paths,
+/// `/`-separated). `reconciliation` checks a requested CSV against this list
+/// before reading it, so a file left over from an earlier run -- e.g. a year
+/// or form that no longer appears in the journal -- is rejected as stale
+/// rather than silently read.
+pub(crate) const MANIFEST_FILE_NAME: &str = ".hledger-elster-manifest";
+
 // Environment variables are process-global, so any test across the crate that
 // touches FINANCES_LEDGER_JOURNAL / FINANCES_TAX_DATA_DIR / HLEDGER_ELSTER_CONFIG
 // (or spawns the pipeline that reads them) must serialize on this lock.

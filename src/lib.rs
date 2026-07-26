@@ -14,5 +14,6 @@ pub mod journal;
 pub mod paths;
 pub mod periods;
 pub mod posting;
+pub mod reconciliation;
 pub mod report_writer;
 pub mod ust;

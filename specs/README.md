@@ -37,3 +37,4 @@ Specifications:
 - [GWG and AfA](./09-afa.md)
 - [Donations](./10-donations.md)
 - [Git commit evidence](./11-commit-evidence.md)
+- [Reconciliation library](./12-reconciliation.md)
