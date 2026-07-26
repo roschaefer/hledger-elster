@@ -119,21 +119,32 @@ async fn run_git(world: &ElsterWorld, args: &[&str]) -> std::process::Output {
 async fn run_elster_command(world: &mut ElsterWorld, command: &str) -> bool {
     let args: Vec<&str> = command.split_whitespace().collect();
     let bin = PathBuf::from(env!("CARGO_BIN_EXE_hledger-elster"));
+    let is_cargo = args.first() == Some(&"cargo");
     let (program, rest): (PathBuf, &[&str]) =
         if args.len() >= 2 && args[0] == "hledger" && args[1] == "elster" {
             (bin, &args[2..])
         } else if !args.is_empty() && args[0] == "hledger-elster" {
             (bin, &args[1..])
+        } else if is_cargo {
+            (PathBuf::from("cargo"), &args[1..])
         } else {
             panic!("Unsupported command: {command}");
         };
 
-    let output = Command::new(program)
-        .args(rest)
-        .current_dir(&world.work_dir)
-        .output()
-        .await
-        .expect("failed to run command");
+    let mut cmd = Command::new(&program);
+    cmd.args(rest).current_dir(&world.work_dir);
+    if is_cargo {
+        // A nested `cargo test` fixture crate (see specs/12-reconciliation.md)
+        // reconciles against the export this scenario already wrote to
+        // `export/` under the work dir. Deliberately left to build into its
+        // own target/ under that same (already scenario-unique) work dir,
+        // rather than a shared one: cucumber runs scenarios concurrently, and
+        // every fixture in this suite shares a crate/test name, so a shared
+        // target dir would race two scenarios' builds against the same
+        // output path.
+        cmd.env("FINANCES_TAX_DATA_DIR", world.work_dir.join("export"));
+    }
+    let output = cmd.output().await.expect("failed to run command");
 
     world.last_stdout = String::from_utf8_lossy(&output.stdout).into_owned();
     world.last_stderr = String::from_utf8_lossy(&output.stderr).into_owned();
@@ -171,7 +182,13 @@ async fn git_repository(world: &mut ElsterWorld) {
 
 #[given(regex = r#"^a file named "([^"]+)" with content:$"#)]
 async fn write_file(world: &mut ElsterWorld, step: &Step, path: String) {
-    let content = docstring(step);
+    // Lets a scenario's fixture Cargo.toml depend on this checkout of
+    // hledger-elster by path (see specs/12-reconciliation.md) without baking
+    // in an absolute path that would only be valid on one machine/CI run.
+    let content = docstring(step).replace(
+        "{{HLEDGER_ELSTER_MANIFEST_DIR}}",
+        env!("CARGO_MANIFEST_DIR"),
+    );
     let target = world.resolve(&path);
     std::fs::create_dir_all(target.parent().unwrap()).unwrap();
     std::fs::write(&target, format!("{content}\n")).unwrap();
@@ -403,24 +420,32 @@ async fn xlsx_tab_should_equal_csv(
     );
 }
 
+/// A line containing only "..." is a wildcard: everything before and after
+/// it must still appear, in `actual`, in that order, but nothing is
+/// asserted about what (if anything) sits between them. Lets a docstring
+/// assert most of a real command's output verbatim while skipping over a
+/// specific volatile fragment (a PID, a source line number) instead of
+/// splitting into several disconnected "should contain:" steps.
+fn assert_contains_in_order(stream_name: &str, actual: &str, expected: &str) {
+    let mut cursor = 0;
+    for segment in expected.split("\n...\n") {
+        match actual[cursor..].find(segment) {
+            Some(pos) => cursor += pos + segment.len(),
+            None => panic!(
+                "{stream_name} did not contain:\n{segment}\n\n(as part of expected sequence:\n{expected}\n)\n\nActual {stream_name}:\n{actual}",
+            ),
+        }
+    }
+}
+
 #[then(regex = r"^stderr should contain:$")]
 async fn stderr_should_contain(world: &mut ElsterWorld, step: &Step) {
-    let expected = docstring(step);
-    assert!(
-        world.last_stderr.contains(&expected),
-        "stderr did not contain:\n{expected}\n\nActual stderr:\n{}",
-        world.last_stderr,
-    );
+    assert_contains_in_order("stderr", &world.last_stderr, &docstring(step));
 }
 
 #[then(regex = r"^stdout should contain:$")]
 async fn stdout_should_contain(world: &mut ElsterWorld, step: &Step) {
-    let expected = docstring(step);
-    assert!(
-        world.last_stdout.contains(&expected),
-        "stdout did not contain:\n{expected}\n\nActual stdout:\n{}",
-        world.last_stdout,
-    );
+    assert_contains_in_order("stdout", &world.last_stdout, &docstring(step));
 }
 
 // ---------------------------------------------------------------------------

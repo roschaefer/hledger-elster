@@ -76,6 +76,7 @@ Specs:
 - [GWG and AfA](./specs/09-afa.md)
 - [Donations](./specs/10-donations.md)
 - [Git commit evidence](./specs/11-commit-evidence.md)
+- [Reconciliation library](./specs/12-reconciliation.md)
 
 ## Development
 

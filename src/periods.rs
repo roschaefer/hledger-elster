@@ -1,6 +1,7 @@
 use crate::dataset::TaxDataset;
 use indexmap::IndexMap;
 use rust_decimal::Decimal;
+use std::str::FromStr;
 
 /// A single output row, keyed by column name in display order — mirrors
 /// Python's `dict[str, str]` rows, whose column set varies by report (e.g.
@@ -39,6 +40,14 @@ pub fn aggregate_periods(
 /// pasted straight into ELSTER's web forms, which expect that convention.
 pub fn fmt(value: Decimal) -> String {
     format!("{value:.2}").replace('.', ",")
+}
+
+/// Inverse of `fmt`: parses a German-formatted amount -- as read back from a
+/// report CSV/xlsx cell -- into a `Decimal`. Strips `.` first in case a future
+/// report ever adds thousands grouping (`1.234,56`); today's `fmt` never
+/// produces one, so this is a no-op against current output.
+pub fn parse(s: &str) -> Result<Decimal, rust_decimal::Error> {
+    Decimal::from_str(&s.replace('.', "").replace(',', "."))
 }
 
 pub fn blank_row(labels: &[String]) -> ReportRow {

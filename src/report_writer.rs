@@ -388,6 +388,34 @@ fn unlink_if_exists(path: &Path, touched_files: &mut HashSet<PathBuf>) -> Result
     Ok(())
 }
 
+/// Records every path in `touched_files` (relative to `data_dir`) into
+/// `paths::MANIFEST_FILE_NAME` at the root of the export, so `reconciliation`
+/// can tell a file this run actually (re)wrote from one left over from an
+/// earlier run. Written -- and its own path added to `touched_files` -- before
+/// `warn_about_untouched_files` runs, so the manifest itself is never reported
+/// as an untouched leftover.
+fn write_manifest(data_dir: &Path, touched_files: &mut HashSet<PathBuf>) -> Result<()> {
+    std::fs::create_dir_all(data_dir)?;
+    let canonical_data_dir = data_dir.canonicalize()?;
+    // `touched_files` also records paths `unlink_if_exists` deleted (so
+    // `warn_about_untouched_files` doesn't need to care) -- exclude those
+    // here, since a deleted file was not "freshly generated" and reading it
+    // back would just fail with a generic file-not-found error rather than
+    // the clear stale-data diagnostic `reconciliation::verify_fresh` gives.
+    let mut relative: Vec<String> = touched_files
+        .iter()
+        .filter(|p| p.exists())
+        .filter_map(|p| p.strip_prefix(&canonical_data_dir).ok())
+        .map(|p| p.to_string_lossy().replace(std::path::MAIN_SEPARATOR, "/"))
+        .collect();
+    relative.sort();
+
+    let manifest_path = data_dir.join(paths::MANIFEST_FILE_NAME);
+    std::fs::write(&manifest_path, format!("{}\n", relative.join("\n")))?;
+    touched_files.insert(manifest_path.canonicalize()?);
+    Ok(())
+}
+
 fn warn_about_untouched_files(data_dir: &Path, touched_files: &HashSet<PathBuf>) {
     if !data_dir.exists() {
         return;
@@ -553,6 +581,7 @@ pub fn generate_report() -> Result<i32> {
         }
     }
 
+    write_manifest(&data_dir, &mut touched_files)?;
     warn_about_untouched_files(&data_dir, &touched_files);
     Ok(0)
 }
@@ -728,6 +757,61 @@ mod tests {
         assert!(
             checked_any_trail_sheet,
             "expected at least one Herleitung sheet in the example journal"
+        );
+    }
+
+    #[test]
+    fn manifest_excludes_files_deleted_because_ignored_postings_disappeared() {
+        let _guard = crate::paths::ENV_LOCK.lock().unwrap();
+
+        let tmp = tempfile::tempdir().unwrap();
+        let journal_path = tmp.path().join("journal.journal");
+        let out_dir = tempfile::tempdir().unwrap();
+
+        std::fs::write(
+            &journal_path,
+            "account assets:bank  ; elster_account:business\n\n\
+             2024-01-01 Test  ; elster_role:ignore\n    \
+             transfers:internal  50.00 EUR\n    \
+             assets:bank  -50.00 EUR\n",
+        )
+        .unwrap();
+
+        std::env::set_var("FINANCES_LEDGER_JOURNAL", &journal_path);
+        std::env::set_var("FINANCES_TAX_DATA_DIR", out_dir.path());
+        std::env::remove_var("HLEDGER_ELSTER_CONFIG");
+
+        generate_report().unwrap();
+        let ignoriert_xlsx = out_dir.path().join("2024/herleitung/ignoriert.xlsx");
+        let ignoriert_csv = out_dir.path().join("2024/herleitung/ignoriert.csv");
+        assert!(ignoriert_xlsx.exists());
+        assert!(ignoriert_csv.exists());
+
+        // Second run: the ignored posting is gone, so there are no ignored
+        // postings for 2024 anymore -- `unlink_if_exists` deletes both files.
+        std::fs::write(
+            &journal_path,
+            "account assets:bank  ; elster_account:business\n\
+             account income:business  ; elster_form:einnahmenueberschussrechnung, \
+             elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen\n\n\
+             2024-01-01 Client invoice\n    \
+             income:business  -50.00 EUR\n    \
+             assets:bank  50.00 EUR\n",
+        )
+        .unwrap();
+        generate_report().unwrap();
+
+        std::env::remove_var("FINANCES_LEDGER_JOURNAL");
+        std::env::remove_var("FINANCES_TAX_DATA_DIR");
+
+        assert!(!ignoriert_xlsx.exists());
+        assert!(!ignoriert_csv.exists());
+
+        let manifest =
+            std::fs::read_to_string(out_dir.path().join(paths::MANIFEST_FILE_NAME)).unwrap();
+        assert!(
+            !manifest.contains("ignoriert"),
+            "manifest should not list deleted files: {manifest}"
         );
     }
 
