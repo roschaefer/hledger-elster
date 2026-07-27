@@ -45,10 +45,11 @@
 //! suppresses output from passing tests) and grep for that marker to list
 //! every case still awaiting review.
 //!
-//! Typical usage in a downstream crate that keeps its own historical ledger:
+//! Typical usage in a downstream crate that keeps its own historical ledger
+//! is a `#[test]` fn defined with [`case_test!`](crate::case_test):
 //!
-//! ```ignore
-//! use hledger_elster::{case_test, reconciliation::{Case, Status}};
+//! ```
+//! use hledger_elster::{case_test, reconciliation::Case};
 //! use rust_decimal_macros::dec;
 //!
 //! case_test!(
@@ -62,6 +63,260 @@
 //!         dec!(1236.98),
 //!     )
 //! );
+//! ```
+//!
+//! `case_test!` just wraps [`assert_csv_value`] in a `#[test]` fn, so that
+//! call is what's actually verified in the worked examples below (a
+//! `#[test]` fn defined by a macro invocation, as above, can't be *executed*
+//! from inside a doctest, only compiled -- doctests run their body directly,
+//! not through libtest's test collection). Every example shares this
+//! journal:
+//!
+//! ```text
+//! account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
+//! account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+//!
+//! 2024-01-15 Client invoice
+//!     income:business       -119.00 EUR
+//!     assets:bank:business   119.00 EUR
+//! ```
+//!
+//! which produces a `Umsatzsteuerpflichtige Betriebseinnahmen` of `100.00`
+//! -- the 19% VAT split out of the 119.00 gross invoice -- in
+//! `2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv`.
+//!
+//! ### An unreviewed drift fails
+//!
+//! A `Case` pinned to the wrong figure panics, `assert_eq!`-style, with a
+//! pointer to whichever of scenarios (1)-(4) above applies:
+//!
+//! ```
+//! # use hledger_elster::reconciliation::{assert_csv_value, export_dir, Case};
+//! # use rust_decimal_macros::dec;
+//! # let journal = "\
+//! # account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto\n\
+//! # account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen\n\
+//! # \n\
+//! # 2024-01-15 Client invoice\n\
+//! # \x20\x20\x20\x20income:business       -119.00 EUR\n\
+//! # \x20\x20\x20\x20assets:bank:business   119.00 EUR\n\
+//! # ";
+//! # let tmp = tempfile::tempdir().unwrap();
+//! # let journal_path = tmp.path().join("journal.journal");
+//! # std::fs::write(&journal_path, journal).unwrap();
+//! # std::env::set_var("FINANCES_LEDGER_JOURNAL", &journal_path);
+//! # std::env::set_var("FINANCES_TAX_DATA_DIR", tmp.path().join("export"));
+//! # hledger_elster::report_writer::generate_report().unwrap();
+//! let result = std::panic::catch_unwind(|| {
+//!     assert_csv_value(
+//!         &export_dir(),
+//!         &Case::new(
+//!             "income:business",
+//!             "2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv",
+//!             "Kennzahl",
+//!             "Umsatzsteuerpflichtige Betriebseinnahmen",
+//!             "2024",
+//!             dec!(999.00), // pinned to the wrong figure on purpose
+//!         ),
+//!     );
+//! });
+//! let message = *result.unwrap_err().downcast::<String>().unwrap();
+//! assert!(message.contains("expected=999.00, actual=100.00, delta=-899.00"));
+//! assert!(message.contains("https://github.com/roschaefer/hledger-elster/issues"));
+//! ```
+//!
+//! The panic this produces reads:
+//!
+//! ```text
+//! assertion `left == right` failed: income:business: value mismatch, path=2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv, row=Umsatzsteuerpflichtige Betriebseinnahmen, column=2024, status=Expected, expected=999.00, actual=100.00, delta=-899.00
+//!
+//! If the historical (filed) figure was wrong and the export above is now correct, see scenario (1)/(3) in the `reconciliation` module docs: mark this case `.status(Status::ConfirmedDrift)` with `.previous(...)`/`.reason(...)` explaining why. If the export is wrong and the historical figure was correct, that's a hledger-elster bug -- please open one at https://github.com/roschaefer/hledger-elster/issues
+//!   left: 100.00
+//!  right: 999.00
+//! ```
+//!
+//! ### Fixing the ledger turns it green
+//!
+//! Pin `expected` to what the ledger *should* produce, and the same `Case`
+//! passes once the export agrees -- no change to the test itself:
+//!
+//! ```
+//! # use hledger_elster::reconciliation::{assert_csv_value, export_dir, Case};
+//! # use rust_decimal_macros::dec;
+//! # let journal = "\
+//! # account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto\n\
+//! # account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen\n\
+//! # \n\
+//! # 2024-01-15 Client invoice\n\
+//! # \x20\x20\x20\x20income:business       -119.00 EUR\n\
+//! # \x20\x20\x20\x20assets:bank:business   119.00 EUR\n\
+//! # ";
+//! # let tmp = tempfile::tempdir().unwrap();
+//! # let journal_path = tmp.path().join("journal.journal");
+//! # std::fs::write(&journal_path, journal).unwrap();
+//! # std::env::set_var("FINANCES_LEDGER_JOURNAL", &journal_path);
+//! # std::env::set_var("FINANCES_TAX_DATA_DIR", tmp.path().join("export"));
+//! # hledger_elster::report_writer::generate_report().unwrap();
+//! assert_csv_value(
+//!     &export_dir(),
+//!     &Case::new(
+//!         "income:business",
+//!         "2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv",
+//!         "Kennzahl",
+//!         "Umsatzsteuerpflichtige Betriebseinnahmen",
+//!         "2024",
+//!         dec!(100.00),
+//!     ),
+//! );
+//! ```
+//!
+//! ### The historical figure was wrong (`Status::ConfirmedDrift`)
+//!
+//! Say `90.00` was actually filed for 2024, but reviewing it turns up an old
+//! bug -- the correct figure was always `100.00`. Pin `expected` to the
+//! corrected figure, move the old one to `.previous(...)`, and explain why
+//! in `.reason(...)`; the case still asserts exact equality against
+//! `expected`, it just also keeps the old figure and the explanation
+//! visible in the test source:
+//!
+//! ```
+//! # use hledger_elster::reconciliation::{assert_csv_value, export_dir, Case, Status};
+//! # use rust_decimal_macros::dec;
+//! # let journal = "\
+//! # account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto\n\
+//! # account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen\n\
+//! # \n\
+//! # 2024-01-15 Client invoice\n\
+//! # \x20\x20\x20\x20income:business       -119.00 EUR\n\
+//! # \x20\x20\x20\x20assets:bank:business   119.00 EUR\n\
+//! # ";
+//! # let tmp = tempfile::tempdir().unwrap();
+//! # let journal_path = tmp.path().join("journal.journal");
+//! # std::fs::write(&journal_path, journal).unwrap();
+//! # std::env::set_var("FINANCES_LEDGER_JOURNAL", &journal_path);
+//! # std::env::set_var("FINANCES_TAX_DATA_DIR", tmp.path().join("export"));
+//! # hledger_elster::report_writer::generate_report().unwrap();
+//! assert_csv_value(
+//!     &export_dir(),
+//!     &Case::new(
+//!         "income:business",
+//!         "2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv",
+//!         "Kennzahl",
+//!         "Umsatzsteuerpflichtige Betriebseinnahmen",
+//!         "2024",
+//!         dec!(100.00),
+//!     )
+//!     .status(Status::ConfirmedDrift)
+//!     .previous(dec!(90.00))
+//!     .reason("Historical figure missed a client invoice; corrected once the ledger was fixed"),
+//! );
+//! ```
+//!
+//! ### Postponing a review (`Status::UnderReview`)
+//!
+//! No time to dig into a drift this week, or it looks like a hledger-elster
+//! bug awaiting triage? Pin `expected` to what the export produces *right
+//! now* and explain why in `.reason(...)`. The case passes, behaving exactly
+//! like `ConfirmedDrift` -- so a *further* drift still fails -- except it
+//! also prints a marker every time it runs, even when it passes:
+//!
+//! ```
+//! # use hledger_elster::reconciliation::{assert_csv_value, export_dir, Case, Status};
+//! # use rust_decimal_macros::dec;
+//! # let journal = "\
+//! # account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto\n\
+//! # account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen\n\
+//! # \n\
+//! # 2024-01-15 Client invoice\n\
+//! # \x20\x20\x20\x20income:business       -119.00 EUR\n\
+//! # \x20\x20\x20\x20assets:bank:business   119.00 EUR\n\
+//! # ";
+//! # let tmp = tempfile::tempdir().unwrap();
+//! # let journal_path = tmp.path().join("journal.journal");
+//! # std::fs::write(&journal_path, journal).unwrap();
+//! # std::env::set_var("FINANCES_LEDGER_JOURNAL", &journal_path);
+//! # std::env::set_var("FINANCES_TAX_DATA_DIR", tmp.path().join("export"));
+//! # hledger_elster::report_writer::generate_report().unwrap();
+//! assert_csv_value(
+//!     &export_dir(),
+//!     &Case::new(
+//!         "income:business",
+//!         "2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv",
+//!         "Kennzahl",
+//!         "Umsatzsteuerpflichtige Betriebseinnahmen",
+//!         "2024",
+//!         dec!(100.00),
+//!     )
+//!     .status(Status::UnderReview)
+//!     .reason("No time to review this week"),
+//! );
+//! ```
+//!
+//! `cargo test -- --show-output` (libtest normally suppresses output from
+//! passing tests) prints, for the case above:
+//!
+//! ```text
+//! UNDER REVIEW: income:business: under review, path=2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv, row=Umsatzsteuerpflichtige Betriebseinnahmen, column=2024, status=UnderReview, expected=100.00, actual=100.00, delta=+0.00, reason=No time to review this week
+//! ```
+//!
+//! Grepping a full test run for `UNDER REVIEW:` lists every case still
+//! awaiting review (verified by this crate's own test suite, since a
+//! doctest has no way to capture its own stdout).
+//!
+//! ### A removed year's stale CSV is rejected
+//!
+//! Every `hledger elster` run writes a manifest of the files it (re)wrote.
+//! If last year's journal entries are removed and the export is regenerated,
+//! the old CSV for that year may still be sitting on disk -- but it's gone
+//! from the manifest, and a `Case` reading it refuses rather than silently
+//! trusting stale data:
+//!
+//! ```
+//! # use hledger_elster::reconciliation::{assert_csv_value, export_dir, Case};
+//! # use rust_decimal_macros::dec;
+//! # let tmp = tempfile::tempdir().unwrap();
+//! # let journal_path = tmp.path().join("journal.journal");
+//! # let export_dir_path = tmp.path().join("export");
+//! # std::env::set_var("FINANCES_LEDGER_JOURNAL", &journal_path);
+//! # std::env::set_var("FINANCES_TAX_DATA_DIR", &export_dir_path);
+//! #
+//! # // First run: a 2024 entry produces the 2024 CSV.
+//! # std::fs::write(&journal_path, "\
+//! # account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto\n\
+//! # account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen\n\
+//! # \n\
+//! # 2024-01-15 Client invoice\n\
+//! # \x20\x20\x20\x20income:business       -119.00 EUR\n\
+//! # \x20\x20\x20\x20assets:bank:business   119.00 EUR\n\
+//! # ").unwrap();
+//! # hledger_elster::report_writer::generate_report().unwrap();
+//! #
+//! # // Second run: the journal now only covers 2023 -- the 2024 CSV file is
+//! # // still on disk, but the fresh manifest no longer lists it.
+//! # std::fs::write(&journal_path, "\
+//! # account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto\n\
+//! # account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen\n\
+//! # \n\
+//! # 2023-01-15 Client invoice\n\
+//! # \x20\x20\x20\x20income:business       -50.00 EUR\n\
+//! # \x20\x20\x20\x20assets:bank:business   50.00 EUR\n\
+//! # ").unwrap();
+//! # hledger_elster::report_writer::generate_report().unwrap();
+//! let result = std::panic::catch_unwind(|| {
+//!     assert_csv_value(
+//!         &export_dir(),
+//!         &Case::new(
+//!             "income:business",
+//!             "2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv",
+//!             "Kennzahl",
+//!             "Umsatzsteuerpflichtige Betriebseinnahmen",
+//!             "2024",
+//!             dec!(100.00),
+//!         ),
+//!     );
+//! });
+//! let message = *result.unwrap_err().downcast::<String>().unwrap();
+//! assert!(message.contains("was not (re)generated by the most recent `hledger elster` run"));
 //! ```
 //!
 //! `export_dir()` resolves the export directory the same way the main tool
@@ -358,6 +613,39 @@ fn check(
     reason: Option<&str>,
     actual: Decimal,
 ) {
+    check_to(
+        &mut std::io::stdout(),
+        id,
+        path,
+        row_label,
+        value_field,
+        status,
+        expected,
+        tolerance,
+        previous,
+        reason,
+        actual,
+    );
+}
+
+/// Same as `check`, but writes the `UnderReview` marker line to `out`
+/// instead of unconditionally to stdout -- lets tests capture it into a
+/// buffer, since there's no stable way to intercept a real `println!`'s
+/// destination from outside.
+#[allow(clippy::too_many_arguments)]
+fn check_to(
+    out: &mut impl std::io::Write,
+    id: &str,
+    path: &str,
+    row_label: &str,
+    value_field: &str,
+    status: Status,
+    expected: Decimal,
+    tolerance: Option<Decimal>,
+    previous: Option<Decimal>,
+    reason: Option<&str>,
+    actual: Decimal,
+) {
     let message = |summary: &str| -> String {
         let mut parts = vec![
             format!("{id}: {summary}"),
@@ -423,7 +711,7 @@ fn check(
         // Printed even when the assertion below passes, so a case still
         // awaiting review stays discoverable: `cargo test -- --show-output`
         // (or `--nocapture`) and grep for this marker lists every one.
-        println!("UNDER REVIEW: {}", message("under review"));
+        writeln!(out, "UNDER REVIEW: {}", message("under review")).unwrap();
     }
     if tolerance.is_some() && status != Status::Tolerated {
         panic!(
@@ -1073,6 +1361,36 @@ mod tests {
             });
             assert!(result.is_err());
         });
+    }
+
+    #[test]
+    fn under_review_status_prints_a_marker_line_for_listing_cases_still_open() {
+        // check_to doesn't itself read a CSV -- only assert_csv_value's
+        // caller does -- so this exercises the print directly, without
+        // needing a real export.
+        let mut out = Vec::new();
+        check_to(
+            &mut out,
+            "test/under-review-marker",
+            "some.csv",
+            "SomeRow",
+            "2024",
+            Status::UnderReview,
+            dec!(100.00),
+            None,
+            None,
+            Some("waiting on a hledger-elster bug report"),
+            dec!(100.00),
+        );
+        let printed = String::from_utf8(out).unwrap();
+        assert!(
+            printed.starts_with("UNDER REVIEW: test/under-review-marker: under review, "),
+            "unexpected output: {printed}"
+        );
+        assert!(
+            printed.contains("reason=waiting on a hledger-elster bug report"),
+            "unexpected output: {printed}"
+        );
     }
 
     #[test]

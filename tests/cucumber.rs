@@ -119,42 +119,21 @@ async fn run_git(world: &ElsterWorld, args: &[&str]) -> std::process::Output {
 async fn run_elster_command(world: &mut ElsterWorld, command: &str) -> bool {
     let args: Vec<&str> = command.split_whitespace().collect();
     let bin = PathBuf::from(env!("CARGO_BIN_EXE_hledger-elster"));
-    let is_cargo = args.first() == Some(&"cargo");
     let (program, rest): (PathBuf, &[&str]) =
         if args.len() >= 2 && args[0] == "hledger" && args[1] == "elster" {
             (bin, &args[2..])
         } else if !args.is_empty() && args[0] == "hledger-elster" {
             (bin, &args[1..])
-        } else if is_cargo {
-            (PathBuf::from("cargo"), &args[1..])
         } else {
             panic!("Unsupported command: {command}");
         };
 
-    let mut cmd = Command::new(&program);
-    cmd.current_dir(&world.work_dir);
-    if is_cargo {
-        // A nested `cargo test` fixture crate (see specs/12-reconciliation.md)
-        // reconciles against the export this scenario already wrote to
-        // `export/` under the work dir. Deliberately left to build into its
-        // own target/ under that same (already scenario-unique) work dir,
-        // rather than a shared one: cucumber runs scenarios concurrently, and
-        // every fixture in this suite shares a crate/test name, so a shared
-        // target dir would race two scenarios' builds against the same
-        // output path.
-        cmd.env("FINANCES_TAX_DATA_DIR", world.work_dir.join("export"));
-        // The fixture crate has no Cargo.lock of its own (fresh work dir
-        // every scenario), so it re-resolves hledger-elster's dependency
-        // graph -- including its git build dependency -- from scratch on
-        // every single scenario. --offline guarantees that never touches
-        // the network even so: that git dependency is already cached
-        // locally by the time any scenario runs, since building *this*
-        // test binary already required fetching it to compile
-        // hledger-elster's own build.rs.
-        cmd.arg("--offline");
-    }
-    cmd.args(rest);
-    let output = cmd.output().await.expect("failed to run command");
+    let output = Command::new(&program)
+        .args(rest)
+        .current_dir(&world.work_dir)
+        .output()
+        .await
+        .expect("failed to run command");
 
     world.last_stdout = String::from_utf8_lossy(&output.stdout).into_owned();
     world.last_stderr = String::from_utf8_lossy(&output.stderr).into_owned();
@@ -192,13 +171,7 @@ async fn git_repository(world: &mut ElsterWorld) {
 
 #[given(regex = r#"^a file named "([^"]+)" with content:$"#)]
 async fn write_file(world: &mut ElsterWorld, step: &Step, path: String) {
-    // Lets a scenario's fixture Cargo.toml depend on this checkout of
-    // hledger-elster by path (see specs/12-reconciliation.md) without baking
-    // in an absolute path that would only be valid on one machine/CI run.
-    let content = docstring(step).replace(
-        "{{HLEDGER_ELSTER_MANIFEST_DIR}}",
-        env!("CARGO_MANIFEST_DIR"),
-    );
+    let content = docstring(step);
     let target = world.resolve(&path);
     std::fs::create_dir_all(target.parent().unwrap()).unwrap();
     std::fs::write(&target, format!("{content}\n")).unwrap();
