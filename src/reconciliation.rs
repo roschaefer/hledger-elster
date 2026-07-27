@@ -600,6 +600,28 @@ fn sum_csv_value(
         .sum()
 }
 
+/// `Write` adapter that routes through the `print!` macro rather than
+/// writing to `std::io::stdout()` directly -- unlike a raw `Stdout` handle,
+/// `print!`/`println!` are what libtest's per-test output capture actually
+/// hooks (confirmed empirically: a direct `writeln!(&mut std::io::stdout(),
+/// ...)` leaks straight to the terminal even without `--show-output`,
+/// interleaved with harness progress, while `print!` stays correctly
+/// captured and grouped under the test that produced it). Exists so
+/// `check`'s production path keeps that documented behavior while still
+/// going through the same testable, injectable `check_to`.
+struct CapturedStdout;
+
+impl std::io::Write for CapturedStdout {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        print!("{}", String::from_utf8_lossy(buf));
+        Ok(buf.len())
+    }
+
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 fn check(
     id: &str,
@@ -614,7 +636,7 @@ fn check(
     actual: Decimal,
 ) {
     check_to(
-        &mut std::io::stdout(),
+        &mut CapturedStdout,
         id,
         path,
         row_label,
@@ -630,8 +652,7 @@ fn check(
 
 /// Same as `check`, but writes the `UnderReview` marker line to `out`
 /// instead of unconditionally to stdout -- lets tests capture it into a
-/// buffer, since there's no stable way to intercept a real `println!`'s
-/// destination from outside.
+/// plain buffer.
 #[allow(clippy::too_many_arguments)]
 fn check_to(
     out: &mut impl std::io::Write,
