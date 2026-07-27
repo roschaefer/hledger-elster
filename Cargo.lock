@@ -1062,7 +1062,7 @@ dependencies = [
 [[package]]
 name = "markdown-to-cucumber"
 version = "0.1.0"
-source = "git+https://github.com/roschaefer/markdown-to-cucumber.git?branch=main#8cf536dad707929abe7b01a5c689f0d2d0e6b24c"
+source = "git+https://github.com/roschaefer/markdown-to-cucumber.git?rev=8cf536dad707929abe7b01a5c689f0d2d0e6b24c#8cf536dad707929abe7b01a5c689f0d2d0e6b24c"
 
 [[package]]
 name = "memchr"
