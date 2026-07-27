@@ -132,7 +132,7 @@ async fn run_elster_command(world: &mut ElsterWorld, command: &str) -> bool {
         };
 
     let mut cmd = Command::new(&program);
-    cmd.args(rest).current_dir(&world.work_dir);
+    cmd.current_dir(&world.work_dir);
     if is_cargo {
         // A nested `cargo test` fixture crate (see specs/12-reconciliation.md)
         // reconciles against the export this scenario already wrote to
@@ -143,7 +143,17 @@ async fn run_elster_command(world: &mut ElsterWorld, command: &str) -> bool {
         // target dir would race two scenarios' builds against the same
         // output path.
         cmd.env("FINANCES_TAX_DATA_DIR", world.work_dir.join("export"));
+        // The fixture crate has no Cargo.lock of its own (fresh work dir
+        // every scenario), so it re-resolves hledger-elster's dependency
+        // graph -- including its git build dependency -- from scratch on
+        // every single scenario. --offline guarantees that never touches
+        // the network even so: that git dependency is already cached
+        // locally by the time any scenario runs, since building *this*
+        // test binary already required fetching it to compile
+        // hledger-elster's own build.rs.
+        cmd.arg("--offline");
     }
+    cmd.args(rest);
     let output = cmd.output().await.expect("failed to run command");
 
     world.last_stdout = String::from_utf8_lossy(&output.stdout).into_owned();
