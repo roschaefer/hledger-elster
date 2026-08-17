@@ -1,4 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>roschaefer/renovate-config:rust"]
+  "extends": ["github>roschaefer/renovate-config:rust"],
+  "packageRules": [
+    {
+      "matchPackageNames": ["rust_decimal"],
+      "prBodyNotes": [
+        ":warning: Check whether `rust_decimal`'s `rkyv` dependency now satisfies `>=0.8.17`. If so, remove the `RUSTSEC-2026-0235` entry from `.cargo/audit.toml` (see comment there) and confirm `cargo audit` still passes without it."
+      ]
+    }
+  ]
 }
