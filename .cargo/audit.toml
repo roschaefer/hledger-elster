@@ -1,0 +1,11 @@
+[advisories]
+ignore = [
+    # rkyv is an optional transitive dependency of rust_decimal (via its
+    # unused "rkyv"/"rkyv-safe" features). We only enable rust_decimal's
+    # default features (serde, std), so rkyv is never compiled into this
+    # binary — confirmed with `cargo tree -i rkyv` returning nothing.
+    # rust_decimal 1.42.1 is the latest release and has not yet bumped to
+    # rkyv >=0.8.17. renovate.json has a prBodyNotes reminder on rust_decimal
+    # PRs to recheck and remove this entry once that happens.
+    "RUSTSEC-2026-0235",
+]
