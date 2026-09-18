@@ -265,7 +265,8 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
     for lbl in &labels {
         let einnahmen = *einnahmen_total.get(lbl).unwrap();
         let refund = *ust_refund_totals.get(lbl).unwrap();
-        summe_betriebseinnahmen.insert(lbl.clone(), quantize(einnahmen + refund));
+        let betriebseinnahmen = quantize(einnahmen + refund);
+        summe_betriebseinnahmen.insert(lbl.clone(), betriebseinnahmen);
 
         let betriebsausgaben = quantize(
             *summe_betriebskosten.get(lbl).unwrap()
@@ -274,7 +275,7 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
                 + *ust_paid_totals.get(lbl).unwrap(),
         );
         summe_betriebsausgaben.insert(lbl.clone(), betriebsausgaben);
-        gewinn_totals.insert(lbl.clone(), quantize(einnahmen - betriebsausgaben));
+        gewinn_totals.insert(lbl.clone(), quantize(betriebseinnahmen - betriebsausgaben));
     }
 
     let mut rows: Vec<ReportRow> = vec![
