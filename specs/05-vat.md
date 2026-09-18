@@ -205,4 +205,41 @@ Feature: VAT cash settlement
       | 2024 Q3  | 0,00             | 0,00                      | 0,00                        | 0,00                |                    |
       | 2024 Q4  | 100,00           | 19,00                     | 0,00                        | 19,00               |                    |
       | 2024     | 100,00           | 19,00                     | 0,00                        | 19,00               | 19,00              |
+
+  Scenario: VAT refund from the Finanzamt is part of the profit
+    Given a file named "journal.journal" with content:
+      """
+      account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
+      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+      account expenses:taxes:umsatzsteuer:erstattung  ; elster_role:vat_payment
+
+      2025-02-01 Client invoice
+          income:business       -119.00 EUR
+          assets:bank:business   119.00 EUR
+
+      2025-03-01 VAT refund for 2024
+          expenses:taxes:umsatzsteuer:erstattung  -10.00 EUR
+          assets:bank:business                     10.00 EUR
+      """
+    When I run "hledger elster -f journal.journal --config elster.toml -o export"
+    Then the CSV file "export/2025/steuererklaerung/einnahmen-ueberschuss-rechnung.csv" should contain exactly:
+      | Kennzahl                                                    | 2025   |
+      | # Betriebseinnahmen                                         |        |
+      | Umsatzsteuerpflichtige Betriebseinnahmen                    | 100,00 |
+      | Vereinnahmte Umsatzsteuer                                   | 19,00  |
+      | Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 10,00  |
+      | Summe Betriebseinnahmen                                     | 129,00 |
+      |                                                             |        |
+      | # Betriebsausgaben                                          |        |
+      |                                                             |        |
+      | An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0,00   |
+      | Summe Betriebskosten                                        | 0,00   |
+      | Summe Betriebsausgaben                                      | 0,00   |
+      |                                                             |        |
+      | # Ermittlung des Gewinns                                    |        |
+      | Steuerpflichtiger Gewinn/Verlust                            | 129,00 |
+      |                                                             |        |
+      | # Zusätzliche Angaben bei Einzelunternehmen                 |        |
+      | Entnahmen                                                   | 0,00   |
+      | Einlagen                                                    | 0,00   |
 ```
