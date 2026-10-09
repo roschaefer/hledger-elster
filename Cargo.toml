@@ -24,8 +24,8 @@ rust_decimal = "1.43.0"
 rust_xlsxwriter = "0.99.1"
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
-thiserror = "2.0.20"
-toml = "1.1.6"
+thiserror = "2.0.21"
+toml = "1.1.8"
 unicode-normalization = "0.1.25"
 walkdir = "2.5.0"
 zip = "8.6.0"
@@ -35,7 +35,7 @@ calamine = "0.36.1"
 cucumber = { version = "0.23", features = ["macros"] }
 rust_decimal_macros = "1.40.0"
 tempfile = "3.27.0"
-tokio = { version = "1.53.1", features = ["macros", "process", "rt-multi-thread", "time"] }
+tokio = { version = "1.53.2", features = ["macros", "process", "rt-multi-thread", "time"] }
 
 [build-dependencies]
 markdown-to-cucumber = { git = "https://github.com/roschaefer/markdown-to-cucumber.git", branch = "main" }
