@@ -2,7 +2,7 @@
 //! same in-memory `ReportRow` / `TrailSheet` values the export pipeline
 //! builds before writing. Exists to guarantee CSV-on-disk and in-memory
 //! representation never drift apart — see
-//! `specs/01-csv-xlsx-equivalence.md`.
+//! `tests/specifications/csv-xlsx-equivalence/README.md`.
 
 use crate::herleitung::{TrailRow, TrailSheet};
 use crate::periods::ReportRow;

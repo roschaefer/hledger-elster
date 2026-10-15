@@ -56,29 +56,39 @@ scenarios. The goal is to cover more cases over time through executable examples
 
 ## Specification By Example
 
-Executable specifications in [`specs/`](./specs/) — run them with:
-
-```bash
-cargo test --test cucumber
-```
+Executable [Scrut](https://github.com/facebookincubator/scrut) specifications
+live in [`tests/specifications/`](./tests/specifications/). Run them with
+`just test-scrut`.
 
 Specs:
 
-- [Configuration](./specs/00-configuration.md)
-- [CSV/xlsx equivalence](./specs/01-csv-xlsx-equivalence.md)
-- [Traceability](./specs/02-traceability.md)
-- [Export hygiene](./specs/03-export-hygiene.md)
-- [Business expenses and income](./specs/04-form-section-item-tags.md)
-- [VAT payments and settlements](./specs/05-vat.md)
-- [VAT reverse charge](./specs/06-vat-reverse-charge.md)
-- [Business vs. private accounts](./specs/07-business-accounts.md)
-- [Health care and insurance](./specs/08-health-care.md)
-- [GWG and AfA](./specs/09-afa.md)
-- [Donations](./specs/10-donations.md)
-- [Git commit evidence](./specs/11-commit-evidence.md)
-- [Reconciliation library](./specs/12-reconciliation.md)
+- [Configuration](./tests/specifications/configuration/)
+- [CSV/xlsx equivalence](./tests/specifications/csv-xlsx-equivalence/)
+- [Traceability](./tests/specifications/traceability/)
+- [Export hygiene](./tests/specifications/export-hygiene/)
+- [Business expenses and income](./tests/specifications/form-section-item-tags/)
+- [VAT payments and settlements](./tests/specifications/vat/)
+- [VAT reverse charge](./tests/specifications/vat-reverse-charge/)
+- [Business vs. private accounts](./tests/specifications/business-accounts/)
+- [Health care and insurance](./tests/specifications/health-care/)
+- [GWG and AfA](./tests/specifications/afa/)
+- [Donations](./tests/specifications/donations/)
+- [Git commit evidence](./tests/specifications/commit-evidence/)
+- [Reconciliation library](./tests/specifications/reconciliation/)
 
 ## Development
+
+Enter the reproducible development shell, which includes Rust, `hledger`,
+Just, Scrut, and the linting tools:
+
+```bash
+nix develop
+```
+
+Alternatively, install a [Rust toolchain](https://rustup.rs/),
+[`hledger`](https://hledger.org/),
+[Just](https://github.com/casey/just), and
+[Scrut](https://github.com/facebookincubator/scrut) yourself.
 
 ```bash
 git clone git@github.com:roschaefer/hledger-elster.git

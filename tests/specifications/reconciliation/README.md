@@ -24,6 +24,6 @@ than here:
 cargo doc --open -p hledger-elster  # then open the `reconciliation` module
 ```
 
-or read [`src/reconciliation.rs`](../src/reconciliation.rs) directly.
+or read [`src/reconciliation.rs`](../../../src/reconciliation.rs) directly.
 Every example there is a real doctest, checked by `cargo test --doc` on
 every run, so it can't drift from what the library actually does.
