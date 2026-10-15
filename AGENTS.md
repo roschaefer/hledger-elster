@@ -26,7 +26,8 @@
   inline by the helpers in `readme-setup.sh`; a chapter whose scenarios share
   a starting state keeps it in its `setup.bash` and splits further scenarios
   into sibling documents
-- `examples/`: sanitized example journals
+- `examples/`: sanitized example journals; `README.md` is a Scrut document
+  that runs its examples against them
 
 Private data and private tests stay outside this repository.
 

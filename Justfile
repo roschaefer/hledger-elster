@@ -15,7 +15,7 @@ run *args="":
 test:
     cargo test
 
-test-scrut *paths="tests/specifications":
+test-scrut *paths="README.md tests/specifications":
     cargo build
     PATH="$(realpath "${CARGO_TARGET_DIR:-target}/debug"):$PATH" scrut test --combine-output {{paths}}
 

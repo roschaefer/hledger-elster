@@ -96,3 +96,13 @@ PYTHON
 strip_section_markers() {
   sed 's/^# //' "$1"
 }
+
+HLEDGER_ELSTER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+
+# checkout_examples copies the repository's tracked examples/ directory into the
+# current directory, for the README's examples.
+checkout_examples() {
+  git -C "$HLEDGER_ELSTER_ROOT" ls-files -z -- examples |
+    tar -C "$HLEDGER_ELSTER_ROOT" --null --files-from - -cf - |
+    tar -xf -
+}
