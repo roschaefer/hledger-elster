@@ -22,6 +22,16 @@ provides these helpers:
 Scrut gives every document a fresh temporary working directory and checks the
 exit code of every block, so a failing setup step fails its scenario.
 
+To try a scenario by hand, print a document's commands as a bash script,
+without Scrut's `$ ` and `> ` prompts, and run or edit it. With
+`hledger-elster` on `PATH`, each scenario runs in a new `scenario.XXXXXX/work`
+directory below the current one:
+
+```sh
+just scenario-script tests/specifications/configuration/README.md > try.sh
+bash try.sh
+```
+
 When several scenarios start from the same state, their chapter keeps that
 state in a `setup.bash` defining one function named after the folder
 (`scenario_commit_evidence` in `commit-evidence/`). The chapter's `README.md`
