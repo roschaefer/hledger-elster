@@ -6,6 +6,9 @@ $ source "$TESTDIR/../readme-setup.sh"
 ```
 -->
 
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 The commit evidence export is an explicit step after the repository state for a
 tax declaration has been committed. It writes a PDF that can be uploaded to
 ELSTER as a supporting document without becoming part of the committed state it

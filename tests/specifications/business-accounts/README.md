@@ -6,6 +6,9 @@ $ source "$TESTDIR/../readme-setup.sh"
 ```
 -->
 
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 Business income is identified by the combination of account metadata and the
 counterposting account:
 

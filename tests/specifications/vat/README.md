@@ -6,6 +6,9 @@ $ source "$TESTDIR/../readme-setup.sh"
 ```
 -->
 
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 VAT payment accounts use role metadata instead of form metadata:
 
 - `elster_role:vat_advance` marks VAT advance payments and reversals.

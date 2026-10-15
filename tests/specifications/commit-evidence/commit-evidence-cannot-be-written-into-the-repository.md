@@ -6,6 +6,9 @@ $ source "$TESTDIR/../readme-setup.sh"
 ```
 -->
 
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 Starts from the chapter's [shared setup](README.md#shared-setup), which
 [`setup.bash`](setup.bash) builds:
 
@@ -15,7 +18,7 @@ $ build_scenario scenario_commit_evidence
 
 ```scrut
 $ hledger-elster export-commit-evidence --output commit-evidence.pdf
-Error: commit evidence output must be outside the Git repository: */scenario/work/commit-evidence.pdf (glob)
+Error: commit evidence output must be outside the Git repository: */work/commit-evidence.pdf (glob)
 [1]
 ```
 

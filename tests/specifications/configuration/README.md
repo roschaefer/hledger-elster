@@ -6,6 +6,9 @@ $ source "$TESTDIR/../readme-setup.sh"
 ```
 -->
 
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 `hledger-elster` uses a TOML config file for user-specific tax assumptions that
 are not ledger transactions. The tool defaults the Home-Office-Pauschale to the
 maximum legal amount for the year, because human users are likely to forget this

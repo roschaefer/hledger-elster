@@ -6,6 +6,9 @@ $ source "$TESTDIR/../readme-setup.sh"
 ```
 -->
 
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 A German tax audit (`Steuerprüfung`) expects to see the calculation, not just
 the filed number. In my own audit, the tax office asked for a file they could
 open in LibreOffice or Microsoft Office — a spreadsheet, not a printout — so

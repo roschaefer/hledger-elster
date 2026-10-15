@@ -7,12 +7,12 @@ export LC_ALL=C.UTF-8
 
 SPECIFICATION_WORKING_DIRECTORY=$PWD
 
-# Start every scenario in an empty directory. Scenarios run in scenario/work,
-# so files "outside the repository" (../) are cleaned up with the scenario.
+# Start every scenario in a new empty directory, scenario.XXXXXX/work, so files
+# "outside the repository" (../) stay inside the scenario too. Nothing is
+# deleted, so sourcing this file to try a scenario by hand is safe.
 new_scenario() {
-  cd "$SPECIFICATION_WORKING_DIRECTORY" || return
-  rm -rf scenario && mkdir -p scenario/work || return
-  cd scenario/work || return
+  cd "$(mktemp -d "$SPECIFICATION_WORKING_DIRECTORY/scenario.XXXXXX")" || return
+  mkdir work && cd work || return
 }
 
 # build_scenario FUNCTION starts a scenario from the state that FUNCTION, from

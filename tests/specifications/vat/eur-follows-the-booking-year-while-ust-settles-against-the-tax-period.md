@@ -6,6 +6,9 @@ $ source "$TESTDIR/../readme-setup.sh"
 ```
 -->
 
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 The EÜR and USt views use different time axes for VAT cash movements:
 
 - `Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer` and `An das

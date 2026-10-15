@@ -6,6 +6,9 @@ $ source "$TESTDIR/../readme-setup.sh"
 ```
 -->
 
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 This is for you, the person who has to stand behind these numbers — not just
 the software. When the tax office asks how a figure was arrived at, you
 should be able to point at a row in a spreadsheet and add it up yourself,

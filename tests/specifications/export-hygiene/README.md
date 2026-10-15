@@ -6,6 +6,9 @@ $ source "$TESTDIR/../readme-setup.sh"
 ```
 -->
 
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 The generator writes deterministic ELSTER artifacts into the selected output
 directory. It also reports files it did not touch, because stale CSVs in the
 export tree can be mistaken for current tax artifacts.
@@ -45,6 +48,6 @@ $ hledger elster -f journal.journal --config elster.toml -o export
   2024
 
 Warning: untouched files remain in ELSTER export directory. Consider emptying the export directory and running the tool again.
-  */scenario/work/export/2024/steuererklaerung/stale.csv (glob)
+  */work/export/2024/steuererklaerung/stale.csv (glob)
 
 ```
