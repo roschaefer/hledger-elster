@@ -15,6 +15,16 @@ new_scenario() {
   cd scenario/work || return
 }
 
+# build_scenario FUNCTION starts a scenario from the state that FUNCTION, from
+# the document's setup.bash, builds. Chapters whose scenarios share their
+# setup keep it there, so every document in the folder starts the same way.
+build_scenario() {
+  new_scenario || return
+  # shellcheck disable=SC1091
+  source "$TESTDIR/setup.bash" || return
+  "$1"
+}
+
 # write_file PATH <<'EOF' ... EOF
 write_file() {
   mkdir -p "$(dirname "$1")" && cat >"$1"

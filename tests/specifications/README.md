@@ -11,6 +11,8 @@ source [`readme-setup.sh`](readme-setup.sh) in a hidden Scrut block, which
 provides these helpers:
 
 - `new_scenario` starts a scenario in an empty directory;
+- `build_scenario FUNCTION` starts a scenario from the state a chapter's
+  `setup.bash` builds (see below);
 - `write_file PATH` writes a journal, config, or other file from a heredoc;
 - `new_git_repository` initializes the scenario directory as a Git repository;
 - `xlsx_sheet WORKBOOK SHEET` prints a workbook tab as `;`-separated CSV;
@@ -19,6 +21,14 @@ provides these helpers:
 
 Scrut gives every document a fresh temporary working directory and checks the
 exit code of every block, so a failing setup step fails its scenario.
+
+When several scenarios start from the same state, their chapter keeps that
+state in a `setup.bash` defining one function named after the folder
+(`scenario_commit_evidence` in `commit-evidence/`). The chapter's `README.md`
+builds it under "Shared setup", prints the files it wrote so the inputs stay
+visible next to the output, runs the first scenario, and links to one document
+per further scenario in the same folder. Each of those calls `build_scenario`
+first.
 
 The examples document the public journal tagging contract. Account directives
 carry ELSTER metadata in hledger comments, and postings inherit the metadata from

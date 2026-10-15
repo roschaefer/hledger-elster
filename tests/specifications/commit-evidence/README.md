@@ -43,33 +43,37 @@ If the repository cannot later be produced, or if the original commit history is
 rewritten, the commit hash in the PDF is only a string and no longer a useful way
 to verify the underlying files.
 
-### A clean repository can export copyable commit evidence
+## Shared setup
+
+Every scenario starts in a Git repository with a journal and config
+committed. [`setup.bash`](setup.bash) builds this state:
 
 ```scrut
-$ new_scenario
+$ build_scenario scenario_commit_evidence
 ```
 
 ```scrut
-$ new_git_repository
+$ cat journal.journal
+account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
+account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
 ```
 
 ```scrut
-$ write_file journal.journal <<'EOF'
-> account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-> account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
-> EOF
+$ cat elster.toml
+[euer.home_office_pauschale]
+enabled = false
 ```
 
 ```scrut
-$ write_file elster.toml <<'EOF'
-> [euer.home_office_pauschale]
-> enabled = false
-> EOF
+$ git log --format=%s
+scenario state
 ```
 
 ```scrut
-$ git add . && git commit --quiet --message "scenario state"
+$ git status --porcelain
 ```
+
+## A clean repository can export copyable commit evidence
 
 ```scrut
 $ hledger-elster export-commit-evidence --output ../commit-evidence.pdf
@@ -87,178 +91,14 @@ $ grep --quiet --fixed-strings "$(git rev-parse HEAD)" ../commit-evidence.pdf
 $ git status --porcelain
 ```
 
-### Commit evidence cannot be written into the repository
+## More scenarios
 
-```scrut
-$ new_scenario
-```
+These start from the same shared setup:
 
-```scrut
-$ new_git_repository
-```
-
-```scrut
-$ write_file journal.journal <<'EOF'
-> account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-> account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
-> EOF
-```
-
-```scrut
-$ write_file elster.toml <<'EOF'
-> [euer.home_office_pauschale]
-> enabled = false
-> EOF
-```
-
-```scrut
-$ git add . && git commit --quiet --message "scenario state"
-```
-
-```scrut
-$ hledger-elster export-commit-evidence --output commit-evidence.pdf
-Error: commit evidence output must be outside the Git repository: */scenario/work/commit-evidence.pdf (glob)
-[1]
-```
-
-```scrut
-$ test ! -e commit-evidence.pdf
-```
-
-```scrut
-$ git status --porcelain
-```
-
-### A dirty repository cannot export commit evidence
-
-```scrut
-$ new_scenario
-```
-
-```scrut
-$ new_git_repository
-```
-
-```scrut
-$ write_file journal.journal <<'EOF'
-> account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-> account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
-> EOF
-```
-
-```scrut
-$ write_file elster.toml <<'EOF'
-> [euer.home_office_pauschale]
-> enabled = false
-> EOF
-```
-
-```scrut
-$ git add . && git commit --quiet --message "scenario state"
-```
-
-```scrut
-$ write_file journal.journal <<'EOF'
-> account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-> account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
-> 
-> 2024-01-10 Client invoice
->     income:business       -119.00 EUR
->     assets:bank:business   119.00 EUR
-> EOF
-```
-
-```scrut
-$ hledger-elster export-commit-evidence --output ../commit-evidence.pdf
-Error: working tree has uncommitted changes; commit or stash them before exporting commit evidence
-[1]
-```
-
-```scrut
-$ test ! -e ../commit-evidence.pdf
-```
-
-### Existing commit evidence is not silently overwritten
-
-```scrut
-$ new_scenario
-```
-
-```scrut
-$ new_git_repository
-```
-
-```scrut
-$ write_file journal.journal <<'EOF'
-> account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-> account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
-> EOF
-```
-
-```scrut
-$ write_file elster.toml <<'EOF'
-> [euer.home_office_pauschale]
-> enabled = false
-> EOF
-```
-
-```scrut
-$ git add . && git commit --quiet --message "scenario state"
-```
-
-```scrut
-$ write_file ../commit-evidence.pdf <<'EOF'
-> previous evidence
-> EOF
-```
-
-```scrut
-$ hledger-elster export-commit-evidence --output ../commit-evidence.pdf
-Error: commit evidence file already exists: */scenario/work/../commit-evidence.pdf (use --force to overwrite) (glob)
-[1]
-```
-
-### --force overwrites existing commit evidence
-
-```scrut
-$ new_scenario
-```
-
-```scrut
-$ new_git_repository
-```
-
-```scrut
-$ write_file journal.journal <<'EOF'
-> account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-> account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
-> EOF
-```
-
-```scrut
-$ write_file elster.toml <<'EOF'
-> [euer.home_office_pauschale]
-> enabled = false
-> EOF
-```
-
-```scrut
-$ git add . && git commit --quiet --message "scenario state"
-```
-
-```scrut
-$ write_file ../commit-evidence.pdf <<'EOF'
-> previous evidence
-> EOF
-```
-
-```scrut
-$ hledger-elster export-commit-evidence --output ../commit-evidence.pdf --force
-```
-
-```scrut
-$ grep --quiet --fixed-strings "$(git rev-parse HEAD)" ../commit-evidence.pdf
-```
+- [Commit evidence cannot be written into the repository](commit-evidence-cannot-be-written-into-the-repository.md)
+- [A dirty repository cannot export commit evidence](a-dirty-repository-cannot-export-commit-evidence.md)
+- [Existing commit evidence is not silently overwritten](existing-commit-evidence-is-not-silently-overwritten.md)
+- [--force overwrites existing commit evidence](force-overwrites-existing-commit-evidence.md)
 
 ## Third-Party Timestamp Evidence
 
