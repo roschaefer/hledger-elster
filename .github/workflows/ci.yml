@@ -13,3 +13,4 @@ jobs:
       binary_name: hledger-elster
       platforms: '["linux-x86_64","macos-arm64"]'
       needs_hledger: true
+      needs_scrut: true

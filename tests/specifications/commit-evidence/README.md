@@ -1,5 +1,14 @@
 # Git Commit Evidence
 
+<!--
+```scrut {fail_fast: true}
+$ source "$TESTDIR/../readme-setup.sh"
+```
+-->
+
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 The commit evidence export is an explicit step after the repository state for a
 tax declaration has been committed. It writes a PDF that can be uploaded to
 ELSTER as a supporting document without becoming part of the committed state it
@@ -37,74 +46,62 @@ If the repository cannot later be produced, or if the original commit history is
 rewritten, the commit hash in the PDF is only a string and no longer a useful way
 to verify the underlying files.
 
-```gherkin
-Feature: Git commit evidence
+## Shared setup
 
-  Background:
-    Given a git repository
-    And a file named "journal.journal" with content:
-      """
-      account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
-      """
-    And a file named "elster.toml" with content:
-      """
-      [euer.home_office_pauschale]
-      enabled = false
-      """
-    And I commit all files
+Every scenario starts in a Git repository with a journal and config
+committed. [`setup.bash`](setup.bash) builds this state:
 
-  Scenario: A clean repository can export copyable commit evidence
-    When I run "hledger-elster export-commit-evidence --output ../commit-evidence.pdf"
-    Then the file outside the repository "commit-evidence.pdf" should exist
-    And the PDF file outside the repository "commit-evidence.pdf" should contain the current git commit hash
-    And the git working tree should be clean
-
-  Scenario: Commit evidence cannot be written into the repository
-    When I run "hledger-elster export-commit-evidence --output commit-evidence.pdf" and it fails
-    Then stderr should contain:
-      """
-      commit evidence output must be outside the Git repository
-      """
-    And the file "commit-evidence.pdf" should not exist
-    And the git working tree should be clean
-
-  Scenario: A dirty repository cannot export commit evidence
-    Given a file named "journal.journal" with content:
-      """
-      account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
-
-      2024-01-10 Client invoice
-          income:business       -119.00 EUR
-          assets:bank:business   119.00 EUR
-      """
-    When I run "hledger-elster export-commit-evidence --output ../commit-evidence.pdf" and it fails
-    Then stderr should contain:
-      """
-      working tree has uncommitted changes
-      """
-    And the file outside the repository "commit-evidence.pdf" should not exist
-
-  Scenario: Existing commit evidence is not silently overwritten
-    Given a file outside the repository named "commit-evidence.pdf" with content:
-      """
-      previous evidence
-      """
-    When I run "hledger-elster export-commit-evidence --output ../commit-evidence.pdf" and it fails
-    Then stderr should contain:
-      """
-      commit evidence file already exists
-      """
-
-  Scenario: --force overwrites existing commit evidence
-    Given a file outside the repository named "commit-evidence.pdf" with content:
-      """
-      previous evidence
-      """
-    When I run "hledger-elster export-commit-evidence --output ../commit-evidence.pdf --force"
-    Then the PDF file outside the repository "commit-evidence.pdf" should contain the current git commit hash
+```scrut
+$ build_scenario scenario_commit_evidence
 ```
+
+```scrut
+$ cat journal.journal
+account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
+account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+```
+
+```scrut
+$ cat elster.toml
+[euer.home_office_pauschale]
+enabled = false
+```
+
+```scrut
+$ git log --format=%s
+scenario state
+```
+
+```scrut
+$ git status --porcelain
+```
+
+## A clean repository can export copyable commit evidence
+
+```scrut
+$ hledger-elster export-commit-evidence --output ../commit-evidence.pdf
+```
+
+```scrut
+$ test -f ../commit-evidence.pdf
+```
+
+```scrut
+$ grep --quiet --fixed-strings "$(git rev-parse HEAD)" ../commit-evidence.pdf
+```
+
+```scrut
+$ git status --porcelain
+```
+
+## More scenarios
+
+These start from the same shared setup:
+
+- [Commit evidence cannot be written into the repository](output-inside-the-repository.md)
+- [A dirty repository cannot export commit evidence](dirty-repository.md)
+- [Existing commit evidence is not silently overwritten](no-silent-overwrite.md)
+- [--force overwrites existing commit evidence](force-overwrite.md)
 
 ## Third-Party Timestamp Evidence
 

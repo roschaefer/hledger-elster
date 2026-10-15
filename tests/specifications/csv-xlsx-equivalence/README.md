@@ -1,5 +1,14 @@
 # CSV/xlsx equivalence
 
+<!--
+```scrut {fail_fast: true}
+$ source "$TESTDIR/../readme-setup.sh"
+```
+-->
+
+The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh),
+such as `new_scenario`, which starts each scenario in a new empty directory.
+
 A German tax audit (`Steuerprüfung`) expects to see the calculation, not just
 the filed number. In my own audit, the tax office asked for a file they could
 open in LibreOffice or Microsoft Office — a spreadsheet, not a printout — so
@@ -42,45 +51,60 @@ instead, since it has actual styling available to convey that meaning.
 `"GESAMT"`- and `"Σ "`-prefixed rows carry no such exception — their text is
 identical in both formats, only the fill/bold formatting differs.
 
-```gherkin
-Feature: CSV/xlsx equivalence
+### Every form tab matches its CSV export, across EÜR, USt, and ESt
 
-  Background:
-    Given a file named "elster.toml" with content:
-      """
-      [euer.home_office_pauschale]
-      enabled = false
-      """
+```scrut
+$ new_scenario
+```
 
-  Scenario: Every form tab matches its CSV export, across EÜR, USt, and ESt
-    Given a file named "journal.journal" with content:
-      """
-      account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-      account assets:bank:private   ; elster_account:private, elster_item:Girokonto
-      account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
-      account expenses:business:hosting  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:contains_vat, elster_vat_rate:0.19, elster_input_vat_share:1.00, elster_item:Serverkosten, elster_section:Bezogene Fremdleistungen
-      account expenses:taxes:umsatzsteuer:vorauszahlung       ; elster_role:vat_advance
-      account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
-      account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_item:Krankenversicherung, elster_section:Vorsorgeaufwand
+```scrut
+$ write_file elster.toml <<'EOF'
+> [euer.home_office_pauschale]
+> enabled = false
+> EOF
+```
 
-      2024-01-15 Client invoice
-          income:business       -119.00 EUR
-          assets:bank:business   119.00 EUR
+```scrut
+$ write_file journal.journal <<'EOF'
+> account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
+> account assets:bank:private   ; elster_account:private, elster_item:Girokonto
+> account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+> account expenses:business:hosting  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:contains_vat, elster_vat_rate:0.19, elster_input_vat_share:1.00, elster_item:Serverkosten, elster_section:Bezogene Fremdleistungen
+> account expenses:taxes:umsatzsteuer:vorauszahlung       ; elster_role:vat_advance
+> account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
+> account expenses:private:health-care:kv  ; elster_form:einkommensteuer, elster_item:Krankenversicherung, elster_section:Vorsorgeaufwand
+> 
+> 2024-01-15 Client invoice
+>     income:business       -119.00 EUR
+>     assets:bank:business   119.00 EUR
+> 
+> 2024-02-01 Hosting
+>     expenses:business:hosting   23.80 EUR
+>     assets:bank:business       -23.80 EUR
+> 
+> 2024-03-01 VAT advance
+>     expenses:taxes:umsatzsteuer:vorauszahlung:2024   19.00 EUR
+>     assets:bank:business                            -19.00 EUR
+> 
+> 2024-06-01 Health care contribution
+>     expenses:private:health-care:kv   200.00 EUR
+>     assets:bank:private              -200.00 EUR
+> EOF
+```
 
-      2024-02-01 Hosting
-          expenses:business:hosting   23.80 EUR
-          assets:bank:business       -23.80 EUR
+```scrut
+$ hledger elster -f journal.journal --config elster.toml -o export
+  2024
+```
 
-      2024-03-01 VAT advance
-          expenses:taxes:umsatzsteuer:vorauszahlung:2024   19.00 EUR
-          assets:bank:business                            -19.00 EUR
+```scrut
+$ xlsx_sheet export/2024/steuererklaerung.xlsx EÜR | diff - <(strip_section_markers export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv)
+```
 
-      2024-06-01 Health care contribution
-          expenses:private:health-care:kv   200.00 EUR
-          assets:bank:private              -200.00 EUR
-      """
-    When I run "hledger elster -f journal.journal --config elster.toml -o export"
-    Then the xlsx file "export/2024/steuererklaerung.xlsx" tab "EÜR" should equal the CSV file "export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv"
-    And the xlsx file "export/2024/steuererklaerung.xlsx" tab "USt" should equal the CSV file "export/2024/steuererklaerung/umsatzsteuer.csv"
-    And the xlsx file "export/2024/steuererklaerung.xlsx" tab "ESt" should equal the CSV file "export/2024/steuererklaerung/einkommensteuer.csv"
+```scrut
+$ xlsx_sheet export/2024/steuererklaerung.xlsx USt | diff - <(strip_section_markers export/2024/steuererklaerung/umsatzsteuer.csv)
+```
+
+```scrut
+$ xlsx_sheet export/2024/steuererklaerung.xlsx ESt | diff - <(strip_section_markers export/2024/steuererklaerung/einkommensteuer.csv)
 ```

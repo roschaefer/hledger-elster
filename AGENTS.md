@@ -19,14 +19,15 @@
 - `src/periods.rs`: period-label generation and per-period aggregation
 - `src/euer.rs` / `src/est.rs` / `src/ust.rs`: the three ELSTER form builders
 - `src/herleitung.rs`: per-form audit-trail ("Herleitung") sheet builders
-- `src/csv_import.rs`: reads the CSV files this tool writes back into `ReportRow`/`TrailSheet` — the read-back half of the [CSV/xlsx equivalence invariant](./specs/01-csv-xlsx-equivalence.md)
+- `src/csv_import.rs`: reads the CSV files this tool writes back into `ReportRow`/`TrailSheet` — the read-back half of the [CSV/xlsx equivalence invariant](./tests/specifications/csv-xlsx-equivalence/)
 - `src/report_writer.rs`: xlsx/CSV writing, sheet-name/filename sanitization, deterministic zip output, export-hygiene tracking
-- `specs/`: Markdown specifications; fenced `gherkin` blocks are compiled into
-  cucumber features at build time by `build.rs`, via the shared
-  [markdown-to-cucumber](https://github.com/roschaefer/markdown-to-cucumber)
-  crate (see `tests/cucumber.rs` for step definitions, which stay local to
-  this crate)
-- `examples/`: sanitized example journals
+- `tests/specifications/`: executable Scrut specifications; each chapter
+  directory uses `README.md` for its document, with scenario inputs written
+  inline by the helpers in `readme-setup.sh`; a chapter whose scenarios share
+  a starting state keeps it in its `setup.bash` and splits further scenarios
+  into sibling documents
+- `examples/`: sanitized example journals; `README.md` is a Scrut document
+  that runs its examples against them
 
 Private data and private tests stay outside this repository.
 
@@ -34,6 +35,7 @@ Private data and private tests stay outside this repository.
 
 - `just build`
 - `just test`
+- `just test-scrut`
 - `cargo run -- -f <journal>`
 
 ## Boundaries

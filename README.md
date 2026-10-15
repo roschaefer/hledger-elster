@@ -1,5 +1,11 @@
 # hledger-elster
 
+<!--
+```scrut {fail_fast: true}
+$ source "$TESTDIR/tests/specifications/readme-setup.sh" && new_scenario && checkout_examples
+```
+-->
+
 `hledger-elster` generates German tax exports for [ELSTER.de](https://www.elster.de) from an `hledger` journal.
 
 ## Installation
@@ -23,26 +29,55 @@ For macOS on Apple Silicon, use the `hledger-elster-macos-arm64` asset instead.
 
 ## Usage
 
+Run it on a journal, here the [example journal](examples/ledger/hledger.journal).
+It prints each tax year it exports:
+
+```scrut
+$ hledger-elster -f examples/ledger/hledger.journal
+  2024
+  2025
+```
+
 Outputs are written under `data/exports/<year>/` by default:
 
-- `steuererklaerung/`: summary CSV files plus `steuererklaerung.xlsx`
-- `herleitung/`: detailed audit trails plus per-form `.xlsx`
+```scrut
+$ ls data/exports/2024
+herleitung
+steuererklaerung
+steuererklaerung.xlsx
+```
+
+- `steuererklaerung/`: summary CSV files, one per form, also bundled as tabs of
+  `steuererklaerung.xlsx`
+- `herleitung/`: detailed audit trails, one `.xlsx` per form
 
 Workbook export convention:
 
 - every `name.xlsx` workbook has a sibling `name/` directory
 - each workbook tab is also exported there as a CSV with the corresponding derived filename
 
-```bash
-hledger-elster -f examples/ledger/hledger.journal
-hledger-elster -f examples/ledger/hledger.journal --config elster.toml -o /tmp/elster-out
+```scrut
+$ ls data/exports/2024/herleitung data/exports/2024/steuererklaerung
+data/exports/2024/herleitung:
+einkommensteuer
+einkommensteuer.xlsx
+einnahmen-ueberschuss-rechnung
+einnahmen-ueberschuss-rechnung.xlsx
+umsatzsteuer
+umsatzsteuer.xlsx
+
+data/exports/2024/steuererklaerung:
+einkommensteuer.csv
+einnahmen-ueberschuss-rechnung.csv
+umsatzsteuer.csv
 ```
 
 Arguments:
 
 - `-f`, `--file`: input journal, with the same meaning as `hledger -f`
 - `-o`, `--output-dir`: output directory for generated tax artifacts
-- `--config`: TOML config file for user-specific tax adjustments
+- `--config`: TOML config file for user-specific tax adjustments (see
+  [Config file](#config-file))
 
 ## Audience
 
@@ -56,29 +91,41 @@ scenarios. The goal is to cover more cases over time through executable examples
 
 ## Specification By Example
 
-Executable specifications in [`specs/`](./specs/) — run them with:
-
-```bash
-cargo test --test cucumber
-```
+Executable [Scrut](https://github.com/facebookincubator/scrut) specifications
+live in [`tests/specifications/`](./tests/specifications/). This README is one
+too: its `scrut` blocks run against the [example journal](examples/ledger/hledger.journal),
+so the commands and outputs shown above stay accurate. Run them all with
+`just test-scrut`.
 
 Specs:
 
-- [Configuration](./specs/00-configuration.md)
-- [CSV/xlsx equivalence](./specs/01-csv-xlsx-equivalence.md)
-- [Traceability](./specs/02-traceability.md)
-- [Export hygiene](./specs/03-export-hygiene.md)
-- [Business expenses and income](./specs/04-form-section-item-tags.md)
-- [VAT payments and settlements](./specs/05-vat.md)
-- [VAT reverse charge](./specs/06-vat-reverse-charge.md)
-- [Business vs. private accounts](./specs/07-business-accounts.md)
-- [Health care and insurance](./specs/08-health-care.md)
-- [GWG and AfA](./specs/09-afa.md)
-- [Donations](./specs/10-donations.md)
-- [Git commit evidence](./specs/11-commit-evidence.md)
-- [Reconciliation library](./specs/12-reconciliation.md)
+- [Configuration](./tests/specifications/configuration/)
+- [CSV/xlsx equivalence](./tests/specifications/csv-xlsx-equivalence/)
+- [Traceability](./tests/specifications/traceability/)
+- [Export hygiene](./tests/specifications/export-hygiene/)
+- [Business expenses and income](./tests/specifications/form-section-item-tags/)
+- [VAT payments and settlements](./tests/specifications/vat/)
+- [VAT reverse charge](./tests/specifications/vat-reverse-charge/)
+- [Business vs. private accounts](./tests/specifications/business-accounts/)
+- [Health care and insurance](./tests/specifications/health-care/)
+- [GWG and AfA](./tests/specifications/afa/)
+- [Donations](./tests/specifications/donations/)
+- [Git commit evidence](./tests/specifications/commit-evidence/)
+- [Reconciliation library](./tests/specifications/reconciliation/)
 
 ## Development
+
+Enter the reproducible development shell, which includes Rust, `hledger`,
+Just, Scrut, and the linting tools:
+
+```bash
+nix develop
+```
+
+Alternatively, install a [Rust toolchain](https://rustup.rs/),
+[`hledger`](https://hledger.org/),
+[Just](https://github.com/casey/just), and
+[Scrut](https://github.com/facebookincubator/scrut) yourself.
 
 ```bash
 git clone git@github.com:roschaefer/hledger-elster.git
@@ -100,46 +147,60 @@ All tags are prefixed with `elster_`. Tags fall into three categories:
 
 ### Example `accounts.journal`
 
-```hledger
-; ── Payment accounts ──────────────────────────────────────────────────────────
-account assets:bank:business          ; elster_account:business, elster_item:Geschäftskonto
-account assets:bank:private           ; elster_account:private,  elster_item:Girokonto
+```scrut
+$ write_file accounts.journal <<'EOF'
+> ; ── Payment accounts ──────────────────────────────────────────────────────────
+> account assets:bank:business          ; elster_account:business, elster_item:Geschäftskonto
+> account assets:bank:private           ; elster_account:private,  elster_item:Girokonto
+> 
+> ; ── Business income (EÜR + USt) ───────────────────────────────────────────────
+> account income:business               ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+> 
+> ; ── Business expenses (EÜR) ───────────────────────────────────────────────────
+> ; Base account sets defaults; sub-accounts inherit and override.
+> account expenses:business             ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:contains_vat, elster_vat_rate:0.19, elster_input_vat_share:1.00
+> account expenses:business:hosting     ; elster_item:Serverkosten, elster_section:Bezogene Fremdleistungen
+> account expenses:business:education   ; elster_item:Fortbildung,  elster_section:Fortbildungskosten
+> 
+> ; Proportional deduction (e.g. phone: 20 % business use)
+> account expenses:phone                ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat:contains_vat, elster_input_vat_share:0.20, elster_vat_rate:0.19, elster_item:Mobiltelefon, elster_section:Arbeitsmittel
+> 
+> ; Depreciable asset (AfA)
+> account expenses:hardware:computer          ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_afa_years:3, elster_item:Computer-Kauf, elster_section:Arbeitsmittel
+> 
+> ; ── Private expenses (ESt) ────────────────────────────────────────────────────
+> account expenses:insurance            ; elster_form:einkommensteuer
+> account expenses:insurance:health:kv  ; elster_item:Krankenversicherung,  elster_section:Vorsorgeaufwand
+> account expenses:insurance:health:pv  ; elster_item:Pflegeversicherung,   elster_section:Vorsorgeaufwand
+> 
+> ; Donations are ordinary ESt accounts grouped by a user-defined section.
+> ; Child accounts without their own item inherit this item and are summed into one row.
+> account expenses:charity              ; elster_form:einkommensteuer, elster_item:Spenden, elster_section:Sonderausgaben
+> account expenses:charity:drk
+> account expenses:charity:unicef
+> 
+> ; Use manual calculation for cases the tool should list but not calculate.
+> account expenses:politics:party       ; elster_form:einkommensteuer, elster_item:Parteispende - §34g/§10b manuell berechnen, elster_section:Sonderausgaben, elster_calculation:manual
+> 
+> ; ── Tax payments ──────────────────────────────────────────────────────────────
+> account expenses:taxes:einkommensteuer:vorauszahlung     ; elster_role:income_tax_advance, elster_item:ESt-Vorauszahlung
+> account expenses:taxes:einkommensteuer:abschlusszahlung  ; elster_role:income_tax_final,   elster_item:ESt-Abschlusszahlung
+> account expenses:taxes:umsatzsteuer:vorauszahlung        ; elster_role:vat_advance
+> account expenses:taxes:umsatzsteuer:vorauszahlung:2024   ; elster_period:2024
+> account expenses:taxes:umsatzsteuer:vorauszahlung:2025   ; elster_period:2025
+> EOF
+```
 
-; ── Business income (EÜR + USt) ───────────────────────────────────────────────
-account income:business               ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen
+hledger reads the tags from the directives, and child accounts inherit them.
+For example, these accounts carry an `elster_role`:
 
-; ── Business expenses (EÜR) ───────────────────────────────────────────────────
-; Base account sets defaults; sub-accounts inherit and override.
-account expenses:business             ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:contains_vat, elster_vat_rate:0.19, elster_input_vat_share:1.00
-account expenses:business:hosting     ; elster_item:Serverkosten, elster_section:Bezogene Fremdleistungen
-account expenses:business:education   ; elster_item:Fortbildung,  elster_section:Fortbildungskosten
-
-; Proportional deduction (e.g. phone: 20 % business use)
-account expenses:phone                ; elster_form:einnahmenueberschussrechnung, elster_deduction:proportional, elster_expense_share:0.20, elster_vat:contains_vat, elster_input_vat_share:0.20, elster_vat_rate:0.19, elster_item:Mobiltelefon, elster_section:Arbeitsmittel
-
-; Depreciable asset (AfA)
-account expenses:hardware:computer          ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_afa_years:3, elster_item:Computer-Kauf, elster_section:Arbeitsmittel
-
-; ── Private expenses (ESt) ────────────────────────────────────────────────────
-account expenses:insurance            ; elster_form:einkommensteuer
-account expenses:insurance:health:kv  ; elster_item:Krankenversicherung,  elster_section:Vorsorgeaufwand
-account expenses:insurance:health:pv  ; elster_item:Pflegeversicherung,   elster_section:Vorsorgeaufwand
-
-; Donations are ordinary ESt accounts grouped by a user-defined section.
-; Child accounts without their own item inherit this item and are summed into one row.
-account expenses:charity              ; elster_form:einkommensteuer, elster_item:Spenden, elster_section:Sonderausgaben
-account expenses:charity:drk
-account expenses:charity:unicef
-
-; Use manual calculation for cases the tool should list but not calculate.
-account expenses:politics:party       ; elster_form:einkommensteuer, elster_item:Parteispende - §34g/§10b manuell berechnen, elster_section:Sonderausgaben, elster_calculation:manual
-
-; ── Tax payments ──────────────────────────────────────────────────────────────
-account expenses:taxes:einkommensteuer:vorauszahlung    ; elster_role:income_tax_advance, elster_item:ESt-Vorauszahlung
-account expenses:taxes:einkommensteuer:abschlusszahlung ; elster_role:income_tax_final,   elster_item:ESt-Abschlusszahlung
-account expenses:taxes:umsatzsteuer:vorauszahlung       ; elster_role:vat_advance
-account expenses:taxes:umsatzsteuer:vorauszahlung:2024  ; elster_period:2024
-account expenses:taxes:umsatzsteuer:vorauszahlung:2025  ; elster_period:2025
+```scrut
+$ hledger -f accounts.journal accounts tag:elster_role
+expenses:taxes:einkommensteuer:vorauszahlung
+expenses:taxes:einkommensteuer:abschlusszahlung
+expenses:taxes:umsatzsteuer:vorauszahlung
+expenses:taxes:umsatzsteuer:vorauszahlung:2024
+expenses:taxes:umsatzsteuer:vorauszahlung:2025
 ```
 
 ---
@@ -149,14 +210,15 @@ account expenses:taxes:umsatzsteuer:vorauszahlung:2025  ; elster_period:2025
 User-specific tax assumptions that are not ledger transactions live in a TOML
 config file. Generate the default config with:
 
-```bash
-hledger-elster init-config --output elster.toml
+```scrut
+$ hledger-elster init-config --output elster.toml
 ```
 
 The default config enables the Home-Office-Pauschale and uses the maximum number
 of days for each supported year, because this adjustment is easy to forget:
 
-```toml
+```scrut
+$ cat elster.toml
 [euer.home_office_pauschale]
 enabled = true
 default_days = "max"
@@ -169,7 +231,14 @@ default_days = "max"
 ```
 
 Use `enabled = false` for journal-only exports, or set per-year days when the
-maximum does not match your situation.
+maximum does not match your situation. Pass the file with `--config`, and
+choose another output directory with `-o`:
+
+```scrut
+$ hledger-elster -f examples/ledger/hledger.journal --config elster.toml -o elster-out
+  2024
+  2025
+```
 
 ---
 

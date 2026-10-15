@@ -21,9 +21,10 @@ const VAT_MODES_REQUIRING_RATE: &[&str] =
     &["contains_vat", "reverse_charge_eu", "reverse_charge_non_eu"];
 
 /// Every `elster_*` tag this module reads. README.md's tag tables are the
-/// authoritative contract for journal authors (see specs/README.md); this
-/// list exists so a test can catch drift between the two instead of relying
-/// on remembering to update README in the same change.
+/// authoritative contract for journal authors (see
+/// tests/specifications/README.md); this list exists so a test can catch drift
+/// between the two instead of relying on remembering to update README in the
+/// same change.
 #[cfg(test)]
 const KNOWN_TAGS: &[&str] = &[
     "elster_account",
