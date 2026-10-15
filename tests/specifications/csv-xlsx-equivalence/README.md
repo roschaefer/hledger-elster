@@ -98,13 +98,13 @@ $ hledger elster -f journal.journal --config elster.toml -o export
 ```
 
 ```scrut
-$ diff <(xlsx_sheet export/2024/steuererklaerung.xlsx EÜR) <(strip_section_markers export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv)
+$ xlsx_sheet export/2024/steuererklaerung.xlsx EÜR | diff - <(strip_section_markers export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv)
 ```
 
 ```scrut
-$ diff <(xlsx_sheet export/2024/steuererklaerung.xlsx USt) <(strip_section_markers export/2024/steuererklaerung/umsatzsteuer.csv)
+$ xlsx_sheet export/2024/steuererklaerung.xlsx USt | diff - <(strip_section_markers export/2024/steuererklaerung/umsatzsteuer.csv)
 ```
 
 ```scrut
-$ diff <(xlsx_sheet export/2024/steuererklaerung.xlsx ESt) <(strip_section_markers export/2024/steuererklaerung/einkommensteuer.csv)
+$ xlsx_sheet export/2024/steuererklaerung.xlsx ESt | diff - <(strip_section_markers export/2024/steuererklaerung/einkommensteuer.csv)
 ```
