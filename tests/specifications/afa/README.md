@@ -94,4 +94,4 @@ GESAMT;;;;;1200,00
 
 These start from the same shared setup:
 
-- [A larger non-digital business asset is depreciated over several years](a-larger-non-digital-business-asset-is-depreciated-over-several-years.md)
+- [A larger non-digital business asset is depreciated over several years](depreciation-over-several-years.md)

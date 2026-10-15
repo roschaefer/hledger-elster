@@ -138,4 +138,4 @@ Spenden;50,00
 
 These start from the same shared setup:
 
-- [Expense and input VAT shares can differ for hospitality](expense-and-input-vat-shares-can-differ-for-hospitality.md)
+- [Expense and input VAT shares can differ for hospitality](hospitality.md)

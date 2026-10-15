@@ -140,5 +140,5 @@ Zeitraum;Einnahme (Netto);Vereinnahmte Umsatzsteuer;Abziehbare Vorsteuerbeträge
 
 These start from the same shared setup:
 
-- [EÜR follows the booking year while USt settles against the tax period](eur-follows-the-booking-year-while-ust-settles-against-the-tax-period.md)
-- [VAT refund from the Finanzamt is part of the profit](vat-refund-from-the-finanzamt-is-part-of-the-profit.md)
+- [EÜR follows the booking year while USt settles against the tax period](booking-year-and-tax-period.md)
+- [VAT refund from the Finanzamt is part of the profit](vat-refund.md)

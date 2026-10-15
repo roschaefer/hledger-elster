@@ -98,10 +98,10 @@ $ git status --porcelain
 
 These start from the same shared setup:
 
-- [Commit evidence cannot be written into the repository](commit-evidence-cannot-be-written-into-the-repository.md)
-- [A dirty repository cannot export commit evidence](a-dirty-repository-cannot-export-commit-evidence.md)
-- [Existing commit evidence is not silently overwritten](existing-commit-evidence-is-not-silently-overwritten.md)
-- [--force overwrites existing commit evidence](force-overwrites-existing-commit-evidence.md)
+- [Commit evidence cannot be written into the repository](output-inside-the-repository.md)
+- [A dirty repository cannot export commit evidence](dirty-repository.md)
+- [Existing commit evidence is not silently overwritten](no-silent-overwrite.md)
+- [--force overwrites existing commit evidence](force-overwrite.md)
 
 ## Third-Party Timestamp Evidence
 
