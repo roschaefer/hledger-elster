@@ -37,8 +37,13 @@ Herleitung sheet — and both computations must agree:
 
 - `elster_account:business` marks the bank account that makes unclassified
   owner draws and contributions visible.
-- An outflow from a `business` account with no matching `elster_form` or
-  `elster_role` is an Entnahme; a matching inflow is an Einlage.
+- An outflow from a `business` account is an Entnahme unless it is EÜR
+  income or expense (`elster_form:einnahmenueberschussrechnung`) or a tax
+  payment (an `elster_role` listed in `NON_DRAWING_ROLES` in
+  [`src/drawing.rs`](../../../src/drawing.rs), such as `vat_advance`); a
+  matching inflow is an Einlage. Private expenses for other forms, such as
+  health insurance for the ESt paid from the business account, are
+  Entnahmen too.
 - The EÜR `Entnahmen`/`Einlagen` rows and the `entnahmen`/`einlagen`
   Herleitung sheets are derived from the same underlying transactions, so
   they can never diverge.

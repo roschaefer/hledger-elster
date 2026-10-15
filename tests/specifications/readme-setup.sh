@@ -3,7 +3,12 @@
 set -o pipefail
 
 # Scrut runs commands in the C locale; hledger needs UTF-8 to read the journals.
-export LC_ALL=C.UTF-8
+# macOS has no C.UTF-8.
+if [[ $(uname) == Darwin ]]; then
+  export LC_ALL=en_US.UTF-8
+else
+  export LC_ALL=C.UTF-8
+fi
 
 SPECIFICATION_WORKING_DIRECTORY=$PWD
 
@@ -18,11 +23,14 @@ new_scenario() {
 # build_scenario FUNCTION starts a scenario from the state that FUNCTION, from
 # the document's setup.bash, builds. Chapters whose scenarios share their
 # setup keep it there, so every document in the folder starts the same way.
+# FUNCTION runs with errexit, so its commands need no && chain: Scrut saves
+# functions with declare -f, and bash 5.2 prints an && after a heredoc on a
+# line of its own, which it then cannot parse.
 build_scenario() {
   new_scenario || return
   # shellcheck disable=SC1091
   source "$TESTDIR/setup.bash" || return
-  "$1"
+  (set -o errexit; "$1")
 }
 
 # write_file PATH <<'EOF' ... EOF

@@ -29,3 +29,7 @@ $ hledger-elster export-commit-evidence --output ../commit-evidence.pdf --force
 ```scrut
 $ grep --quiet --fixed-strings "$(git rev-parse HEAD)" ../commit-evidence.pdf
 ```
+
+```scrut
+$ ! grep --quiet --fixed-strings "previous evidence" ../commit-evidence.pdf
+```
