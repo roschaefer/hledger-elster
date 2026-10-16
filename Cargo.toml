@@ -28,7 +28,7 @@ thiserror = "2.0.21"
 toml = "1.1.8"
 unicode-normalization = "0.1.25"
 walkdir = "2.5.0"
-zip = "8.6.0"
+zip = "9.0.4"
 
 [dev-dependencies]
 rust_decimal_macros = "1.40.0"
