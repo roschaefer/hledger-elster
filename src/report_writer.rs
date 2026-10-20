@@ -28,7 +28,7 @@ fn stabilize_xlsx(data: Vec<u8>) -> Result<Vec<u8>> {
     let mut entries: Vec<(String, Vec<u8>)> = Vec::with_capacity(archive.len());
     for i in 0..archive.len() {
         let mut file = archive.by_index(i)?;
-        let name = file.name().to_string();
+        let name = file.name()?.into_owned();
         let mut contents = Vec::new();
         file.read_to_end(&mut contents)?;
         entries.push((name, contents));
