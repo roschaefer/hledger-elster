@@ -4,7 +4,10 @@ use crate::classification::{euer_expenses, euer_income};
 use crate::config::TaxConfig;
 use crate::dataset::TaxDataset;
 use crate::drawing::{is_contribution, is_drawing};
-use crate::periods::{aggregate_periods, annual_labels, blank_row, fmt, section_row, ReportRow};
+use crate::periods::{
+    aggregate_periods, annual_labels, blank_row, displayed, fmt, section_row, section_total_row,
+    ReportRow,
+};
 use crate::posting::TaxPosting;
 use indexmap::IndexMap;
 use rust_decimal::{Decimal, RoundingStrategy};
@@ -47,6 +50,11 @@ fn row_from_values(name: &str, values: &IndexMap<String, Decimal>) -> ReportRow 
         row.insert(label.clone(), fmt(*value));
     }
     row
+}
+
+fn total_row(section_name: &str, values: &IndexMap<String, Decimal>) -> ReportRow {
+    let values = values.iter().map(|(l, v)| (l.clone(), fmt(*v))).collect();
+    section_total_row(section_name, &values)
 }
 
 /// Distribute annual AfA across periods by counting active months in each period.
@@ -160,6 +168,8 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
         posting_labels.sort();
 
         let mut section_rows: Vec<ReportRow> = Vec::new();
+        let mut section_totals: IndexMap<String, Decimal> =
+            labels.iter().map(|l| (l.clone(), Decimal::ZERO)).collect();
         for label in posting_labels {
             let acc_ds = TaxDataset::new(by_label.get(&label).unwrap().clone());
             let mut row = ReportRow::new();
@@ -169,10 +179,14 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
                 let value = *totals.get(lbl).unwrap();
                 row.insert(lbl.clone(), fmt(value));
                 *summe_betriebskosten.get_mut(lbl).unwrap() += value;
+                *section_totals.get_mut(lbl).unwrap() += displayed(value);
             }
             section_rows.push(row);
         }
         if !section_rows.is_empty() {
+            if !section_name.is_empty() {
+                section_rows.push(total_row(section_name, &section_totals));
+            }
             expense_sections.push((section_name.clone(), section_rows));
         }
     }
@@ -191,6 +205,7 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
     afa_accounts.dedup();
 
     let mut afa_sections: IndexMap<String, Vec<ReportRow>> = IndexMap::new();
+    let mut afa_section_totals: IndexMap<String, IndexMap<String, Decimal>> = IndexMap::new();
     let mut afa_totals: IndexMap<String, Decimal> =
         labels.iter().map(|l| (l.clone(), Decimal::ZERO)).collect();
 
@@ -212,12 +227,16 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
             .filter(|s| !s.is_empty())
             .unwrap_or_else(|| "AfA".to_string());
 
+        let section_totals = afa_section_totals
+            .entry(section_name.clone())
+            .or_insert_with(|| labels.iter().map(|l| (l.clone(), Decimal::ZERO)).collect());
         let mut row = ReportRow::new();
         row.insert("Kennzahl".to_string(), format!("AfA {label}"));
         for lbl in &labels {
             let value = afa_for_label(&acc_postings, year, lbl);
             row.insert(lbl.clone(), fmt(value));
             *afa_totals.get_mut(lbl).unwrap() += value;
+            *section_totals.get_mut(lbl).unwrap() += displayed(value);
         }
         afa_sections.entry(section_name).or_default().push(row);
     }
@@ -303,6 +322,10 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
     for section_name in afa_section_names {
         rows.push(section_row(&section_name, &labels));
         rows.extend(afa_sections.get(&section_name).unwrap().clone());
+        rows.push(total_row(
+            &section_name,
+            afa_section_totals.get(&section_name).unwrap(),
+        ));
     }
 
     rows.push(blank_row(&labels));

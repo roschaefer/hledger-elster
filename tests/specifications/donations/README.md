@@ -70,6 +70,7 @@ Kennzahl;2024
 # Sonderausgaben;
 Parteispende (§34g/§10b manuell berechnen);MANUAL
 Spenden;75,00
+Summe Sonderausgaben;MANUAL
 ```
 
 ```scrut
