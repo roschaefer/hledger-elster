@@ -50,6 +50,24 @@ pub fn parse(s: &str) -> Result<Decimal, rust_decimal::Error> {
     Decimal::from_str(&s.replace('.', "").replace(',', "."))
 }
 
+/// The value a reader sees in the report: subtotals add up these, like
+/// ELSTER adds up the amounts entered from the report.
+pub fn displayed(value: Decimal) -> Decimal {
+    parse(&fmt(value)).unwrap()
+}
+
+/// Subtotal row closing a section, e.g. "Summe Bezogene Fremdleistungen".
+pub fn section_total_row(name: &str, values: &IndexMap<String, String>) -> ReportRow {
+    let mut row = ReportRow::new();
+    row.insert("Kennzahl".to_string(), format!("Summe {name}"));
+    row.extend(
+        values
+            .iter()
+            .map(|(label, value)| (label.clone(), value.clone())),
+    );
+    row
+}
+
 pub fn blank_row(labels: &[String]) -> ReportRow {
     let mut row = ReportRow::new();
     row.insert("Kennzahl".to_string(), String::new());
@@ -90,6 +108,24 @@ mod tests {
     fn fmt_always_shows_two_decimal_places() {
         assert_eq!(fmt(Decimal::from_str("5").unwrap()), "5,00");
         assert_eq!(fmt(Decimal::from_str("-5.5").unwrap()), "-5,50");
+    }
+
+    #[test]
+    fn subtotals_add_up_the_cents_shown_in_the_report_not_the_raw_amounts() {
+        let item = Decimal::from_str("0.004").unwrap();
+        assert_eq!(fmt(item), "0,00");
+        assert_eq!(fmt(displayed(item) + displayed(item)), "0,00");
+    }
+
+    #[test]
+    fn section_total_row_is_labelled_with_the_section_name() {
+        let values = IndexMap::from([("2024".to_string(), "150,00".to_string())]);
+        let row = section_total_row("Bezogene Fremdleistungen", &values);
+        assert_eq!(
+            row.get("Kennzahl").unwrap(),
+            "Summe Bezogene Fremdleistungen"
+        );
+        assert_eq!(row.get("2024").unwrap(), "150,00");
     }
 
     #[test]

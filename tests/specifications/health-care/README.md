@@ -75,4 +75,5 @@ Kurzzeit-Auslandskrankenversicherung;9,50
 Langzeit-Auslandskrankenversicherung;343,50
 Pflegeversicherung;240,00
 Zusatzbeitrag;120,00
+Summe Vorsorgeaufwand;1610,88
 ```
