@@ -19,7 +19,9 @@ three core tags:
 - `elster_form:einkommensteuer` routes private tax-relevant expenses into the
   ESt export.
 - `elster_section` is a user-defined heading inside a form. The tool preserves
-  the section name but does not interpret it.
+  the section name but does not interpret it. Each named section ends with a
+  `Summe <section>` row that adds up the amounts as shown, like the subtotals
+  ELSTER displays, so entries can be checked section by section.
 - `elster_item` is the report row. It can translate a technical account name into
   a user-facing row name and it also controls aggregation: child accounts inherit
   the closest parent item unless they define their own item.
@@ -91,6 +93,7 @@ Summe Betriebseinnahmen;119,00
 # Betriebsausgaben;
 # Arbeitsmittel;
 Nicht abzugsfähige Betriebsausgabe;0,00
+Summe Arbeitsmittel;0,00
 ;
 An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
 Summe Betriebskosten;0,00
@@ -132,6 +135,7 @@ Kennzahl;2024
 # Sonderausgaben;
 Internationale Hilfe;30,00
 Spenden;50,00
+Summe Sonderausgaben;80,00
 ```
 
 ## More scenarios
