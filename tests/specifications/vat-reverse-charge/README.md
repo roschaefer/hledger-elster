@@ -87,7 +87,6 @@ Non-EU Hosting;50,00
 Summe Bezogene Fremdleistungen;150,00
 ;
 An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebskosten;150,00
 Summe Betriebsausgaben;150,00
 ;
 # Ermittlung des Gewinns;

@@ -96,7 +96,6 @@ Nicht abzugsfähige Betriebsausgabe;0,00
 Summe Arbeitsmittel;0,00
 ;
 An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebskosten;0,00
 Summe Betriebsausgaben;0,00
 ;
 # Ermittlung des Gewinns;

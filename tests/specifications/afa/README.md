@@ -73,7 +73,6 @@ AfA Laptop;1200,00
 Summe Arbeitsmittel;1200,00
 ;
 An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebskosten;0,00
 Summe Betriebsausgaben;1200,00
 ;
 # Ermittlung des Gewinns;

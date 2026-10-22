@@ -339,7 +339,6 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
             "An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer",
             &ust_paid_totals,
         ),
-        row_from_values("Summe Betriebskosten", &summe_betriebskosten),
         row_from_values("Summe Betriebsausgaben", &summe_betriebsausgaben),
         blank_row(&labels),
         section_row("Ermittlung des Gewinns", &labels),

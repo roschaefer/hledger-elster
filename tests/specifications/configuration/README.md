@@ -49,7 +49,6 @@ Summe Betriebseinnahmen;119,00
 ;
 Home-Office-Pauschale;1260,00
 An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebskosten;0,00
 Summe Betriebsausgaben;1260,00
 ;
 # Ermittlung des Gewinns;
@@ -163,7 +162,6 @@ Summe Betriebseinnahmen;119,00
 ;
 Home-Office-Pauschale;60,00
 An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebskosten;0,00
 Summe Betriebsausgaben;60,00
 ;
 # Ermittlung des Gewinns;
