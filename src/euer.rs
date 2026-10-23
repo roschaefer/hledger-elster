@@ -155,15 +155,13 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
             .push(p.clone());
     }
 
-    let mut section_names: Vec<String> = by_section.keys().cloned().collect();
-    section_names.sort_by_key(|s| section_sort_key(s));
-
-    let mut expense_sections: Vec<(String, Vec<ReportRow>)> = Vec::new();
+    // Regular and AfA rows of the same section share one block and one subtotal.
+    let mut expense_sections: IndexMap<String, (Vec<ReportRow>, IndexMap<String, Decimal>)> =
+        IndexMap::new();
     let mut summe_betriebskosten: IndexMap<String, Decimal> =
         labels.iter().map(|l| (l.clone(), Decimal::ZERO)).collect();
 
-    for section_name in &section_names {
-        let by_label = by_section.get(section_name).unwrap();
+    for (section_name, by_label) in &by_section {
         let mut posting_labels: Vec<String> = by_label.keys().cloned().collect();
         posting_labels.sort();
 
@@ -184,10 +182,7 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
             section_rows.push(row);
         }
         if !section_rows.is_empty() {
-            if !section_name.is_empty() {
-                section_rows.push(total_row(section_name, &section_totals));
-            }
-            expense_sections.push((section_name.clone(), section_rows));
+            expense_sections.insert(section_name.clone(), (section_rows, section_totals));
         }
     }
     for lbl in &labels {
@@ -204,8 +199,6 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
     afa_accounts.sort();
     afa_accounts.dedup();
 
-    let mut afa_sections: IndexMap<String, Vec<ReportRow>> = IndexMap::new();
-    let mut afa_section_totals: IndexMap<String, IndexMap<String, Decimal>> = IndexMap::new();
     let mut afa_totals: IndexMap<String, Decimal> =
         labels.iter().map(|l| (l.clone(), Decimal::ZERO)).collect();
 
@@ -227,9 +220,13 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
             .filter(|s| !s.is_empty())
             .unwrap_or_else(|| "AfA".to_string());
 
-        let section_totals = afa_section_totals
-            .entry(section_name.clone())
-            .or_insert_with(|| labels.iter().map(|l| (l.clone(), Decimal::ZERO)).collect());
+        let (section_rows, section_totals) =
+            expense_sections.entry(section_name).or_insert_with(|| {
+                (
+                    Vec::new(),
+                    labels.iter().map(|l| (l.clone(), Decimal::ZERO)).collect(),
+                )
+            });
         let mut row = ReportRow::new();
         row.insert("Kennzahl".to_string(), format!("AfA {label}"));
         for lbl in &labels {
@@ -238,7 +235,7 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
             *afa_totals.get_mut(lbl).unwrap() += value;
             *section_totals.get_mut(lbl).unwrap() += displayed(value);
         }
-        afa_sections.entry(section_name).or_default().push(row);
+        section_rows.push(row);
     }
     for lbl in &labels {
         let v = *afa_totals.get(lbl).unwrap();
@@ -310,22 +307,15 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
         section_row("Betriebsausgaben", &labels),
     ];
 
-    for (section_name, section_rows) in expense_sections {
-        if !section_name.is_empty() {
-            rows.push(section_row(&section_name, &labels));
+    expense_sections.sort_by(|a, _, b, _| section_sort_key(a).cmp(&section_sort_key(b)));
+    for (section_name, (section_rows, section_totals)) in expense_sections {
+        if section_name.is_empty() {
+            rows.extend(section_rows);
+            continue;
         }
-        rows.extend(section_rows);
-    }
-
-    let mut afa_section_names: Vec<String> = afa_sections.keys().cloned().collect();
-    afa_section_names.sort_by_key(|s| section_sort_key(s));
-    for section_name in afa_section_names {
         rows.push(section_row(&section_name, &labels));
-        rows.extend(afa_sections.get(&section_name).unwrap().clone());
-        rows.push(total_row(
-            &section_name,
-            afa_section_totals.get(&section_name).unwrap(),
-        ));
+        rows.extend(section_rows);
+        rows.push(total_row(&section_name, &section_totals));
     }
 
     rows.push(blank_row(&labels));

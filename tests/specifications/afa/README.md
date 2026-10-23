@@ -95,3 +95,4 @@ GESAMT;;;;;1200,00
 These start from the same shared setup:
 
 - [A larger non-digital business asset is depreciated over several years](depreciation-over-several-years.md)
+- [AfA and regular expenses in the same section share one subtotal](afa-and-regular-expenses-share-a-section.md)
