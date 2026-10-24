@@ -44,9 +44,9 @@ Summe Betriebseinnahmen;0,00
 # Betriebsausgaben;
 # Bewirtungskosten;
 Bewirtung;70,00
+Summe Bewirtungskosten;70,00
 ;
 An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebskosten;70,00
 Summe Betriebsausgaben;70,00
 ;
 # Ermittlung des Gewinns;

@@ -1,6 +1,9 @@
 use crate::aggregates;
 use crate::dataset::TaxDataset;
-use crate::periods::{aggregate_periods, annual_labels, blank_row, fmt, section_row, ReportRow};
+use crate::periods::{
+    aggregate_periods, annual_labels, blank_row, displayed, fmt, section_row, section_total_row,
+    ReportRow,
+};
 use crate::posting::TaxPosting;
 use indexmap::IndexMap;
 use rust_decimal::Decimal;
@@ -92,21 +95,41 @@ pub fn est_rows(dataset: &TaxDataset, year: i32) -> Vec<ReportRow> {
         let by_label = by_section.get(sec_name).unwrap();
         let mut posting_labels: Vec<String> = by_label.keys().cloned().collect();
         posting_labels.sort();
+        let mut section_totals: IndexMap<String, Decimal> =
+            labels.iter().map(|l| (l.clone(), Decimal::ZERO)).collect();
+        let mut section_manual = false;
         for label in posting_labels {
             let acc_ds = TaxDataset::new(by_label.get(&label).unwrap().clone());
             let totals = aggregate_periods(&acc_ds, year, aggregates::signed_total, &labels);
             let manual = requires_manual_calculation(&acc_ds);
+            section_manual |= manual;
             let mut row = ReportRow::new();
             row.insert("Kennzahl".to_string(), label);
             for lbl in &labels {
                 let value = if manual {
                     MANUAL_PLACEHOLDER.to_string()
                 } else {
-                    fmt(*totals.get(lbl).unwrap())
+                    let value = *totals.get(lbl).unwrap();
+                    *section_totals.get_mut(lbl).unwrap() += displayed(value);
+                    fmt(value)
                 };
                 row.insert(lbl.clone(), value);
             }
             section_rows.push(row);
+        }
+        if !sec_name.is_empty() {
+            let values = section_totals
+                .iter()
+                .map(|(l, v)| {
+                    let value = if section_manual {
+                        MANUAL_PLACEHOLDER.to_string()
+                    } else {
+                        fmt(*v)
+                    };
+                    (l.clone(), value)
+                })
+                .collect();
+            section_rows.push(section_total_row(sec_name, &values));
         }
     }
 

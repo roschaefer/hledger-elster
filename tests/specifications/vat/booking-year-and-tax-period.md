@@ -64,7 +64,6 @@ Summe Betriebseinnahmen;119,00
 # Betriebsausgaben;
 ;
 An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebskosten;0,00
 Summe Betriebsausgaben;0,00
 ;
 # Ermittlung des Gewinns;
@@ -87,7 +86,6 @@ Summe Betriebseinnahmen;0,00
 # Betriebsausgaben;
 ;
 An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;19,00
-Summe Betriebskosten;0,00
 Summe Betriebsausgaben;19,00
 ;
 # Ermittlung des Gewinns;

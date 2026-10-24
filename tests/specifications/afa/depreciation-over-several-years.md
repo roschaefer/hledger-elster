@@ -44,9 +44,9 @@ Summe Betriebseinnahmen;0,00
 # Betriebsausgaben;
 # Arbeitsmittel;
 AfA Kamera;200,00
+Summe Arbeitsmittel;200,00
 ;
 An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebskosten;0,00
 Summe Betriebsausgaben;200,00
 ;
 # Ermittlung des Gewinns;
