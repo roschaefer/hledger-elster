@@ -70,8 +70,8 @@ fn header_format() -> Format {
 }
 
 /// Same as `header_format` but without center alignment -- matches
-/// `_write_trail_sheet`'s header styling, which (unlike the summary/USt
-/// writers) never applied `Alignment(horizontal="center")` in the Python
+/// `_write_trail_sheet`'s header styling, which (unlike the summary
+/// writer) never applied `Alignment(horizontal="center")` in the Python
 /// implementation.
 fn header_format_plain() -> Format {
     Format::new()
@@ -195,6 +195,25 @@ fn set_column_widths_for_rows(
     Ok(())
 }
 
+fn is_sum_row(row: &ReportRow) -> bool {
+    row.get("Kennzahl")
+        .map(|k| k.starts_with("Summe "))
+        .unwrap_or(false)
+}
+
+/// Fill of a period column: quarters are subtotals and the year their total,
+/// as in the USt. A sheet with only the year column needs no fill.
+fn period_column_fill(header: &str, headers: &[String]) -> Option<&'static str> {
+    let has_quarters = headers.iter().any(|h| h.contains(" Q"));
+    if header.contains(" Q") {
+        Some("subtotal")
+    } else if has_quarters && header.len() == 4 && header.chars().all(|c| c.is_ascii_digit()) {
+        Some("total")
+    } else {
+        None
+    }
+}
+
 fn write_summary_sheet(ws: &mut Worksheet, rows: &[ReportRow]) -> Result<()> {
     if rows.is_empty() {
         return Ok(());
@@ -208,6 +227,8 @@ fn write_summary_sheet(ws: &mut Worksheet, rows: &[ReportRow]) -> Result<()> {
     let default_fmt = default_format();
     let section_fmt = section_format();
     let blank_fmt = blank_format();
+    let subtotal_fmt = subtotal_format();
+    let total_fmt = total_format();
 
     for (i, row) in rows.iter().enumerate() {
         let row_idx = (i + 1) as u32;
@@ -218,49 +239,19 @@ fn write_summary_sheet(ws: &mut Worksheet, rows: &[ReportRow]) -> Result<()> {
             write_row(ws, row_idx, &headers, &display, &section_fmt)?;
         } else if is_blank_row(row) {
             write_row(ws, row_idx, &headers, row, &blank_fmt)?;
+        } else if is_sum_row(row) {
+            write_row(ws, row_idx, &headers, row, &subtotal_fmt)?;
         } else {
-            write_row(ws, row_idx, &headers, row, &default_fmt)?;
+            for (col_idx, header) in headers.iter().enumerate() {
+                let format = match period_column_fill(header, &headers) {
+                    Some("subtotal") => &subtotal_fmt,
+                    Some(_) => &total_fmt,
+                    None => &default_fmt,
+                };
+                let value = row.get(header).map(String::as_str).unwrap_or("");
+                ws.write_string_with_format(row_idx, col_idx as u16, value, format)?;
+            }
         }
-    }
-
-    set_column_widths_for_rows(ws, &headers, rows)
-}
-
-/// Writer for the vertical USt layout.
-///
-/// Row type is inferred from the `Zeitraum` column:
-///   - "YYYY-MM" -> monthly   (no fill)
-///   - "YYYY QN" -> quarterly -> subtotal fill + bold
-///   - "YYYY"    -> annual    -> total fill + bold
-///   - all empty -> blank separator
-fn write_ust_sheet(ws: &mut Worksheet, rows: &[ReportRow]) -> Result<()> {
-    if rows.is_empty() {
-        return Ok(());
-    }
-    let headers: Vec<String> = rows[0].keys().cloned().collect();
-    let header_fmt = header_format();
-    for (col_idx, header) in headers.iter().enumerate() {
-        ws.write_string_with_format(0, col_idx as u16, header, &header_fmt)?;
-    }
-
-    let default_fmt = default_format();
-    let blank_fmt = blank_format();
-    let subtotal_fmt = subtotal_format();
-    let total_fmt = total_format();
-
-    for (i, row) in rows.iter().enumerate() {
-        let row_idx = (i + 1) as u32;
-        let zeitraum = row.get("Zeitraum").map(String::as_str).unwrap_or("");
-        let format = if is_blank_row(row) {
-            &blank_fmt
-        } else if zeitraum.contains('Q') {
-            &subtotal_fmt
-        } else if !zeitraum.contains('-') && !zeitraum.is_empty() {
-            &total_fmt
-        } else {
-            &default_fmt
-        };
-        write_row(ws, row_idx, &headers, row, format)?;
     }
 
     set_column_widths_for_rows(ws, &headers, rows)
@@ -485,7 +476,7 @@ pub fn generate_report() -> Result<i32> {
         {
             let ws = workbook.add_worksheet();
             ws.set_name("USt")?;
-            write_ust_sheet(ws, &ust)?;
+            write_summary_sheet(ws, &ust)?;
         }
         {
             let ws = workbook.add_worksheet();
@@ -591,6 +582,19 @@ mod tests {
     use super::*;
 
     #[test]
+    fn quarter_and_year_columns_are_filled_only_when_the_sheet_has_quarters() {
+        let ust: Vec<String> = ["Kennzahl", "2024-03", "2024 Q1", "2024"]
+            .map(String::from)
+            .into();
+        assert_eq!(period_column_fill("2024-03", &ust), None);
+        assert_eq!(period_column_fill("2024 Q1", &ust), Some("subtotal"));
+        assert_eq!(period_column_fill("2024", &ust), Some("total"));
+
+        let euer: Vec<String> = ["Kennzahl", "2024"].map(String::from).into();
+        assert_eq!(period_column_fill("2024", &euer), None);
+    }
+
+    #[test]
     fn tab_csv_name_slugifies_unicode_and_collapses_separators() {
         assert_eq!(
             tab_csv_name("Serverkosten Wasabi"),
@@ -668,11 +672,7 @@ mod tests {
                 .join("2024/steuererklaerung/umsatzsteuer.csv"),
         )
         .unwrap();
-        let annual = ust_2024
-            .iter()
-            .find(|r| r.get("Zeitraum").map(String::as_str) == Some("2024"))
-            .unwrap();
-        assert_eq!(annual["Bereits Entrichtet"], "190,00");
+        assert_eq!(row(&ust_2024, "Bereits Entrichtet")["2024"], "190,00");
 
         assert!(out_dir
             .path()
