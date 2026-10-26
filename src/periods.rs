@@ -12,6 +12,20 @@ pub fn annual_labels(year: i32) -> Vec<String> {
     vec![year.to_string()]
 }
 
+/// The USt periods in reading order: each quarter after its months, and the
+/// year last, as subtotals follow their items.
+pub fn vat_period_labels(year: i32) -> Vec<String> {
+    let mut labels = Vec::new();
+    for q in 1..=4 {
+        for m in (3 * q - 2)..=(3 * q) {
+            labels.push(format!("{year}-{m:02}"));
+        }
+        labels.push(format!("{year} Q{q}"));
+    }
+    labels.push(year.to_string());
+    labels
+}
+
 pub fn filter_period(dataset: &TaxDataset, year: i32, label: &str) -> TaxDataset {
     if label == year.to_string() {
         return dataset.for_year(year);
@@ -102,6 +116,17 @@ mod tests {
         assert_eq!(filter_period(&ds, 2024, "2024").len(), 2);
         assert_eq!(filter_period(&ds, 2024, "2024 Q1").len(), 1);
         assert_eq!(filter_period(&ds, 2024, "2024-05").len(), 1);
+    }
+
+    #[test]
+    fn vat_periods_put_each_quarter_after_its_months_and_the_year_last() {
+        let labels = vat_period_labels(2024);
+        assert_eq!(labels.len(), 17);
+        assert_eq!(
+            &labels[..5],
+            ["2024-01", "2024-02", "2024-03", "2024 Q1", "2024-04"]
+        );
+        assert_eq!(&labels[15..], ["2024 Q4", "2024"]);
     }
 
     #[test]
