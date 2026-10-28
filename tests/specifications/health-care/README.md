@@ -66,14 +66,14 @@ $ hledger elster -f journal.journal --config elster.toml -o export
 ```
 
 ```scrut
-$ cat export/2024/steuererklaerung/einkommensteuer.csv
-Kennzahl;2024
-# Vorsorgeaufwand;
-Haftpflichtversicherung;57,88
-Krankenversicherung;840,00
-Kurzzeit-Auslandskrankenversicherung;9,50
-Langzeit-Auslandskrankenversicherung;343,50
-Pflegeversicherung;240,00
-Zusatzbeitrag;120,00
-Summe Vorsorgeaufwand;1610,88
+$ csv_table export/2024/steuererklaerung/einkommensteuer.csv
+Kennzahl                             | 2024
+# Vorsorgeaufwand                    |
+Haftpflichtversicherung              | 57,88
+Krankenversicherung                  | 840,00
+Kurzzeit-Auslandskrankenversicherung | 9,50
+Langzeit-Auslandskrankenversicherung | 343,50
+Pflegeversicherung                   | 240,00
+Zusatzbeitrag                        | 120,00
+Summe Vorsorgeaufwand                | 1610,88
 ```

@@ -38,23 +38,23 @@ $ hledger elster -f journal.journal --config elster.toml -o export
 ```
 
 ```scrut
-$ cat export/2025/steuererklaerung/einnahmen-ueberschuss-rechnung.csv
-Kennzahl;2025
-# Betriebseinnahmen;
-Umsatzsteuerpflichtige Betriebseinnahmen;100,00
-Vereinnahmte Umsatzsteuer;19,00
-Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer;10,00
-Summe Betriebseinnahmen;129,00
-;
-# Betriebsausgaben;
-;
-An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebsausgaben;0,00
-;
-# Ermittlung des Gewinns;
-Steuerpflichtiger Gewinn/Verlust;129,00
-;
-# Zusätzliche Angaben bei Einzelunternehmen;
-Entnahmen;0,00
-Einlagen;0,00
+$ csv_table export/2025/steuererklaerung/einnahmen-ueberschuss-rechnung.csv
+Kennzahl                                                    | 2025
+# Betriebseinnahmen                                         |
+Umsatzsteuerpflichtige Betriebseinnahmen                    | 100,00
+Vereinnahmte Umsatzsteuer                                   | 19,00
+Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 10,00
+Summe Betriebseinnahmen                                     | 129,00
+                                                            |
+# Betriebsausgaben                                          |
+                                                            |
+An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0,00
+Summe Betriebsausgaben                                      | 0,00
+                                                            |
+# Ermittlung des Gewinns                                    |
+Steuerpflichtiger Gewinn/Verlust                            | 129,00
+                                                            |
+# Zusätzliche Angaben bei Einzelunternehmen                 |
+Entnahmen                                                   | 0,00
+Einlagen                                                    | 0,00
 ```

@@ -65,27 +65,27 @@ $ hledger elster -f journal.journal --config elster.toml -o export
 ```
 
 ```scrut
-$ cat export/2024/steuererklaerung/einkommensteuer.csv
-Kennzahl;2024
-# Sonderausgaben;
-Parteispende (§34g/§10b manuell berechnen);MANUAL
-Spenden;75,00
-Summe Sonderausgaben;MANUAL
+$ csv_table export/2024/steuererklaerung/einkommensteuer.csv
+Kennzahl                                   | 2024
+# Sonderausgaben                           |
+Parteispende (§34g/§10b manuell berechnen) | MANUAL
+Spenden                                    | 75,00
+Summe Sonderausgaben                       | MANUAL
 ```
 
 ```scrut
-$ cat export/2024/herleitung/einkommensteuer/spenden.csv
-Konto;Datum;Beschreibung;Betrag
-Girokonto;2024-12-01;Example charity donation;50,00
-Girokonto;2024-12-02;Another charity donation;25,00
-Σ Girokonto;;;75,00
-GESAMT;;;75,00
+$ csv_table export/2024/herleitung/einkommensteuer/spenden.csv
+Konto       | Datum      | Beschreibung             | Betrag
+Girokonto   | 2024-12-01 | Example charity donation | 50,00
+Girokonto   | 2024-12-02 | Another charity donation | 25,00
+Σ Girokonto |            |                          | 75,00
+GESAMT      |            |                          | 75,00
 ```
 
 ```scrut
-$ cat export/2024/herleitung/einkommensteuer/parteispende-34g-10b-manuell.csv
-Konto;Datum;Beschreibung;Betrag
-Girokonto;2024-12-02;Example political party donation;100,00
-Σ Girokonto;;;100,00
-GESAMT;;;100,00
+$ csv_table export/2024/herleitung/einkommensteuer/parteispende-34g-10b-manuell.csv
+Konto       | Datum      | Beschreibung                     | Betrag
+Girokonto   | 2024-12-02 | Example political party donation | 100,00
+Σ Girokonto |            |                                  | 100,00
+GESAMT      |            |                                  | 100,00
 ```

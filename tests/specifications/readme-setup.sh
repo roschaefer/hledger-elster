@@ -38,6 +38,22 @@ write_file() {
   mkdir -p "$(dirname "$1")" && cat >"$1"
 }
 
+csv_table() {
+  python3 -I - "$1" <<'PYTHON'
+import csv, sys
+
+with open(sys.argv[1], newline="", encoding="utf-8") as csv_file:
+    rows = list(csv.reader(csv_file, delimiter=";"))
+
+width = max((len(row) for row in rows), default=0)
+rows = [row + [""] * (width - len(row)) for row in rows]
+widths = [max(len(row[column]) for row in rows) for column in range(width)]
+
+for row in rows:
+    print(" | ".join(value.ljust(widths[column]) for column, value in enumerate(row)).rstrip())
+PYTHON
+}
+
 new_git_repository() {
   git init --quiet &&
     git config user.email specifications@example.invalid &&

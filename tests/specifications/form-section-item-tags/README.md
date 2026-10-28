@@ -82,51 +82,51 @@ $ hledger elster -f journal.journal --config elster.toml -o export
 ```
 
 ```scrut
-$ cat export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv
-Kennzahl;2024
-# Betriebseinnahmen;
-Umsatzsteuerpflichtige Betriebseinnahmen;100,00
-Vereinnahmte Umsatzsteuer;19,00
-Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebseinnahmen;119,00
-;
-# Betriebsausgaben;
-# Arbeitsmittel;
-Nicht abzugsfähige Betriebsausgabe;0,00
-Summe Arbeitsmittel;0,00
-;
-An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebsausgaben;0,00
-;
-# Ermittlung des Gewinns;
-Steuerpflichtiger Gewinn/Verlust;119,00
-;
-# Zusätzliche Angaben bei Einzelunternehmen;
-Entnahmen;0,00
-Einlagen;0,00
+$ csv_table export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv
+Kennzahl                                                    | 2024
+# Betriebseinnahmen                                         |
+Umsatzsteuerpflichtige Betriebseinnahmen                    | 100,00
+Vereinnahmte Umsatzsteuer                                   | 19,00
+Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0,00
+Summe Betriebseinnahmen                                     | 119,00
+                                                            |
+# Betriebsausgaben                                          |
+# Arbeitsmittel                                             |
+Nicht abzugsfähige Betriebsausgabe                          | 0,00
+Summe Arbeitsmittel                                         | 0,00
+                                                            |
+An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0,00
+Summe Betriebsausgaben                                      | 0,00
+                                                            |
+# Ermittlung des Gewinns                                    |
+Steuerpflichtiger Gewinn/Verlust                            | 119,00
+                                                            |
+# Zusätzliche Angaben bei Einzelunternehmen                 |
+Entnahmen                                                   | 0,00
+Einlagen                                                    | 0,00
 ```
 
 ```scrut
-$ cat export/2024/steuererklaerung/umsatzsteuer.csv
-Kennzahl;2024-01;2024-02;2024-03;2024 Q1;2024-04;2024-05;2024-06;2024 Q2;2024-07;2024-08;2024-09;2024 Q3;2024-10;2024-11;2024-12;2024 Q4;2024
-# Lieferungen und sonstige Leistungen;;;;;;;;;;;;;;;;;
-Einnahme (Netto);100,00;0,00;0,00;100,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;100,00
-Vereinnahmte Umsatzsteuer;19,00;0,00;0,00;19,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;19,00
-;;;;;;;;;;;;;;;;;
-Abziehbare Vorsteuerbeträge;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00
-;;;;;;;;;;;;;;;;;
-# Berechnung der Umsatzsteuer;;;;;;;;;;;;;;;;;
-Vorauszahlungssoll;19,00;0,00;0,00;19,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;19,00
-Bereits Entrichtet;;;;;;;;;;;;;;;;;0,00
+$ csv_table export/2024/steuererklaerung/umsatzsteuer.csv
+Kennzahl                              | 2024-01 | 2024-02 | 2024-03 | 2024 Q1 | 2024-04 | 2024-05 | 2024-06 | 2024 Q2 | 2024-07 | 2024-08 | 2024-09 | 2024 Q3 | 2024-10 | 2024-11 | 2024-12 | 2024 Q4 | 2024
+# Lieferungen und sonstige Leistungen |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |
+Einnahme (Netto)                      | 100,00  | 0,00    | 0,00    | 100,00  | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 100,00
+Vereinnahmte Umsatzsteuer             | 19,00   | 0,00    | 0,00    | 19,00   | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 19,00
+                                      |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |
+Abziehbare Vorsteuerbeträge           | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00
+                                      |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |
+# Berechnung der Umsatzsteuer         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |
+Vorauszahlungssoll                    | 19,00   | 0,00    | 0,00    | 19,00   | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 19,00
+Bereits Entrichtet                    |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         | 0,00
 ```
 
 ```scrut
-$ cat export/2024/steuererklaerung/einkommensteuer.csv
-Kennzahl;2024
-# Sonderausgaben;
-Internationale Hilfe;30,00
-Spenden;50,00
-Summe Sonderausgaben;80,00
+$ csv_table export/2024/steuererklaerung/einkommensteuer.csv
+Kennzahl             | 2024
+# Sonderausgaben     |
+Internationale Hilfe | 30,00
+Spenden              | 50,00
+Summe Sonderausgaben | 80,00
 ```
 
 ## More scenarios

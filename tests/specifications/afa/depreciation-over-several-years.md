@@ -33,33 +33,33 @@ $ hledger elster -f journal.journal --config elster.toml -o export
 ```
 
 ```scrut
-$ cat export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv
-Kennzahl;2024
-# Betriebseinnahmen;
-Umsatzsteuerpflichtige Betriebseinnahmen;0,00
-Vereinnahmte Umsatzsteuer;0,00
-Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebseinnahmen;0,00
-;
-# Betriebsausgaben;
-# Arbeitsmittel;
-AfA Kamera;200,00
-Summe Arbeitsmittel;200,00
-;
-An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebsausgaben;200,00
-;
-# Ermittlung des Gewinns;
-Steuerpflichtiger Gewinn/Verlust;-200,00
-;
-# Zusätzliche Angaben bei Einzelunternehmen;
-Entnahmen;0,00
-Einlagen;0,00
+$ csv_table export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv
+Kennzahl                                                    | 2024
+# Betriebseinnahmen                                         |
+Umsatzsteuerpflichtige Betriebseinnahmen                    | 0,00
+Vereinnahmte Umsatzsteuer                                   | 0,00
+Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0,00
+Summe Betriebseinnahmen                                     | 0,00
+                                                            |
+# Betriebsausgaben                                          |
+# Arbeitsmittel                                             |
+AfA Kamera                                                  | 200,00
+Summe Arbeitsmittel                                         | 200,00
+                                                            |
+An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0,00
+Summe Betriebsausgaben                                      | 200,00
+                                                            |
+# Ermittlung des Gewinns                                    |
+Steuerpflichtiger Gewinn/Verlust                            | -200,00
+                                                            |
+# Zusätzliche Angaben bei Einzelunternehmen                 |
+Entnahmen                                                   | 0,00
+Einlagen                                                    | 0,00
 ```
 
 ```scrut
-$ cat export/2024/herleitung/einnahmen-ueberschuss-rechnung/afa-kamera.csv
-Beschreibung;Kaufdatum;Kaufpreis (Netto);AfA-Jahre;Monat. AfA;AfA 2024
-Camera AfA;2024-01-01;1400,00;7;16,67;200,00
-GESAMT;;;;;200,00
+$ csv_table export/2024/herleitung/einnahmen-ueberschuss-rechnung/afa-kamera.csv
+Beschreibung | Kaufdatum  | Kaufpreis (Netto) | AfA-Jahre | Monat. AfA | AfA 2024
+Camera AfA   | 2024-01-01 | 1400,00           | 7         | 16,67      | 200,00
+GESAMT       |            |                   |           |            | 200,00
 ```

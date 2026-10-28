@@ -59,35 +59,35 @@ $ hledger elster -f journal.journal --config elster.toml -o export
 ```
 
 ```scrut
-$ cat export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv
-Kennzahl;2024
-# Betriebseinnahmen;
-Umsatzsteuerpflichtige Betriebseinnahmen;0,00
-Vereinnahmte Umsatzsteuer;0,00
-Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebseinnahmen;0,00
-;
-# Betriebsausgaben;
-# Arbeitsmittel;
-AfA Laptop;1200,00
-Summe Arbeitsmittel;1200,00
-;
-An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebsausgaben;1200,00
-;
-# Ermittlung des Gewinns;
-Steuerpflichtiger Gewinn/Verlust;-1200,00
-;
-# Zusätzliche Angaben bei Einzelunternehmen;
-Entnahmen;0,00
-Einlagen;0,00
+$ csv_table export/2024/steuererklaerung/einnahmen-ueberschuss-rechnung.csv
+Kennzahl                                                    | 2024
+# Betriebseinnahmen                                         |
+Umsatzsteuerpflichtige Betriebseinnahmen                    | 0,00
+Vereinnahmte Umsatzsteuer                                   | 0,00
+Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0,00
+Summe Betriebseinnahmen                                     | 0,00
+                                                            |
+# Betriebsausgaben                                          |
+# Arbeitsmittel                                             |
+AfA Laptop                                                  | 1200,00
+Summe Arbeitsmittel                                         | 1200,00
+                                                            |
+An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0,00
+Summe Betriebsausgaben                                      | 1200,00
+                                                            |
+# Ermittlung des Gewinns                                    |
+Steuerpflichtiger Gewinn/Verlust                            | -1200,00
+                                                            |
+# Zusätzliche Angaben bei Einzelunternehmen                 |
+Entnahmen                                                   | 0,00
+Einlagen                                                    | 0,00
 ```
 
 ```scrut
-$ cat export/2024/herleitung/einnahmen-ueberschuss-rechnung/afa-laptop.csv
-Beschreibung;Kaufdatum;Kaufpreis (Netto);AfA-Jahre;Monat. AfA;AfA 2024
-Laptop digital AfA;2024-01-01;1200,00;1;100,00;1200,00
-GESAMT;;;;;1200,00
+$ csv_table export/2024/herleitung/einnahmen-ueberschuss-rechnung/afa-laptop.csv
+Beschreibung       | Kaufdatum  | Kaufpreis (Netto) | AfA-Jahre | Monat. AfA | AfA 2024
+Laptop digital AfA | 2024-01-01 | 1200,00           | 1         | 100,00     | 1200,00
+GESAMT             |            |                   |           |            | 1200,00
 ```
 
 ## More scenarios
