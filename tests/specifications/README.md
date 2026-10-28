@@ -15,6 +15,8 @@ provides these helpers:
   `setup.bash` builds (see below);
 - `write_file PATH` writes a journal, config, or other file from a heredoc;
 - `new_git_repository` initializes the scenario directory as a Git repository;
+- `csv_table CSV` parses a semicolon-separated export and prints aligned,
+  pipe-separated columns for readable expectations and diffs;
 - `xlsx_sheet WORKBOOK SHEET` prints a workbook tab as `;`-separated CSV;
 - `strip_section_markers CSV` drops the `"# "` section-header prefix that only
   the CSV export carries.

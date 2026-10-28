@@ -72,47 +72,47 @@ $ hledger elster -f journal.journal --config elster.toml -o export
 ```
 
 ```scrut
-$ cat export/2026/steuererklaerung/einnahmen-ueberschuss-rechnung.csv
-Kennzahl;2026
-# Betriebseinnahmen;
-Umsatzsteuerpflichtige Betriebseinnahmen;0,00
-Vereinnahmte Umsatzsteuer;0,00
-Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebseinnahmen;0,00
-;
-# Betriebsausgaben;
-# Bezogene Fremdleistungen;
-EU Hosting;100,00
-Non-EU Hosting;50,00
-Summe Bezogene Fremdleistungen;150,00
-;
-An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer;0,00
-Summe Betriebsausgaben;150,00
-;
-# Ermittlung des Gewinns;
-Steuerpflichtiger Gewinn/Verlust;-150,00
-;
-# Zusätzliche Angaben bei Einzelunternehmen;
-Entnahmen;0,00
-Einlagen;0,00
+$ csv_table export/2026/steuererklaerung/einnahmen-ueberschuss-rechnung.csv
+Kennzahl                                                    | 2026
+# Betriebseinnahmen                                         |
+Umsatzsteuerpflichtige Betriebseinnahmen                    | 0,00
+Vereinnahmte Umsatzsteuer                                   | 0,00
+Vom Finanzamt erstattete und ggf. verrechnete Umsatzsteuer  | 0,00
+Summe Betriebseinnahmen                                     | 0,00
+                                                            |
+# Betriebsausgaben                                          |
+# Bezogene Fremdleistungen                                  |
+EU Hosting                                                  | 100,00
+Non-EU Hosting                                              | 50,00
+Summe Bezogene Fremdleistungen                              | 150,00
+                                                            |
+An das Finanzamt gezahlte und ggf. verrechnete Umsatzsteuer | 0,00
+Summe Betriebsausgaben                                      | 150,00
+                                                            |
+# Ermittlung des Gewinns                                    |
+Steuerpflichtiger Gewinn/Verlust                            | -150,00
+                                                            |
+# Zusätzliche Angaben bei Einzelunternehmen                 |
+Entnahmen                                                   | 0,00
+Einlagen                                                    | 0,00
 ```
 
 ```scrut
-$ cat export/2026/steuererklaerung/umsatzsteuer.csv
-Kennzahl;2026-01;2026-02;2026-03;2026 Q1;2026-04;2026-05;2026-06;2026 Q2;2026-07;2026-08;2026-09;2026 Q3;2026-10;2026-11;2026-12;2026 Q4;2026
-# Lieferungen und sonstige Leistungen;;;;;;;;;;;;;;;;;
-Einnahme (Netto);0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00
-Vereinnahmte Umsatzsteuer;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00
-;;;;;;;;;;;;;;;;;
-# Leistungsempfänger als Steuerschuldner (§13b UStG);;;;;;;;;;;;;;;;;
-§13b EU Leistung (Netto);0,00;0,00;100,00;100,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;100,00
-§13b EU Umsatzsteuer;0,00;0,00;19,00;19,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;19,00
-§13b Non-EU Leistung (Netto);0,00;0,00;50,00;50,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;50,00
-§13b Non-EU Umsatzsteuer;0,00;0,00;9,50;9,50;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;9,50
-;;;;;;;;;;;;;;;;;
-Abziehbare Vorsteuerbeträge;0,00;0,00;28,50;28,50;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;28,50
-;;;;;;;;;;;;;;;;;
-# Berechnung der Umsatzsteuer;;;;;;;;;;;;;;;;;
-Vorauszahlungssoll;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00;0,00
-Bereits Entrichtet;;;;;;;;;;;;;;;;;0,00
+$ csv_table export/2026/steuererklaerung/umsatzsteuer.csv
+Kennzahl                                             | 2026-01 | 2026-02 | 2026-03 | 2026 Q1 | 2026-04 | 2026-05 | 2026-06 | 2026 Q2 | 2026-07 | 2026-08 | 2026-09 | 2026 Q3 | 2026-10 | 2026-11 | 2026-12 | 2026 Q4 | 2026
+# Lieferungen und sonstige Leistungen                |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |
+Einnahme (Netto)                                     | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00
+Vereinnahmte Umsatzsteuer                            | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00
+                                                     |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |
+# Leistungsempfänger als Steuerschuldner (§13b UStG) |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |
+§13b EU Leistung (Netto)                             | 0,00    | 0,00    | 100,00  | 100,00  | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 100,00
+§13b EU Umsatzsteuer                                 | 0,00    | 0,00    | 19,00   | 19,00   | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 19,00
+§13b Non-EU Leistung (Netto)                         | 0,00    | 0,00    | 50,00   | 50,00   | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 50,00
+§13b Non-EU Umsatzsteuer                             | 0,00    | 0,00    | 9,50    | 9,50    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 9,50
+                                                     |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |
+Abziehbare Vorsteuerbeträge                          | 0,00    | 0,00    | 28,50   | 28,50   | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 28,50
+                                                     |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |
+# Berechnung der Umsatzsteuer                        |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |
+Vorauszahlungssoll                                   | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00    | 0,00
+Bereits Entrichtet                                   |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         |         | 0,00
 ```
