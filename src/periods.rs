@@ -1,6 +1,6 @@
 use crate::dataset::TaxDataset;
 use indexmap::IndexMap;
-use rust_decimal::Decimal;
+use rust_decimal::{Decimal, RoundingStrategy};
 use std::str::FromStr;
 
 /// A single output row, keyed by column name in display order — mirrors
@@ -53,7 +53,8 @@ pub fn aggregate_periods(
 /// crate writes (xlsx and CSV alike) targets a German-only audience and is
 /// pasted straight into ELSTER's web forms, which expect that convention.
 pub fn fmt(value: Decimal) -> String {
-    format!("{value:.2}").replace('.', ",")
+    let rounded = value.round_dp_with_strategy(2, RoundingStrategy::MidpointAwayFromZero);
+    format!("{rounded:.2}").replace('.', ",")
 }
 
 /// Inverse of `fmt`: parses a German-formatted amount -- as read back from a
@@ -133,6 +134,14 @@ mod tests {
     fn fmt_always_shows_two_decimal_places() {
         assert_eq!(fmt(Decimal::from_str("5").unwrap()), "5,00");
         assert_eq!(fmt(Decimal::from_str("-5.5").unwrap()), "-5,50");
+    }
+
+    #[test]
+    fn fmt_rounds_half_away_from_zero_instead_of_truncating() {
+        assert_eq!(fmt(Decimal::from_str("0.129").unwrap()), "0,13");
+        assert_eq!(fmt(Decimal::from_str("0.125").unwrap()), "0,13");
+        assert_eq!(fmt(Decimal::from_str("0.124").unwrap()), "0,12");
+        assert_eq!(fmt(Decimal::from_str("-0.125").unwrap()), "-0,13");
     }
 
     #[test]
