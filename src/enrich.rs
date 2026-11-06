@@ -374,6 +374,12 @@ fn enrich_posting(
     let tax_period_raw = tags.get("elster_period").cloned().unwrap_or_default();
     let (tax_period, tax_period_year) = parse_tax_period(&tax_period_raw)?;
 
+    if tax_deduction == "afa" && afa_years <= 0 {
+        return Err(EnrichError::TagValidation(format!(
+            "elster_deduction:afa for account \"{account}\" requires a positive elster_afa_years."
+        )));
+    }
+
     // GWG: elster_afa_years always overrides inherited elster_deduction.
     if afa_years > 0 {
         let gross = amount.abs();
@@ -580,6 +586,28 @@ mod tests {
         )
         .unwrap_err();
         assert!(err.to_string().contains("Use \"non_deductible\" instead"));
+    }
+
+    #[test]
+    fn rejects_afa_deduction_without_afa_years() {
+        let err = try_build(
+            "2024-01-01 Test\n    expenses:foo  5000.00 EUR  ; elster_form:einnahmenueberschussrechnung, elster_deduction:afa, elster_vat:not_applicable\n    assets:bank  -5000.00 EUR\n",
+        )
+        .unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("elster_deduction:afa for account \"expenses:foo\" requires a positive elster_afa_years"));
+    }
+
+    #[test]
+    fn rejects_afa_deduction_with_zero_afa_years() {
+        let err = try_build(
+            "2024-01-01 Test\n    expenses:foo  5000.00 EUR  ; elster_form:einnahmenueberschussrechnung, elster_deduction:afa, elster_vat:not_applicable, elster_afa_years:0\n    assets:bank  -5000.00 EUR\n",
+        )
+        .unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("requires a positive elster_afa_years"));
     }
 
     #[test]
