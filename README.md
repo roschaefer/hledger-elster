@@ -270,10 +270,10 @@ $ hledger-elster -f examples/ledger/hledger.journal --config elster.toml -o elst
 | `elster_deduction` | `full` | The full net amount is deductible as a business expense. |
 | `elster_deduction` | `proportional` | Only a fraction is deductible. Set `elster_expense_share`; set `elster_input_vat_share` too when the deductible input VAT share differs. |
 | `elster_deduction` | `non_deductible` | Show an EÜR expense row but count `0.00` toward deductible business expenses and input VAT. |
-| `elster_deduction` | `afa` | Triggers straight-line depreciation. Set `elster_afa_years` to the useful life. Net cost above €800 is depreciated; at or below €800 it is treated as `full` (GWG). |
+| `elster_deduction` | `afa` | Triggers straight-line depreciation. Requires a positive `elster_afa_years`, the useful life; without it the export fails. Net cost above €800 is depreciated; at or below €800 it is treated as `full` (GWG). |
 | `elster_expense_share` | decimal (e.g. `0.20`) | Fraction of the net amount that is a deductible business expense. Only effective when `elster_deduction:proportional`. |
 | `elster_input_vat_share` | decimal (e.g. `0.20`) | Fraction of input VAT that is deductible. Defaults to `elster_expense_share` when omitted. Hospitality can use `elster_expense_share:0.70` with `elster_input_vat_share:1.00`. |
-| `elster_afa_years` | integer (e.g. `3`) | Useful life in years for straight-line depreciation. Only effective when `elster_deduction:afa`. |
+| `elster_afa_years` | positive integer (e.g. `3`) | Useful life in years for straight-line depreciation. Only effective when `elster_deduction:afa`. |
 | `elster_calculation` | `manual` | Lists the account in the form but writes `MANUAL` instead of a calculated amount. The Herleitung still shows the booked payment amount. Use this for unimplemented or externally calculated cases such as political party donations. |
 
 ---
