@@ -672,6 +672,32 @@ mod tests {
     }
 
     #[test]
+    fn expense_share_applies_without_proportional_deduction() {
+        let ds = build(
+            "2024-01-01 Test\n    expenses:foo  10.00 EUR  ; elster_deduction:full, elster_expense_share:0.5\n    assets:bank  -10.00 EUR\n",
+        );
+        let p = ds
+            .iter()
+            .find(|p| p.counter_account == "expenses:foo")
+            .unwrap();
+        assert_eq!(p.tax_deduction, "full");
+        assert_eq!(p.expense_share, Decimal::new(5, 1));
+    }
+
+    #[test]
+    fn afa_years_overrides_inherited_deduction() {
+        let ds = build(
+            "account expenses:foo  ; elster_deduction:proportional, elster_expense_share:0.5\n\n2024-01-01 Test\n    expenses:foo  5000.00 EUR  ; elster_form:einnahmenueberschussrechnung, elster_vat:not_applicable, elster_afa_years:3\n    assets:bank  -5000.00 EUR\n",
+        );
+        let p = ds
+            .iter()
+            .find(|p| p.counter_account == "expenses:foo")
+            .unwrap();
+        assert_eq!(p.tax_deduction, "afa");
+        assert_eq!(p.afa_years, 3);
+    }
+
+    #[test]
     fn gwg_below_threshold_becomes_full_deduction_with_no_afa_years() {
         // net cost 700.00 / 1.19 = 588.24, below the 800 EUR GWG threshold -> full.
         let ds = build(
