@@ -83,39 +83,34 @@ pub fn current_git_metadata() -> Result<GitMetadata, CommitEvidenceError> {
 
 fn win_ansi_encoding(ch: char) -> Option<u8> {
     match ch {
-        '\u{2022}' => Some(0x80),
-        '\u{2020}' => Some(0x81),
-        '\u{2021}' => Some(0x82),
-        '\u{2026}' => Some(0x83),
-        '\u{2014}' => Some(0x84),
-        '\u{2013}' => Some(0x85),
-        '\u{0192}' => Some(0x86),
-        '\u{2044}' => Some(0x87),
-        '\u{2039}' => Some(0x88),
-        '\u{203A}' => Some(0x89),
-        '\u{2212}' => Some(0x8A),
-        '\u{2030}' => Some(0x8B),
-        '\u{201E}' => Some(0x8C),
-        '\u{201C}' => Some(0x8D),
-        '\u{201D}' => Some(0x8E),
-        '\u{2018}' => Some(0x8F),
-        '\u{2019}' => Some(0x90),
-        '\u{201A}' => Some(0x91),
-        '\u{2122}' => Some(0x92),
-        '\u{FB01}' => Some(0x93),
-        '\u{FB02}' => Some(0x94),
-        '\u{0141}' => Some(0x95),
-        '\u{0152}' => Some(0x96),
-        '\u{0160}' => Some(0x97),
-        '\u{0178}' => Some(0x98),
-        '\u{017D}' => Some(0x99),
-        '\u{0131}' => Some(0x9A),
-        '\u{0142}' => Some(0x9B),
+        '\u{20AC}' => Some(0x80),
+        '\u{201A}' => Some(0x82),
+        '\u{0192}' => Some(0x83),
+        '\u{201E}' => Some(0x84),
+        '\u{2026}' => Some(0x85),
+        '\u{2020}' => Some(0x86),
+        '\u{2021}' => Some(0x87),
+        '\u{02C6}' => Some(0x88),
+        '\u{2030}' => Some(0x89),
+        '\u{0160}' => Some(0x8A),
+        '\u{2039}' => Some(0x8B),
+        '\u{0152}' => Some(0x8C),
+        '\u{017D}' => Some(0x8E),
+        '\u{2018}' => Some(0x91),
+        '\u{2019}' => Some(0x92),
+        '\u{201C}' => Some(0x93),
+        '\u{201D}' => Some(0x94),
+        '\u{2022}' => Some(0x95),
+        '\u{2013}' => Some(0x96),
+        '\u{2014}' => Some(0x97),
+        '\u{02DC}' => Some(0x98),
+        '\u{2122}' => Some(0x99),
+        '\u{0161}' => Some(0x9A),
+        '\u{203A}' => Some(0x9B),
         '\u{0153}' => Some(0x9C),
-        '\u{0161}' => Some(0x9D),
         '\u{017E}' => Some(0x9E),
-        '\u{20AC}' => Some(0xA0),
-        _ if ('\u{00A1}'..='\u{00FF}').contains(&ch) => Some(ch as u8),
+        '\u{0178}' => Some(0x9F),
+        _ if ('\u{00A0}'..='\u{00FF}').contains(&ch) => Some(ch as u8),
         _ if ch.is_ascii() => Some(ch as u8),
         _ => None,
     }
@@ -349,6 +344,27 @@ mod tests {
         assert!(pdf.contains("/S /URI"));
         assert!(pdf.contains("\\344nderbarkeit und Nachpr\\374fbarkeit"));
         assert!(!pdf.contains("/tmp/tax-repo"));
+    }
+
+    #[test]
+    fn text_uses_win_ansi_bytes_matching_the_declared_font_encoding() {
+        assert_eq!(
+            escape_pdf_text("\u{20AC} \u{201E}\u{201C} \u{2013} \u{2014} \u{2022}"),
+            "\\200 \\204\\223 \\226 \\227 \\225"
+        );
+    }
+
+    #[test]
+    fn latin1_characters_keep_their_code_point_as_win_ansi_byte() {
+        assert_eq!(
+            escape_pdf_text("\u{00A0}\u{00E4}\u{00DF}"),
+            "\\240\\344\\337"
+        );
+    }
+
+    #[test]
+    fn characters_outside_win_ansi_are_replaced() {
+        assert_eq!(escape_pdf_text("\u{2212}\u{FB01}\u{0141}"), "???");
     }
 
     #[test]
