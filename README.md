@@ -50,7 +50,8 @@ steuererklaerung.xlsx
 ```
 
 - `steuererklaerung/`: summary CSV files, one per form, also bundled as tabs of
-  `steuererklaerung.xlsx`
+  `steuererklaerung.xlsx`; `anlageverzeichnis.csv` (Anlage AVEÜR) only for years
+  with depreciated assets
 - `herleitung/`: detailed audit trails, one `.xlsx` per form
 
 Workbook export convention:
@@ -69,6 +70,7 @@ umsatzsteuer
 umsatzsteuer.xlsx
 
 data/exports/2024/steuererklaerung:
+anlageverzeichnis.csv
 einkommensteuer.csv
 einnahmen-ueberschuss-rechnung.csv
 umsatzsteuer.csv

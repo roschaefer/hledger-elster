@@ -99,3 +99,23 @@ Beschreibung | Kaufdatum  | Kaufpreis (Netto) | AfA-Jahre | Monat. AfA | AfA 202
 Laptop       | 2024-01-10 | 3600,00           | 3         | 100,00     | 300,00   | 2025-03-20 | 2100,00      | 1,00   | 2400,00
 GESAMT       |            |                   |           |            | 300,00   |            | 2100,00      |        | 2400,00
 ```
+
+## The Anlageverzeichnis follows the book value
+
+The Anlage AVEÜR lists the laptop as an addition in 2024:
+
+```scrut
+$ csv_table export/2024/steuererklaerung/anlageverzeichnis.csv
+Kennzahl                | Anschaffungsdatum | Anschaffungskosten | Buchwert 01.01. | Zugänge | AfA     | Abgänge | Buchwert 31.12.
+Laptop                  | 2024-01-10        | 3600,00            | 0,00            | 3600,00 | 1200,00 | 0,00    | 2400,00
+Summe Anlageverzeichnis |                   | 3600,00            | 0,00            | 3600,00 | 1200,00 | 0,00    | 2400,00
+```
+
+In 2025 it starts from the book value and leaves with the rest:
+
+```scrut
+$ csv_table export/2025/steuererklaerung/anlageverzeichnis.csv
+Kennzahl                | Anschaffungsdatum | Anschaffungskosten | Buchwert 01.01. | Zugänge | AfA    | Abgänge | Buchwert 31.12.
+Laptop                  | 2024-01-10        | 3600,00            | 2400,00         | 0,00    | 300,00 | 2100,00 | 0,00
+Summe Anlageverzeichnis |                   | 3600,00            | 2400,00         | 0,00    | 300,00 | 2100,00 | 0,00
+```

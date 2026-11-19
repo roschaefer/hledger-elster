@@ -1,4 +1,5 @@
 use crate::afa;
+use crate::aveur::aveur_rows;
 use crate::config;
 use crate::enrich;
 use crate::est::est_rows;
@@ -470,6 +471,7 @@ pub fn generate_report() -> Result<i32> {
         let euer = euer_rows(&dataset, year, &config);
         let ust = ust_rows(&dataset, year)?;
         let est = est_rows(&dataset, year);
+        let aveur = aveur_rows(&dataset, year);
 
         let mut workbook = Workbook::new();
         {
@@ -486,6 +488,11 @@ pub fn generate_report() -> Result<i32> {
             let ws = workbook.add_worksheet();
             ws.set_name("ESt")?;
             write_summary_sheet(ws, &est)?;
+        }
+        if !aveur.is_empty() {
+            let ws = workbook.add_worksheet();
+            ws.set_name("AVEÜR")?;
+            write_summary_sheet(ws, &aveur)?;
         }
         save_xlsx(
             &base.join("steuererklaerung.xlsx"),
@@ -508,6 +515,11 @@ pub fn generate_report() -> Result<i32> {
         write_rows_csv(
             &base.join("steuererklaerung").join("einkommensteuer.csv"),
             &est,
+            &mut touched_files,
+        )?;
+        write_rows_csv(
+            &base.join("steuererklaerung").join("anlageverzeichnis.csv"),
+            &aveur,
             &mut touched_files,
         )?;
 
