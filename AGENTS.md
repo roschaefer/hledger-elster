@@ -12,7 +12,8 @@
 - `src/dataset.rs`: `TaxDataset`, filter/group combinators over postings
 - `src/journal.rs`: `hledger ... print --output-format json` shelling and JSON model
 - `src/enrich.rs`: `elster_*` tag validation and enrichment, GWG/AfA override, drawing/contribution fallback
-- `src/afa.rs`: straight-line depreciation
+- `src/afa.rs`: straight-line depreciation, rounding remainder, disposal
+- `src/aveur.rs`: Anlageverzeichnis (Anlage AVEÜR) builder
 - `src/aggregates.rs`: net/gross/VAT aggregation over a `TaxDataset`
 - `src/drawing.rs`: `is_drawing`/`is_contribution` predicates
 - `src/classification.rs`: EÜR income/expense classification

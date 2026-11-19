@@ -1,5 +1,6 @@
 pub mod afa;
 pub mod aggregates;
+pub mod aveur;
 pub mod classification;
 pub mod commit_evidence;
 pub mod config;
