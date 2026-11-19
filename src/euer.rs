@@ -57,60 +57,15 @@ fn total_row(section_name: &str, values: &IndexMap<String, Decimal>) -> ReportRo
     section_total_row(section_name, &values)
 }
 
-/// Distribute annual AfA across periods by counting active months in each period.
-fn afa_for_label(postings: &[TaxPosting], year: i32, label: &str) -> Decimal {
-    let total: Decimal = postings
+/// Deductible AfA and written-off book values of postings in a year, rounded per posting.
+fn afa_for_year(postings: &[TaxPosting], year: i32) -> afa::YearAmounts {
+    postings
         .iter()
-        .map(|p| afa_posting_for_label(p, year, label))
-        .sum();
-    quantize(total)
-}
-
-fn afa_posting_for_label(p: &TaxPosting, year: i32, label: &str) -> Decimal {
-    use chrono::Datelike;
-
-    let purchase = p.posting_date;
-    let total_months = p.afa_years * 12;
-    if total_months <= 0 {
-        return Decimal::ZERO;
-    }
-
-    let cost = afa::net_cost(p);
-    let monthly = cost / Decimal::from(total_months);
-
-    let window_end_month_abs =
-        (purchase.year() - 1) * 12 + purchase.month() as i32 - 1 + total_months;
-    let window_end_year = (window_end_month_abs - 1).div_euclid(12) + 1;
-    let window_end_cal_month = (window_end_month_abs - 1).rem_euclid(12) + 1;
-
-    let month_in_window = |y: i32, m: i32| -> bool {
-        if y < purchase.year() || (y == purchase.year() && m < purchase.month() as i32) {
-            return false;
-        }
-        if y > window_end_year || (y == window_end_year && m > window_end_cal_month) {
-            return false;
-        }
-        true
-    };
-
-    let months: Vec<i32> = if label == year.to_string() {
-        (1..=12).filter(|&m| month_in_window(year, m)).collect()
-    } else if label.contains('Q') {
-        let q: i32 = label.split('Q').nth(1).unwrap().parse().unwrap();
-        let start = (q - 1) * 3 + 1;
-        (start..start + 3)
-            .filter(|&m| month_in_window(year, m))
-            .collect()
-    } else {
-        let m: i32 = label.split('-').nth(1).unwrap().parse().unwrap();
-        if month_in_window(year, m) {
-            vec![m]
-        } else {
-            vec![]
-        }
-    };
-
-    monthly * Decimal::from(months.len()) * p.expense_share
+        .map(|p| afa::deductible_for_year(p, year))
+        .fold(afa::YearAmounts::default(), |acc, a| afa::YearAmounts {
+            afa: acc.afa + a.afa,
+            residual: acc.residual + a.residual,
+        })
 }
 
 pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<ReportRow> {
@@ -227,15 +182,24 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
                     labels.iter().map(|l| (l.clone(), Decimal::ZERO)).collect(),
                 )
             });
-        let mut row = ReportRow::new();
-        row.insert("Kennzahl".to_string(), format!("AfA {label}"));
-        for lbl in &labels {
-            let value = afa_for_label(&acc_postings, year, lbl);
-            row.insert(lbl.clone(), fmt(value));
-            *afa_totals.get_mut(lbl).unwrap() += value;
-            *section_totals.get_mut(lbl).unwrap() += displayed(value);
+        let amounts = afa_for_year(&acc_postings, year);
+        let mut kinds = vec![("AfA", amounts.afa)];
+        if acc_postings
+            .iter()
+            .any(|p| afa::for_year(p, year).residual != Decimal::ZERO)
+        {
+            kinds.push(("Restbuchwert", amounts.residual));
         }
-        section_rows.push(row);
+        for (kind, value) in kinds {
+            let mut row = ReportRow::new();
+            row.insert("Kennzahl".to_string(), format!("{kind} {label}"));
+            for lbl in &labels {
+                row.insert(lbl.clone(), fmt(value));
+                *afa_totals.get_mut(lbl).unwrap() += value;
+                *section_totals.get_mut(lbl).unwrap() += displayed(value);
+            }
+            section_rows.push(row);
+        }
     }
     for lbl in &labels {
         let v = *afa_totals.get(lbl).unwrap();

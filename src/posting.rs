@@ -35,6 +35,8 @@ pub struct TaxPosting {
 
     /// AfA metadata — only set when `tax_deduction == "afa"`; 0 otherwise.
     pub afa_years: i32,
+    /// When the asset left the business; AfA stops and the rest is written off.
+    pub afa_disposal: Option<NaiveDate>,
 
     /// "" or "abschreibung" for synthetic rows.
     pub derived_kind: String,
@@ -96,6 +98,7 @@ pub mod test_support {
             expense_share: Decimal::ZERO,
             input_vat_share: Decimal::ZERO,
             afa_years: 0,
+            afa_disposal: None,
             derived_kind: String::new(),
             label: String::new(),
             source_label: String::new(),
