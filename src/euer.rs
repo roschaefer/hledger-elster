@@ -110,7 +110,7 @@ fn afa_posting_for_label(p: &TaxPosting, year: i32, label: &str) -> Decimal {
         }
     };
 
-    monthly * Decimal::from(months.len())
+    monthly * Decimal::from(months.len()) * p.expense_share
 }
 
 pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<ReportRow> {

@@ -382,22 +382,6 @@ fn enrich_posting(
     let tax_period_raw = tags.get("elster_period").cloned().unwrap_or_default();
     let (tax_period, tax_period_year) = parse_tax_period(&tax_period_raw)?;
 
-    // GWG: elster_afa_years always overrides inherited elster_deduction.
-    if afa_years > 0 {
-        let gross = amount.abs();
-        let net_cost = if vat_mode == "contains_vat" && vat_rate > Decimal::ZERO {
-            gross / (Decimal::ONE + vat_rate)
-        } else {
-            gross
-        };
-        if net_cost > Decimal::from(800) {
-            tax_deduction = "afa".to_string();
-        } else {
-            tax_deduction = "full".to_string();
-            afa_years = 0;
-        }
-    }
-
     if tax_deduction == "nicht_abzugsfaehig" {
         return Err(EnrichError::Deduction(
             "Unsupported elster_deduction:nicht_abzugsfaehig. Use \"non_deductible\" instead."
@@ -408,6 +392,24 @@ fn enrich_posting(
     if tax_deduction == "non_deductible" {
         expense_share = Decimal::ZERO;
         input_vat_share = Decimal::ZERO;
+    }
+
+    // GWG: elster_afa_years changes when the cost is deducted, never expense_share.
+    if afa_years > 0 {
+        let gross = amount.abs();
+        let net_cost = if vat_mode == "contains_vat" && vat_rate > Decimal::ZERO {
+            gross / (Decimal::ONE + vat_rate)
+        } else {
+            gross
+        };
+        if net_cost > Decimal::from(800) {
+            tax_deduction = "afa".to_string();
+        } else {
+            if matches!(tax_deduction.as_str(), "" | "afa") {
+                tax_deduction = "full".to_string();
+            }
+            afa_years = 0;
+        }
     }
 
     Ok(Some(TaxPosting {

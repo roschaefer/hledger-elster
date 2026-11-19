@@ -59,7 +59,7 @@ Einlagen                                                    | 0,00
 
 ```scrut
 $ csv_table export/2024/herleitung/einnahmen-ueberschuss-rechnung/afa-kamera.csv
-Beschreibung | Kaufdatum  | Kaufpreis (Netto) | AfA-Jahre | Monat. AfA | AfA 2024
-Camera AfA   | 2024-01-01 | 1400,00           | 7         | 16,67      | 200,00
-GESAMT       |            |                   |           |            | 200,00
+Beschreibung | Kaufdatum  | Kaufpreis (Netto) | AfA-Jahre | Monat. AfA | AfA 2024 | Anteil | Abziehbar
+Camera AfA   | 2024-01-01 | 1400,00           | 7         | 16,67      | 200,00   | 1,00   | 200,00
+GESAMT       |            |                   |           |            | 200,00   |        | 200,00
 ```
