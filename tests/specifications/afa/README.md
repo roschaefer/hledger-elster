@@ -85,9 +85,9 @@ Einlagen                                                    | 0,00
 
 ```scrut
 $ csv_table export/2024/herleitung/einnahmen-ueberschuss-rechnung/afa-laptop.csv
-Beschreibung       | Kaufdatum  | Kaufpreis (Netto) | AfA-Jahre | Monat. AfA | AfA 2024
-Laptop digital AfA | 2024-01-01 | 1200,00           | 1         | 100,00     | 1200,00
-GESAMT             |            |                   |           |            | 1200,00
+Beschreibung       | Kaufdatum  | Kaufpreis (Netto) | AfA-Jahre | Monat. AfA | AfA 2024 | Anteil | Abziehbar
+Laptop digital AfA | 2024-01-01 | 1200,00           | 1         | 100,00     | 1200,00  | 1,00   | 1200,00
+GESAMT             |            |                   |           |            | 1200,00  |        | 1200,00
 ```
 
 ## More scenarios
@@ -96,3 +96,5 @@ These start from the same shared setup:
 
 - [A larger non-digital business asset is depreciated over several years](depreciation-over-several-years.md)
 - [AfA and regular expenses in the same section share one subtotal](afa-and-regular-expenses-share-a-section.md)
+- [A partly private asset depreciates only its business share](partly-private-asset.md)
+- [A non-deductible asset stays non-deductible when it is depreciated](non-deductible-asset.md)

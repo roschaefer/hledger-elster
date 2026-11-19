@@ -511,11 +511,14 @@ fn afa_sheet(postings: &[TaxPosting], account: &str, year: i32) -> TrailSheet {
         "AfA-Jahre",
         "Monat. AfA",
         &format!("AfA {year}"),
+        "Anteil",
+        "Abziehbar",
     ]
     .map(String::from)
     .to_vec();
     let mut rows = Vec::new();
     let mut total = Decimal::ZERO;
+    let mut total_deductible = Decimal::ZERO;
 
     let mut sorted = postings.to_vec();
     sorted.sort_by_key(|p| p.posting_date);
@@ -526,6 +529,7 @@ fn afa_sheet(postings: &[TaxPosting], account: &str, year: i32) -> TrailSheet {
         let cost = afa::net_cost(p);
         let monthly = q(cost / Decimal::from(p.afa_years * 12));
         let annual = afa::depreciation_for_year(p, year);
+        let deductible = afa::deductible_depreciation_for_year(p, year);
         rows.push(TrailRow::new(
             vec![
                 p.description.clone(),
@@ -534,10 +538,13 @@ fn afa_sheet(postings: &[TaxPosting], account: &str, year: i32) -> TrailSheet {
                 p.afa_years.to_string(),
                 fmt(monthly),
                 fmt(annual),
+                fmt(p.expense_share),
+                fmt(deductible),
             ],
             1,
         ));
         total += annual;
+        total_deductible += deductible;
     }
 
     rows.push(TrailRow::styled(
@@ -548,6 +555,8 @@ fn afa_sheet(postings: &[TaxPosting], account: &str, year: i32) -> TrailSheet {
             String::new(),
             String::new(),
             fmt(q(total)),
+            String::new(),
+            fmt(q(total_deductible)),
         ],
         0,
         "total",

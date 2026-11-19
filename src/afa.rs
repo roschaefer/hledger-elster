@@ -63,6 +63,11 @@ pub fn depreciation_for_year(posting: &TaxPosting, year: i32) -> Decimal {
     quantize(monthly * Decimal::from(active_months))
 }
 
+/// The deductible part of `depreciation_for_year`, by the posting's expense share.
+pub fn deductible_depreciation_for_year(posting: &TaxPosting, year: i32) -> Decimal {
+    quantize(depreciation_for_year(posting, year) * posting.expense_share)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
