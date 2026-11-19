@@ -31,6 +31,7 @@ const KNOWN_TAGS: &[&str] = &[
     "elster_afa_years",
     "elster_calculation",
     "elster_deduction",
+    "elster_disposal",
     "elster_expense_share",
     "elster_form",
     "elster_input_vat_share",
@@ -60,7 +61,7 @@ fn quantize(value: Decimal) -> Decimal {
     value.round_dp_with_strategy(2, RoundingStrategy::MidpointAwayFromZero)
 }
 
-fn validate_posting_tags(posting: &Posting) -> Result<(), EnrichError> {
+fn validate_posting_tags(posting: &Posting, posting_date: NaiveDate) -> Result<(), EnrichError> {
     let tags = posting.tags();
     let account = &posting.paccount;
 
@@ -156,6 +157,28 @@ fn validate_posting_tags(posting: &Posting) -> Result<(), EnrichError> {
         return Err(EnrichError::TagValidation(format!(
             "elster_deduction:afa for account \"{account}\" requires a positive elster_afa_years."
         )));
+    }
+    if afa_years.is_some() && tags.get("elster_form").map(String::as_str) != Some(EUER_FORM) {
+        return Err(EnrichError::TagValidation(format!(
+            "elster_afa_years for account \"{account}\" requires elster_form:{EUER_FORM}."
+        )));
+    }
+    if let Some(disposal) = tags.get("elster_disposal") {
+        if afa_years.is_none() {
+            return Err(EnrichError::TagValidation(format!(
+                "elster_disposal for account \"{account}\" requires elster_afa_years."
+            )));
+        }
+        let disposal = NaiveDate::parse_from_str(disposal, "%Y-%m-%d").map_err(|_| {
+            EnrichError::TagValidation(format!(
+                "elster_disposal:{disposal} for account \"{account}\" is not a YYYY-MM-DD date."
+            ))
+        })?;
+        if disposal < posting_date {
+            return Err(EnrichError::TagValidation(format!(
+                "elster_disposal:{disposal} for account \"{account}\" is before the purchase."
+            )));
+        }
     }
 
     Ok(())
@@ -306,7 +329,7 @@ fn enrich_posting(
             .map_err(|e| EnrichError::VatPeriod(format!("invalid date: {e}")))?;
 
     let mut tags = posting.tags();
-    validate_posting_tags(posting)?;
+    validate_posting_tags(posting, posting_date)?;
     let source_label = source_tags.get("elster_item").cloned().unwrap_or_default();
     let source_is_business =
         source_tags.get("elster_account").map(String::as_str) == Some("business");
@@ -334,6 +357,7 @@ fn enrich_posting(
             expense_share: Decimal::ONE,
             input_vat_share: Decimal::ZERO,
             afa_years: 0,
+            afa_disposal: None,
             derived_kind: String::new(),
             label: String::new(),
             source_label,
@@ -377,6 +401,11 @@ fn enrich_posting(
             .parse()
             .map_err(|_| EnrichError::InvalidNumber(afa_years_raw.to_string()))?
     };
+    let mut afa_disposal = tags
+        .get("elster_disposal")
+        .map(|d| NaiveDate::parse_from_str(d, "%Y-%m-%d"))
+        .transpose()
+        .map_err(|e| EnrichError::TagValidation(format!("invalid elster_disposal: {e}")))?;
     let label = tags.get("elster_item").cloned().unwrap_or_default();
     let section = tags.get("elster_section").cloned().unwrap_or_default();
     let tax_period_raw = tags.get("elster_period").cloned().unwrap_or_default();
@@ -409,6 +438,7 @@ fn enrich_posting(
                 tax_deduction = "full".to_string();
             }
             afa_years = 0;
+            afa_disposal = None;
         }
     }
 
@@ -431,6 +461,7 @@ fn enrich_posting(
         expense_share,
         input_vat_share,
         afa_years,
+        afa_disposal,
         derived_kind: String::new(),
         label,
         source_label,
@@ -671,6 +702,56 @@ mod tests {
             .unwrap();
         assert_eq!(p.expense_share, Decimal::ZERO);
         assert_eq!(p.input_vat_share, Decimal::ZERO);
+    }
+
+    #[test]
+    fn rejects_afa_years_outside_the_euer() {
+        let err = try_build(
+            "2024-01-01 Test\n    expenses:foo  5000.00 EUR  ; elster_form:einkommensteuer, elster_afa_years:3\n    assets:bank  -5000.00 EUR\n",
+        )
+        .unwrap_err();
+        assert!(err
+            .to_string()
+            .contains("elster_afa_years for account \"expenses:foo\" requires elster_form:einnahmenueberschussrechnung"));
+    }
+
+    #[test]
+    fn rejects_disposal_without_afa_years() {
+        let err = try_build(
+            "2024-01-01 Test\n    expenses:foo  5000.00 EUR  ; elster_form:einnahmenueberschussrechnung, elster_vat:not_applicable, elster_disposal:2025-01-01\n    assets:bank  -5000.00 EUR\n",
+        )
+        .unwrap_err();
+        assert!(err.to_string().contains("requires elster_afa_years"));
+    }
+
+    #[test]
+    fn rejects_disposal_before_the_purchase() {
+        let err = try_build(
+            "2024-01-01 Test\n    expenses:foo  5000.00 EUR  ; elster_form:einnahmenueberschussrechnung, elster_vat:not_applicable, elster_afa_years:3, elster_disposal:2023-12-31\n    assets:bank  -5000.00 EUR\n",
+        )
+        .unwrap_err();
+        assert!(err.to_string().contains("is before the purchase"));
+    }
+
+    #[test]
+    fn rejects_a_disposal_that_is_not_a_date() {
+        let err = try_build(
+            "2024-01-01 Test\n    expenses:foo  5000.00 EUR  ; elster_form:einnahmenueberschussrechnung, elster_vat:not_applicable, elster_afa_years:3, elster_disposal:soon\n    assets:bank  -5000.00 EUR\n",
+        )
+        .unwrap_err();
+        assert!(err.to_string().contains("is not a YYYY-MM-DD date"));
+    }
+
+    #[test]
+    fn gwg_ignores_a_disposal() {
+        let ds = build(
+            "2024-01-01 Test\n    expenses:foo  500.00 EUR  ; elster_form:einnahmenueberschussrechnung, elster_vat:not_applicable, elster_afa_years:3, elster_disposal:2025-01-01\n    assets:bank  -500.00 EUR\n",
+        );
+        let p = ds
+            .iter()
+            .find(|p| p.counter_account == "expenses:foo")
+            .unwrap();
+        assert_eq!(p.afa_disposal, None);
     }
 
     #[test]

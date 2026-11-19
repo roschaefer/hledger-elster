@@ -1,3 +1,4 @@
+use crate::afa;
 use crate::config;
 use crate::enrich;
 use crate::est::est_rows;
@@ -454,7 +455,10 @@ pub fn generate_report() -> Result<i32> {
     }
 
     let dataset = enrich::build_dataset(&journal_path)?;
-    let mut years: Vec<i32> = dataset.iter().map(|p| p.year()).collect();
+    let mut years: Vec<i32> = dataset
+        .iter()
+        .flat_map(|p| std::iter::once(p.year()).chain(afa::years(p)))
+        .collect();
     years.sort_unstable();
     years.dedup();
 

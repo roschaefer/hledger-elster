@@ -36,6 +36,8 @@ It prints each tax year it exports:
 $ hledger-elster -f examples/ledger/hledger.journal
   2024
   2025
+  2026
+  2027
 ```
 
 Outputs are written under `data/exports/<year>/` by default:
@@ -238,6 +240,8 @@ choose another output directory with `-o`:
 $ hledger-elster -f examples/ledger/hledger.journal --config elster.toml -o elster-out
   2024
   2025
+  2026
+  2027
 ```
 
 ---
@@ -273,7 +277,8 @@ $ hledger-elster -f examples/ledger/hledger.journal --config elster.toml -o elst
 | `elster_deduction` | `afa` | Triggers straight-line depreciation. Requires a positive `elster_afa_years`, the useful life; without it the export fails. Net cost above €800 is depreciated; at or below €800 it is treated as `full` (GWG). |
 | `elster_expense_share` | decimal (e.g. `0.20`) | Fraction of the net amount that is a deductible business expense, also of each year's AfA. Use it with `elster_deduction:proportional`; `non_deductible` sets it to `0`. |
 | `elster_input_vat_share` | decimal (e.g. `0.20`) | Fraction of input VAT that is deductible. Defaults to `elster_expense_share` when omitted. Hospitality can use `elster_expense_share:0.70` with `elster_input_vat_share:1.00`. |
-| `elster_afa_years` | positive integer (e.g. `3`) | Useful life in years for straight-line depreciation. Net cost above €800 is depreciated; at or below €800 it is deducted at once (GWG). Changes only when the cost is deducted: the share from `elster_deduction` and `elster_expense_share` still applies. |
+| `elster_afa_years` | positive integer (e.g. `3`) | Useful life in years for straight-line depreciation; requires `elster_form:einnahmenueberschussrechnung`. Each year is rounded on its own and the last year takes the remainder, so the years add up to the net cost. Net cost above €800 is depreciated; at or below €800 it is deducted at once (GWG). Changes only when the cost is deducted: the share from `elster_deduction` and `elster_expense_share` still applies. |
+| `elster_disposal` | date (e.g. `2025-03-20`) | The day a depreciated asset left the business, e.g. sold, stolen, or scrapped. AfA runs through that month; the remaining book value is written off as `Restbuchwert` in the same year. Requires `elster_afa_years`. Put it on the purchase posting, or on an account that holds only that asset. |
 | `elster_calculation` | `manual` | Lists the account in the form but writes `MANUAL` instead of a calculated amount. The Herleitung still shows the booked payment amount. Use this for unimplemented or externally calculated cases such as political party donations. |
 
 ---

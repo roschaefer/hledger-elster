@@ -38,6 +38,12 @@ $ write_file journal.journal <<'EOF'
 ```scrut
 $ hledger elster -f journal.journal --config elster.toml -o export
   2024
+  2025
+  2026
+  2027
+  2028
+  2029
+  2030
 ```
 
 ```scrut

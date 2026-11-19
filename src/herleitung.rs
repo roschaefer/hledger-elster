@@ -504,20 +504,36 @@ fn reverse_charge_sheet(ds: &TaxDataset) -> TrailSheet {
 }
 
 fn afa_sheet(postings: &[TaxPosting], account: &str, year: i32) -> TrailSheet {
-    let headers = [
-        "Beschreibung",
-        "Kaufdatum",
-        "Kaufpreis (Netto)",
-        "AfA-Jahre",
-        "Monat. AfA",
-        &format!("AfA {year}"),
-        "Anteil",
-        "Abziehbar",
-    ]
-    .map(String::from)
-    .to_vec();
+    let with_disposal = postings.iter().any(|p| p.afa_disposal.is_some());
+    let disposal_cells = |cells: [String; 2]| -> Vec<String> {
+        if with_disposal {
+            cells.to_vec()
+        } else {
+            Vec::new()
+        }
+    };
+    let row = |head: [String; 5], afa: String, disposal: [String; 2], tail: [String; 2]| {
+        let mut cells = head.to_vec();
+        cells.push(afa);
+        cells.extend(disposal_cells(disposal));
+        cells.extend(tail);
+        cells
+    };
+
+    let headers = row(
+        [
+            "Beschreibung".to_string(),
+            "Kaufdatum".to_string(),
+            "Kaufpreis (Netto)".to_string(),
+            "AfA-Jahre".to_string(),
+            "Monat. AfA".to_string(),
+        ],
+        format!("AfA {year}"),
+        ["Abgang".to_string(), "Restbuchwert".to_string()],
+        ["Anteil".to_string(), "Abziehbar".to_string()],
+    );
     let mut rows = Vec::new();
-    let mut total = Decimal::ZERO;
+    let mut total = afa::YearAmounts::default();
     let mut total_deductible = Decimal::ZERO;
 
     let mut sorted = postings.to_vec();
@@ -528,36 +544,44 @@ fn afa_sheet(postings: &[TaxPosting], account: &str, year: i32) -> TrailSheet {
         }
         let cost = afa::net_cost(p);
         let monthly = q(cost / Decimal::from(p.afa_years * 12));
-        let annual = afa::depreciation_for_year(p, year);
-        let deductible = afa::deductible_depreciation_for_year(p, year);
+        let amounts = afa::for_year(p, year);
+        let deductible = afa::deductible_for_year(p, year).total();
         rows.push(TrailRow::new(
-            vec![
-                p.description.clone(),
-                p.posting_date.to_string(),
-                fmt(q(cost)),
-                p.afa_years.to_string(),
-                fmt(monthly),
-                fmt(annual),
-                fmt(p.expense_share),
-                fmt(deductible),
-            ],
+            row(
+                [
+                    p.description.clone(),
+                    p.posting_date.to_string(),
+                    fmt(q(cost)),
+                    p.afa_years.to_string(),
+                    fmt(monthly),
+                ],
+                fmt(amounts.afa),
+                [
+                    p.afa_disposal.map(|d| d.to_string()).unwrap_or_default(),
+                    fmt(amounts.residual),
+                ],
+                [fmt(p.expense_share), fmt(deductible)],
+            ),
             1,
         ));
-        total += annual;
+        total.afa += amounts.afa;
+        total.residual += amounts.residual;
         total_deductible += deductible;
     }
 
     rows.push(TrailRow::styled(
-        vec![
-            "GESAMT".to_string(),
-            String::new(),
-            String::new(),
-            String::new(),
-            String::new(),
-            fmt(q(total)),
-            String::new(),
-            fmt(q(total_deductible)),
-        ],
+        row(
+            [
+                "GESAMT".to_string(),
+                String::new(),
+                String::new(),
+                String::new(),
+                String::new(),
+            ],
+            fmt(q(total.afa)),
+            [String::new(), fmt(q(total.residual))],
+            [String::new(), fmt(q(total_deductible))],
+        ),
         0,
         "total",
     ));

@@ -98,3 +98,5 @@ These start from the same shared setup:
 - [AfA and regular expenses in the same section share one subtotal](afa-and-regular-expenses-share-a-section.md)
 - [A partly private asset depreciates only its business share](partly-private-asset.md)
 - [A non-deductible asset stays non-deductible when it is depreciated](non-deductible-asset.md)
+- [A disposed asset writes off its remaining book value](disposed-asset.md)
+- [Several assets on one account depreciate to the cent](several-assets-on-one-account.md)
