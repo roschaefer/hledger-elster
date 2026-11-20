@@ -71,6 +71,7 @@ Specifications:
 - [VAT reverse charge](vat-reverse-charge/)
 - [Business vs. private accounts](business-accounts/)
 - [Health care and insurance](health-care/)
+- [Income tax payments](income-tax-payments/)
 - [GWG and AfA](afa/)
 - [Donations](donations/)
 - [Git commit evidence](commit-evidence/)

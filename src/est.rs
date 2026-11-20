@@ -32,6 +32,24 @@ fn account_label(dataset: &TaxDataset, account: &str, year: i32) -> String {
     label.unwrap_or_else(|| last_component(account))
 }
 
+/// The counter accounts of `dataset` that have no ancestor among them.
+fn topmost_accounts(dataset: &TaxDataset) -> Vec<String> {
+    let mut accounts: Vec<String> = dataset.iter().map(|p| p.counter_account.clone()).collect();
+    accounts.sort();
+    accounts.dedup();
+    let mut topmost: Vec<String> = Vec::new();
+    // An ancestor is a prefix of its descendants, so it sorts before them.
+    for account in accounts {
+        if !topmost
+            .iter()
+            .any(|parent| account.starts_with(&format!("{parent}:")))
+        {
+            topmost.push(account);
+        }
+    }
+    topmost
+}
+
 fn posting_label(p: &TaxPosting) -> String {
     if p.label.is_empty() {
         last_component(&p.counter_account)
@@ -53,16 +71,13 @@ pub fn est_rows(dataset: &TaxDataset, year: i32) -> Vec<ReportRow> {
 
     let mut tax_rows: Vec<ReportRow> = Vec::new();
     for role_ds in [&advance_ds, &final_ds] {
-        let mut accounts: Vec<String> = role_ds.iter().map(|p| p.counter_account.clone()).collect();
-        accounts.sort();
-        accounts.dedup();
-        for account in accounts {
-            let acc_ds = dataset.for_account_prefix(&account);
+        for account in topmost_accounts(role_ds) {
+            let acc_ds = role_ds.for_account_prefix(&account);
             let totals = aggregate_periods(&acc_ds, year, aggregates::signed_total, &labels);
             if totals.values().all(|v| *v == Decimal::ZERO) {
                 continue;
             }
-            let label = account_label(dataset, &account, year);
+            let label = account_label(role_ds, &account, year);
             let mut row = ReportRow::new();
             row.insert("Kennzahl".to_string(), label);
             for lbl in &labels {
