@@ -244,6 +244,10 @@ pub fn pdf_bytes(metadata: &GitMetadata) -> Vec<u8> {
 }
 
 fn resolve_output_path(path: &Path) -> std::io::Result<PathBuf> {
+    resolve_output_path_with_limit(path, 40)
+}
+
+fn resolve_output_path_with_limit(path: &Path, remaining_links: usize) -> std::io::Result<PathBuf> {
     let absolute = crate::paths::resolve(path);
     let mut resolved = PathBuf::new();
     for component in absolute.components() {
@@ -258,12 +262,18 @@ fn resolve_output_path(path: &Path) -> std::io::Result<PathBuf> {
                     Ok(canonical) => resolved = canonical,
                     Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
                         if let Ok(target) = resolved.read_link() {
+                            if remaining_links == 0 {
+                                return Err(std::io::Error::other(
+                                    "too many symlinks while resolving commit evidence output",
+                                ));
+                            }
                             let target = if target.is_absolute() {
                                 target
                             } else {
                                 resolved.parent().unwrap().join(target)
                             };
-                            resolved = resolve_output_path(&target)?;
+                            resolved =
+                                resolve_output_path_with_limit(&target, remaining_links - 1)?;
                         }
                     }
                     Err(error) => return Err(error),
@@ -466,6 +476,28 @@ mod tests {
             Err(CommitEvidenceError::OutputInsideRepository(_))
         ));
         assert_eq!(std::fs::read(&target).unwrap(), b"previous evidence");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn dangling_symlink_cycles_return_a_write_error_instead_of_recursing_forever() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repository = tmp.path().join("tax-repo");
+        std::fs::create_dir(&repository).unwrap();
+        let alias = tmp.path().join("alias");
+        std::os::unix::fs::symlink("missing/../alias", &alias).unwrap();
+
+        assert_eq!(
+            alias.canonicalize().unwrap_err().kind(),
+            std::io::ErrorKind::NotFound
+        );
+        let error = ensure_output_outside_repository(&alias, &repository).unwrap_err();
+        assert!(matches!(
+            error,
+            CommitEvidenceError::Write { path, source }
+                if path == alias && source.to_string().contains("too many symlinks")
+        ));
+        assert!(!tmp.path().join("missing").exists());
     }
 
     #[cfg(unix)]
