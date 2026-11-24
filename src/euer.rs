@@ -255,7 +255,9 @@ pub fn euer_rows(dataset: &TaxDataset, year: i32, config: &TaxConfig) -> Vec<Rep
         .collect();
     let vat_refund_ds: TaxDataset = dataset
         .iter()
-        .filter(|p| p.tax_role == "vat_payment" && p.amount < Decimal::ZERO)
+        .filter(|p| {
+            matches!(p.tax_role.as_str(), "vat_payment" | "vat_advance") && p.amount < Decimal::ZERO
+        })
         .cloned()
         .collect();
     let ust_paid_totals = aggregate_periods(&vat_paid_ds, year, aggregates::gross_amount, &labels);
