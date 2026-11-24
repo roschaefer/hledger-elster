@@ -267,9 +267,9 @@
 //!
 //! Every `hledger elster` run writes a manifest of the files it (re)wrote.
 //! If last year's journal entries are removed and the export is regenerated,
-//! the old CSV for that year may still be sitting on disk -- but it's gone
-//! from the manifest, and a `Case` reading it refuses rather than silently
-//! trusting stale data:
+//! previously generated CSVs for that year are removed. A `Case` reading one
+//! refuses because it is gone from the manifest, rather than trusting stale
+//! data:
 //!
 //! ```
 //! # use hledger_elster::reconciliation::{assert_csv_value, export_dir, Case};
@@ -291,8 +291,7 @@
 //! # ").unwrap();
 //! # hledger_elster::report_writer::generate_report().unwrap();
 //! #
-//! # // Second run: the journal now only covers 2023 -- the 2024 CSV file is
-//! # // still on disk, but the fresh manifest no longer lists it.
+//! # // Second run: the journal now only covers 2023, so the 2024 CSV is removed.
 //! # std::fs::write(&journal_path, "\
 //! # account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto\n\
 //! # account income:business       ; elster_form:einnahmenueberschussrechnung, elster_vat:contains_vat, elster_vat_rate:0.19, elster_item:Betriebseinnahmen\n\
