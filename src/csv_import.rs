@@ -77,8 +77,8 @@ fn classify_trail_row(cells: &[String]) -> (bool, String) {
 /// back into a `TrailSheet`. `outline_level` is not recoverable from CSV
 /// (dead-code metadata, never written) and defaults to `0`; `name` must be
 /// supplied by the caller since it isn't stored in the CSV itself (the
-/// on-disk filename is a lossy, truncated slug of it — see `tab_csv_name`
-/// in `report_writer`).
+/// on-disk filename is a lossy, truncated slug with a numeric suffix on
+/// collisions — see `trail_export_names` in `report_writer`).
 pub fn read_trail_sheet(
     path: &Path,
     name: impl Into<String>,
