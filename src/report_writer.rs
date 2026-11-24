@@ -152,6 +152,35 @@ fn xlsx_sheet_title(sheet_name: &str) -> String {
     title.chars().take(31).collect()
 }
 
+fn trail_export_names(sheets: &[TrailSheet]) -> Vec<(String, String)> {
+    let mut titles = HashSet::new();
+    let mut filenames = HashSet::new();
+    sheets
+        .iter()
+        .map(|sheet| {
+            let title = unique_export_name(&xlsx_sheet_title(&sheet.name), &mut titles, true);
+            let filename = unique_export_name(&tab_csv_name(&sheet.name), &mut filenames, false);
+            (title, filename)
+        })
+        .collect()
+}
+
+fn unique_export_name(name: &str, seen: &mut HashSet<String>, xlsx: bool) -> String {
+    let mut candidate = name.to_owned();
+    let mut index = 2;
+    while !seen.insert(candidate.to_lowercase()) {
+        candidate = if xlsx {
+            let suffix = format!(" ({index})");
+            let stem: String = name.chars().take(31 - suffix.chars().count()).collect();
+            format!("{stem}{suffix}")
+        } else {
+            format!("{}-{index}.csv", name.strip_suffix(".csv").unwrap())
+        };
+        index += 1;
+    }
+    candidate
+}
+
 // ── xlsx sheet writers ───────────────────────────────────────────────────
 
 fn is_blank_row(row: &ReportRow) -> bool {
@@ -516,10 +545,11 @@ pub fn generate_report() -> Result<i32> {
                 _ => continue,
             };
 
+            let names = trail_export_names(sheets);
             let mut workbook = Workbook::new();
-            for sheet in sheets {
+            for (sheet, (title, _)) in sheets.iter().zip(&names) {
                 let ws = workbook.add_worksheet();
-                ws.set_name(xlsx_sheet_title(&sheet.name))?;
+                ws.set_name(title)?;
                 write_trail_sheet(ws, sheet)?;
             }
             save_xlsx(
@@ -528,12 +558,9 @@ pub fn generate_report() -> Result<i32> {
                 &mut touched_files,
             )?;
 
-            for sheet in sheets {
+            for (sheet, (_, filename)) in sheets.iter().zip(&names) {
                 write_trail_csv(
-                    &base
-                        .join("herleitung")
-                        .join(form_key)
-                        .join(tab_csv_name(&sheet.name)),
+                    &base.join("herleitung").join(form_key).join(filename),
                     sheet,
                     &mut touched_files,
                 )?;
@@ -542,10 +569,11 @@ pub fn generate_report() -> Result<i32> {
 
         let ignored_sheets = all_herleitung.get("ignoriert").cloned().unwrap_or_default();
         if !ignored_sheets.is_empty() {
+            let names = trail_export_names(&ignored_sheets);
             let mut workbook = Workbook::new();
-            for sheet in &ignored_sheets {
+            for (sheet, (title, _)) in ignored_sheets.iter().zip(&names) {
                 let ws = workbook.add_worksheet();
-                ws.set_name(xlsx_sheet_title(&sheet.name))?;
+                ws.set_name(title)?;
                 write_trail_sheet(ws, sheet)?;
             }
             save_xlsx(
@@ -553,9 +581,9 @@ pub fn generate_report() -> Result<i32> {
                 workbook,
                 &mut touched_files,
             )?;
-            for sheet in &ignored_sheets {
+            for (sheet, (_, filename)) in ignored_sheets.iter().zip(&names) {
                 write_trail_csv(
-                    &base.join("herleitung").join(tab_csv_name(&sheet.name)),
+                    &base.join("herleitung").join(filename),
                     sheet,
                     &mut touched_files,
                 )?;
@@ -624,6 +652,28 @@ mod tests {
         assert_eq!(xlsx_sheet_title("A/B:C"), "A-B-C");
         let long_name = "x".repeat(40);
         assert_eq!(xlsx_sheet_title(&long_name).chars().count(), 31);
+    }
+
+    #[test]
+    fn export_names_remain_unique_when_suffixes_collide_or_titles_are_truncated() {
+        let mut seen = HashSet::new();
+        assert_eq!(unique_export_name("buro.csv", &mut seen, false), "buro.csv");
+        assert_eq!(
+            unique_export_name("buro-2.csv", &mut seen, false),
+            "buro-2.csv"
+        );
+        assert_eq!(
+            unique_export_name("buro.csv", &mut seen, false),
+            "buro-3.csv"
+        );
+
+        let mut seen = HashSet::new();
+        let name = "Ä".repeat(31);
+        assert_eq!(unique_export_name(&name, &mut seen, true), name);
+        assert_eq!(
+            unique_export_name(&name.to_lowercase(), &mut seen, true),
+            format!("{} (2)", "ä".repeat(27))
+        );
     }
 
     #[test]

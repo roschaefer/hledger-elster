@@ -108,3 +108,101 @@ $ xlsx_sheet export/2024/steuererklaerung.xlsx USt | diff - <(strip_section_mark
 ```scrut
 $ xlsx_sheet export/2024/steuererklaerung.xlsx ESt | diff - <(strip_section_markers export/2024/steuererklaerung/einkommensteuer.csv)
 ```
+
+### Colliding labels keep a separate workbook tab and CSV for every item
+
+Accents, case, or Excel's forbidden characters can collapse distinct labels
+into the same export name. Numeric suffixes keep every tab and its CSV;
+repeating an export chooses the same names and writes identical contents.
+
+```scrut
+$ new_scenario
+```
+
+```scrut
+$ write_file elster.toml <<'EOF'
+> [euer.home_office_pauschale]
+> enabled = false
+> EOF
+```
+
+```scrut
+$ write_file journal.journal <<'EOF'
+> account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
+> account expenses:a  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:Büro
+> account expenses:b  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:Buro
+> account expenses:c  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:Telefon
+> account expenses:d  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:telefon
+> account expenses:e  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:A/B
+> account expenses:f  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:A-B
+>
+> 2024-01-10 Distinct expenses
+>     expenses:a  10.00 EUR
+>     expenses:b  20.00 EUR
+>     expenses:c  30.00 EUR
+>     expenses:d  40.00 EUR
+>     expenses:e  50.00 EUR
+>     expenses:f  60.00 EUR
+>     assets:bank:business
+> EOF
+```
+
+```scrut
+$ hledger elster -f journal.journal --config elster.toml -o export
+  2024
+```
+
+```scrut
+$ ls export/2024/herleitung/einnahmen-ueberschuss-rechnung
+a-b-2.csv
+a-b.csv
+buro-2.csv
+buro.csv
+telefon-2.csv
+telefon.csv
+```
+
+```scrut
+$ workbook=export/2024/herleitung/einnahmen-ueberschuss-rechnung.xlsx
+```
+
+```scrut
+$ csv_dir=export/2024/herleitung/einnahmen-ueberschuss-rechnung
+```
+
+```scrut
+$ xlsx_sheet "$workbook" A-B | diff - "$csv_dir/a-b.csv"
+```
+
+```scrut
+$ xlsx_sheet "$workbook" 'A-B (2)' | diff - "$csv_dir/a-b-2.csv"
+```
+
+```scrut
+$ xlsx_sheet "$workbook" Buro | diff - "$csv_dir/buro.csv"
+```
+
+```scrut
+$ xlsx_sheet "$workbook" Büro | diff - "$csv_dir/buro-2.csv"
+```
+
+```scrut
+$ xlsx_sheet "$workbook" Telefon | diff - "$csv_dir/telefon.csv"
+```
+
+```scrut
+$ xlsx_sheet "$workbook" 'telefon (2)' | diff - "$csv_dir/telefon-2.csv"
+```
+
+```scrut
+$ cp -r export previous-export
+```
+
+```scrut
+$ hledger elster -f journal.journal --config elster.toml -o export
+  2024
+```
+
+```scrut
+$ diff -r previous-export export
+```
