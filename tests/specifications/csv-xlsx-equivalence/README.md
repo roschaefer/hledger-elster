@@ -111,9 +111,24 @@ $ xlsx_sheet export/2024/steuererklaerung.xlsx ESt | diff - <(strip_section_mark
 
 ### Colliding labels keep a separate workbook tab and CSV for every item
 
-Accents, case, or Excel's forbidden characters can collapse distinct labels
-into the same export name. Numeric suffixes keep every tab and its CSV;
-repeating an export chooses the same names and writes identical contents.
+Each `elster_item` becomes one Herleitung tab in the workbook and one CSV
+file next to it. Neither name can be the label verbatim: Excel forbids some
+characters in tab names and compares them case-insensitively, and CSV file
+names are lowercase ASCII slugs. So distinct labels can collapse into the same
+name. This scenario books one expense on each of three such pairs:
+
+| `elster_item` | Amount | Collides with   | Workbook tab  | CSV file        |
+|---------------|-------:|-----------------|---------------|-----------------|
+| `A-B`         |  60,00 |                 | `A-B`         | `a-b.csv`       |
+| `A/B`         |  50,00 | `A-B` (`/`)     | `A-B (2)`     | `a-b-2.csv`     |
+| `Buro`        |  20,00 |                 | `Buro`        | `buro.csv`      |
+| `Büro`        |  10,00 | `Buro` (accent) | `Büro`        | `buro-2.csv`    |
+| `Telefon`     |  30,00 |                 | `Telefon`     | `telefon.csv`   |
+| `telefon`     |  40,00 | `Telefon` (case)| `telefon (2)` | `telefon-2.csv` |
+
+Labels are taken in sorted order; the first keeps the plain name and each
+later one gets a numeric suffix. Tab and CSV names are made unique
+separately, so `Büro` needs a suffix only for its CSV.
 
 ```scrut
 $ new_scenario
@@ -129,12 +144,18 @@ $ write_file elster.toml <<'EOF'
 ```scrut
 $ write_file journal.journal <<'EOF'
 > account assets:bank:business  ; elster_account:business, elster_item:Geschäftskonto
-> account expenses:a  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:Büro
-> account expenses:b  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:Buro
-> account expenses:c  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:Telefon
-> account expenses:d  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:telefon
-> account expenses:e  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:A/B
-> account expenses:f  ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable, elster_item:A-B
+> account expenses:a  ; elster_item:Büro
+>   ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable
+> account expenses:b  ; elster_item:Buro
+>   ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable
+> account expenses:c  ; elster_item:Telefon
+>   ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable
+> account expenses:d  ; elster_item:telefon
+>   ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable
+> account expenses:e  ; elster_item:A/B
+>   ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable
+> account expenses:f  ; elster_item:A-B
+>   ; elster_form:einnahmenueberschussrechnung, elster_deduction:full, elster_vat:not_applicable
 >
 > 2024-01-10 Distinct expenses
 >     expenses:a  10.00 EUR
@@ -152,6 +173,9 @@ $ hledger elster -f journal.journal --config elster.toml -o export
   2024
 ```
 
+All six items get their own CSV. Before this was fixed, `Büro` and `Buro`
+both wrote `buro.csv`, and the second silently overwrote the first.
+
 ```scrut
 $ ls export/2024/herleitung/einnahmen-ueberschuss-rechnung
 a-b-2.csv
@@ -162,6 +186,19 @@ telefon-2.csv
 telefon.csv
 ```
 
+The `GESAMT` row of each CSV shows which item landed in which file, matching
+the amounts in the table above:
+
+```scrut
+$ (cd export/2024/herleitung/einnahmen-ueberschuss-rechnung && grep ^GESAMT *.csv)
+a-b-2.csv:GESAMT;;;50,00;50,00;;50,00
+a-b.csv:GESAMT;;;60,00;60,00;;60,00
+buro-2.csv:GESAMT;;;10,00;10,00;;10,00
+buro.csv:GESAMT;;;20,00;20,00;;20,00
+telefon-2.csv:GESAMT;;;40,00;40,00;;40,00
+telefon.csv:GESAMT;;;30,00;30,00;;30,00
+```
+
 ```scrut
 $ workbook=export/2024/herleitung/einnahmen-ueberschuss-rechnung.xlsx
 ```
@@ -169,6 +206,13 @@ $ workbook=export/2024/herleitung/einnahmen-ueberschuss-rechnung.xlsx
 ```scrut
 $ csv_dir=export/2024/herleitung/einnahmen-ueberschuss-rechnung
 ```
+
+Next, each workbook tab is paired with its CSV. `xlsx_sheet` prints a tab
+as `;`-separated text, and `diff -` compares that against the CSV file; no
+output means they're identical. Since every item has a different amount, a
+tab paired with the wrong CSV would show up as a diff. Each block below
+therefore checks one row of the table: the item's tab and its CSV hold the
+same data.
 
 ```scrut
 $ xlsx_sheet "$workbook" A-B | diff - "$csv_dir/a-b.csv"
@@ -193,6 +237,11 @@ $ xlsx_sheet "$workbook" Telefon | diff - "$csv_dir/telefon.csv"
 ```scrut
 $ xlsx_sheet "$workbook" 'telefon (2)' | diff - "$csv_dir/telefon-2.csv"
 ```
+
+Finally, the suffixes are deterministic: exporting the same journal again
+assigns every item the same tab and CSV name, so the export doesn't churn
+under version control. `diff -r` prints nothing when both exports are
+identical.
 
 ```scrut
 $ cp -r export previous-export
