@@ -243,26 +243,46 @@ pub fn pdf_bytes(metadata: &GitMetadata) -> Vec<u8> {
     pdf.into_bytes()
 }
 
-fn normalize_path(path: &Path) -> PathBuf {
+fn resolve_output_path(path: &Path) -> std::io::Result<PathBuf> {
+    let absolute = crate::paths::resolve(path);
     let mut resolved = PathBuf::new();
-    for component in path.components() {
+    for component in absolute.components() {
         match component {
             std::path::Component::CurDir => {}
             std::path::Component::ParentDir => {
                 resolved.pop();
             }
-            _ => resolved.push(component.as_os_str()),
+            _ => {
+                resolved.push(component.as_os_str());
+                match resolved.canonicalize() {
+                    Ok(canonical) => resolved = canonical,
+                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                        if let Ok(target) = resolved.read_link() {
+                            let target = if target.is_absolute() {
+                                target
+                            } else {
+                                resolved.parent().unwrap().join(target)
+                            };
+                            resolved = resolve_output_path(&target)?;
+                        }
+                    }
+                    Err(error) => return Err(error),
+                }
+            }
         }
     }
-    resolved
+    Ok(resolved)
 }
 
 fn ensure_output_outside_repository(
     path: &Path,
     repository_root: &Path,
 ) -> Result<(), CommitEvidenceError> {
-    let output = normalize_path(path);
-    let repository_root = normalize_path(repository_root);
+    let output = resolve_output_path(path).map_err(|source| CommitEvidenceError::Write {
+        path: path.to_path_buf(),
+        source,
+    })?;
+    let repository_root = repository_root.canonicalize()?;
     if output.starts_with(&repository_root) {
         return Err(CommitEvidenceError::OutputInsideRepository(output));
     }
@@ -389,6 +409,77 @@ mod tests {
         std::fs::create_dir(&repository).unwrap();
 
         ensure_output_outside_repository(&tmp.path().join("commit-evidence.pdf"), &repository)
+            .unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn output_through_a_symlink_into_repository_is_rejected_before_creating_directories() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repository = tmp.path().join("tax-repo");
+        std::fs::create_dir(&repository).unwrap();
+        let alias = tmp.path().join("alias");
+        std::os::unix::fs::symlink(&repository, &alias).unwrap();
+
+        for suffix in ["commit-evidence.pdf", "new/nested/commit-evidence.pdf"] {
+            assert!(matches!(
+                ensure_output_outside_repository(&alias.join(suffix), &repository),
+                Err(CommitEvidenceError::OutputInsideRepository(_))
+            ));
+        }
+        assert!(!repository.join("new").exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn symlink_is_resolved_before_parent_components() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repository = tmp.path().join("tax-repo");
+        std::fs::create_dir_all(repository.join("child")).unwrap();
+        let alias = tmp.path().join("alias");
+        std::os::unix::fs::symlink(repository.join("child"), &alias).unwrap();
+
+        assert!(matches!(
+            ensure_output_outside_repository(&alias.join("../commit-evidence.pdf"), &repository),
+            Err(CommitEvidenceError::OutputInsideRepository(_))
+        ));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn output_symlink_target_inside_repository_is_rejected() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repository = tmp.path().join("tax-repo");
+        std::fs::create_dir(&repository).unwrap();
+        let target = repository.join("commit-evidence.pdf");
+        let alias = tmp.path().join("commit-evidence.pdf");
+        std::os::unix::fs::symlink(&target, &alias).unwrap();
+
+        assert!(matches!(
+            ensure_output_outside_repository(&alias, &repository),
+            Err(CommitEvidenceError::OutputInsideRepository(_))
+        ));
+        assert!(!target.exists());
+        std::fs::write(&target, b"previous evidence").unwrap();
+        assert!(matches!(
+            ensure_output_outside_repository(&alias, &repository),
+            Err(CommitEvidenceError::OutputInsideRepository(_))
+        ));
+        assert_eq!(std::fs::read(&target).unwrap(), b"previous evidence");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn output_through_a_symlink_outside_repository_is_allowed() {
+        let tmp = tempfile::tempdir().unwrap();
+        let repository = tmp.path().join("tax-repo");
+        std::fs::create_dir(&repository).unwrap();
+        let outside = tmp.path().join("outside");
+        std::fs::create_dir(&outside).unwrap();
+        let alias = repository.join("alias");
+        std::os::unix::fs::symlink(&outside, &alias).unwrap();
+
+        ensure_output_outside_repository(&alias.join("new/commit-evidence.pdf"), &repository)
             .unwrap();
     }
 

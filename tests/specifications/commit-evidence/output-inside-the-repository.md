@@ -29,3 +29,47 @@ $ test ! -e commit-evidence.pdf
 ```scrut
 $ git status --porcelain
 ```
+
+## A symlink cannot hide an output inside the repository
+
+The output may name a symlink outside the repository, including a directory that
+has not been created yet. It must still be rejected before changing the tree.
+
+```scrut
+$ ln -s "$PWD" ../repository-alias
+```
+
+```scrut
+$ hledger-elster export-commit-evidence --output ../repository-alias/new/nested/commit-evidence.pdf
+Error: commit evidence output must be outside the Git repository: */work/new/nested/commit-evidence.pdf (glob)
+[1]
+```
+
+```scrut
+$ test ! -e new
+```
+
+```scrut
+$ git status --porcelain
+```
+
+An existing or dangling file symlink also cannot redirect a forced write into
+the repository.
+
+```scrut
+$ ln -s "$PWD/commit-evidence.pdf" ../evidence-alias.pdf
+```
+
+```scrut
+$ hledger-elster export-commit-evidence --force --output ../evidence-alias.pdf
+Error: commit evidence output must be outside the Git repository: */work/commit-evidence.pdf (glob)
+[1]
+```
+
+```scrut
+$ test ! -e commit-evidence.pdf
+```
+
+```scrut
+$ git status --porcelain
+```
