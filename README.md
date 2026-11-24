@@ -29,6 +29,11 @@ For macOS on Apple Silicon, use the `hledger-elster-macos-arm64` asset instead.
 
 ## Usage
 
+Postings must contain one EUR amount (`EUR`, `€`, or no commodity). Foreign
+currencies and mixed-commodity postings are rejected with their source location;
+record them in EUR before exporting. A price annotation does not convert the
+posting for this export. Unsupported decimal precision also returns an error.
+
 Run it on a journal, here the [example journal](examples/ledger/hledger.journal).
 It prints each tax year it exports:
 

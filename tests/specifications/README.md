@@ -63,6 +63,7 @@ just test-scrut
 Specifications:
 
 - [Configuration](configuration/)
+- [Posting amounts](posting-amounts/)
 - [CSV/xlsx equivalence](csv-xlsx-equivalence/)
 - [Traceability](traceability/)
 - [Export hygiene](export-hygiene/)
