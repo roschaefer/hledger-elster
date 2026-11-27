@@ -10,8 +10,10 @@ The `scrut` blocks below use helpers from [`readme-setup.sh`](../readme-setup.sh
 such as `new_scenario`, which starts each scenario in a new empty directory.
 
 The generator writes deterministic ELSTER artifacts into the selected output
-directory. It also reports files it did not touch, because stale CSVs in the
-export tree can be mistaken for current tax artifacts.
+directory. [Generated files](generated-file-lifecycle.md) that disappear from
+the current export are removed using the previous export manifest. Files not
+recorded there are kept and reported, because stale CSVs in the export tree
+can be mistaken for current tax artifacts.
 
 ### Stale files in the export directory are reported
 

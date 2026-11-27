@@ -313,15 +313,17 @@ fn write_rows_csv(
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent)?;
     }
-    if rows.is_empty() {
-        return Ok(());
-    }
-    let headers: Vec<String> = rows[0].keys().cloned().collect();
+    let headers: Vec<String> = rows
+        .first()
+        .map(|row| row.keys().cloned().collect())
+        .unwrap_or_default();
     let mut writer = csv::WriterBuilder::new()
         .delimiter(b';')
         .terminator(csv::Terminator::Any(b'\n'))
         .from_path(path)?;
-    writer.write_record(&headers)?;
+    if !headers.is_empty() {
+        writer.write_record(&headers)?;
+    }
     for row in rows {
         let record: Vec<&str> = headers
             .iter()
@@ -370,11 +372,39 @@ fn save_xlsx(
     Ok(())
 }
 
-fn unlink_if_exists(path: &Path, touched_files: &mut HashSet<PathBuf>) -> Result<()> {
-    if path.exists() {
+fn remove_obsolete_generated_files(
+    data_dir: &Path,
+    touched_files: &HashSet<PathBuf>,
+) -> Result<()> {
+    let manifest_path = data_dir.join(paths::MANIFEST_FILE_NAME);
+    let manifest = match std::fs::read_to_string(&manifest_path) {
+        Ok(manifest) => manifest,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error.into()),
+    };
+    let root = data_dir.canonicalize()?;
+    for entry in manifest.lines() {
+        let relative = Path::new(entry);
+        if relative.as_os_str().is_empty()
+            || !relative
+                .components()
+                .all(|component| matches!(component, std::path::Component::Normal(_)))
+        {
+            continue;
+        }
+        let path = data_dir.join(relative);
+        let metadata = match path.symlink_metadata() {
+            Ok(metadata) => metadata,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => return Err(error.into()),
+        };
+        if !metadata.file_type().is_file() {
+            continue;
+        }
         let canonical = path.canonicalize()?;
-        std::fs::remove_file(path)?;
-        touched_files.insert(canonical);
+        if canonical.starts_with(&root) && !touched_files.contains(&canonical) {
+            std::fs::remove_file(path)?;
+        }
     }
     Ok(())
 }
@@ -388,11 +418,6 @@ fn unlink_if_exists(path: &Path, touched_files: &mut HashSet<PathBuf>) -> Result
 fn write_manifest(data_dir: &Path, touched_files: &mut HashSet<PathBuf>) -> Result<()> {
     std::fs::create_dir_all(data_dir)?;
     let canonical_data_dir = data_dir.canonicalize()?;
-    // `touched_files` also records paths `unlink_if_exists` deleted (so
-    // `warn_about_untouched_files` doesn't need to care) -- exclude those
-    // here, since a deleted file was not "freshly generated" and reading it
-    // back would just fail with a generic file-not-found error rather than
-    // the clear stale-data diagnostic `reconciliation::verify_fresh` gives.
     let mut relative: Vec<String> = touched_files
         .iter()
         .filter(|p| p.exists())
@@ -555,23 +580,18 @@ pub fn generate_report() -> Result<i32> {
             )?;
             for sheet in &ignored_sheets {
                 write_trail_csv(
-                    &base.join("herleitung").join(tab_csv_name(&sheet.name)),
+                    &base
+                        .join("herleitung")
+                        .join("ignoriert")
+                        .join(tab_csv_name(&sheet.name)),
                     sheet,
                     &mut touched_files,
                 )?;
             }
-        } else {
-            unlink_if_exists(
-                &base.join("herleitung").join("ignoriert.xlsx"),
-                &mut touched_files,
-            )?;
-            unlink_if_exists(
-                &base.join("herleitung").join("ignoriert.csv"),
-                &mut touched_files,
-            )?;
         }
     }
 
+    remove_obsolete_generated_files(&data_dir, &touched_files)?;
     write_manifest(&data_dir, &mut touched_files)?;
     warn_about_untouched_files(&data_dir, &touched_files);
     Ok(0)
@@ -783,12 +803,12 @@ mod tests {
 
         generate_report().unwrap();
         let ignoriert_xlsx = out_dir.path().join("2024/herleitung/ignoriert.xlsx");
-        let ignoriert_csv = out_dir.path().join("2024/herleitung/ignoriert.csv");
+        let ignoriert_csv = out_dir
+            .path()
+            .join("2024/herleitung/ignoriert/ignoriert.csv");
         assert!(ignoriert_xlsx.exists());
         assert!(ignoriert_csv.exists());
 
-        // Second run: the ignored posting is gone, so there are no ignored
-        // postings for 2024 anymore -- `unlink_if_exists` deletes both files.
         std::fs::write(
             &journal_path,
             "account assets:bank  ; elster_account:business\n\
@@ -813,6 +833,58 @@ mod tests {
             !manifest.contains("ignoriert"),
             "manifest should not list deleted files: {manifest}"
         );
+    }
+
+    #[test]
+    fn obsolete_cleanup_preserves_unlisted_files_and_paths_outside_the_export() {
+        let tmp = tempfile::tempdir().unwrap();
+        let output = tmp.path().join("export");
+        std::fs::create_dir(&output).unwrap();
+        for name in ["obsolete.csv", "current.csv", "notes.txt"] {
+            std::fs::write(output.join(name), name).unwrap();
+        }
+        let outside = tmp.path().join("outside.csv");
+        std::fs::write(&outside, "outside").unwrap();
+        std::fs::write(
+            output.join(paths::MANIFEST_FILE_NAME),
+            format!(
+                "obsolete.csv\ncurrent.csv\n../outside.csv\n{}\n",
+                outside.display()
+            ),
+        )
+        .unwrap();
+        let touched = HashSet::from([output.join("current.csv").canonicalize().unwrap()]);
+
+        remove_obsolete_generated_files(&output, &touched).unwrap();
+
+        assert!(!output.join("obsolete.csv").exists());
+        assert!(output.join("current.csv").exists());
+        assert!(output.join("notes.txt").exists());
+        assert!(outside.exists());
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn obsolete_cleanup_does_not_follow_symlinks_to_external_files() {
+        let tmp = tempfile::tempdir().unwrap();
+        let output = tmp.path().join("export");
+        std::fs::create_dir(&output).unwrap();
+        let outside = tmp.path().join("outside");
+        std::fs::create_dir(&outside).unwrap();
+        std::fs::write(outside.join("evidence.csv"), "outside").unwrap();
+        let alias = output.join("alias.csv");
+        std::os::unix::fs::symlink(outside.join("evidence.csv"), &alias).unwrap();
+        std::os::unix::fs::symlink(&outside, output.join("alias-dir")).unwrap();
+        std::fs::write(
+            output.join(paths::MANIFEST_FILE_NAME),
+            "alias.csv\nalias-dir/evidence.csv\n",
+        )
+        .unwrap();
+
+        remove_obsolete_generated_files(&output, &HashSet::new()).unwrap();
+
+        assert!(alias.is_symlink());
+        assert!(outside.join("evidence.csv").exists());
     }
 
     #[test]
