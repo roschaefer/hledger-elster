@@ -42,6 +42,8 @@ pub struct Posting {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Amount {
+    #[serde(default)]
+    pub acommodity: String,
     pub aquantity: Quantity,
 }
 

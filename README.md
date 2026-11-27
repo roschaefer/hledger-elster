@@ -29,6 +29,8 @@ For macOS on Apple Silicon, use the `hledger-elster-macos-arm64` asset instead.
 
 ## Usage
 
+Postings must contain [one EUR amount (`EUR`, `€`, or no commodity)](./tests/specifications/posting-amounts/).
+
 Run it on a journal, here the [example journal](examples/ledger/hledger.journal).
 It prints each tax year it exports:
 

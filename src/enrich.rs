@@ -52,6 +52,8 @@ pub enum EnrichError {
     Deduction(String),
     #[error("invalid numeric tag value: {0}")]
     InvalidNumber(String),
+    #[error("{0}")]
+    UnsupportedAmount(String),
     #[error(transparent)]
     Journal(#[from] JournalError),
 }
@@ -281,18 +283,31 @@ fn enrich_posting(
         return Ok(None);
     }
 
-    // Rebuild the exact decimal from hledger's own mantissa/scale rather than its
-    // lossy `floatingPoint` convenience field, then apply the same ROUND_HALF_UP
-    // quantization used throughout the rest of the codebase. This is bit-identical
-    // to the Python port for every real EUR amount (<=2 fractional digits), which
-    // is the only case that occurs in practice; it also avoids depending on
-    // Python's incidental ROUND_HALF_EVEN-via-string-formatting behavior for the
-    // (unreachable, for currency journals) >2-decimal-place case.
-    let quantity = &posting.pamount[0].aquantity;
-    let amount = quantize(Decimal::new(
-        quantity.decimal_mantissa,
-        quantity.decimal_places,
-    ));
+    let amount_error = |reason: String| {
+        let date = posting.pdate.as_deref().unwrap_or(transaction_date);
+        EnrichError::UnsupportedAmount(format!(
+            "Unsupported amount for account \"{account}\" on {date} \
+             (\"{description}\", {source_file}:{source_line}): {reason}"
+        ))
+    };
+    if posting.pamount.len() != 1 {
+        return Err(amount_error(format!(
+            "expected a single EUR amount, found {} amounts; split the posting into EUR postings",
+            posting.pamount.len()
+        )));
+    }
+    let posting_amount = &posting.pamount[0];
+    if !matches!(posting_amount.acommodity.as_str(), "" | "EUR" | "€") {
+        return Err(amount_error(format!(
+            "commodity \"{}\" is not EUR; record the posting in EUR before exporting",
+            posting_amount.acommodity
+        )));
+    }
+    let quantity = &posting_amount.aquantity;
+    let amount = quantize(
+        Decimal::try_new(quantity.decimal_mantissa, quantity.decimal_places)
+            .map_err(|error| amount_error(error.to_string()))?,
+    );
 
     let posting_comment = posting
         .pcomment
@@ -493,6 +508,53 @@ mod tests {
     fn try_build(body: &str) -> Result<TaxDataset, EnrichError> {
         let file = journal_with(body);
         build_dataset(file.path())
+    }
+
+    #[test]
+    fn euro_symbols_and_commodityless_amounts_keep_their_values() {
+        for commodity in ["EUR", "€", ""] {
+            let dataset = build(&format!(
+                "2024-01-01 Test\n    expenses:hosting  10.00 {commodity}  ; elster_role:income_tax_advance\n    assets:bank\n"
+            ));
+            assert_eq!(dataset.iter().next().unwrap().amount, Decimal::new(1000, 2));
+        }
+    }
+
+    #[test]
+    fn euro_amount_with_a_foreign_cost_keeps_the_euro_quantity() {
+        let dataset =
+            build("2024-01-01 Test\n    expenses:hosting  10.00 EUR @ 2 USD  ; elster_role:income_tax_advance\n    assets:bank  -10.00 EUR @ 2 USD\n");
+        assert_eq!(dataset.iter().next().unwrap().amount, Decimal::new(1000, 2));
+    }
+
+    #[test]
+    fn unsupported_precision_returns_a_contextual_error_instead_of_panicking() {
+        let posting: Posting = serde_json::from_value(serde_json::json!({
+            "paccount": "expenses:hosting",
+            "pdate": "2024-02-03",
+            "pamount": [{
+                "acommodity": "EUR",
+                "aquantity": {"decimalMantissa": 1, "decimalPlaces": 29}
+            }]
+        }))
+        .unwrap();
+        let error = enrich_posting(
+            &posting,
+            "2024-01-01",
+            "",
+            "Hosting invoice",
+            "assets:bank",
+            &HashMap::new(),
+            "journal.journal",
+            7,
+        )
+        .unwrap_err();
+        let message = error.to_string();
+        assert!(message.contains("expenses:hosting"));
+        assert!(message.contains("2024-02-03"));
+        assert!(message.contains("Hosting invoice"));
+        assert!(message.contains("journal.journal:7"));
+        assert!(message.contains("29"));
     }
 
     #[test]
