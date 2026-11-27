@@ -118,3 +118,4 @@ These start from the same shared setup:
 
 - [EÜR follows the booking year while USt settles against the tax period](booking-year-and-tax-period.md)
 - [VAT refund from the Finanzamt is part of the profit](vat-refund.md)
+- [VAT advance reversals are refunds in the booking year](advance-refund.md)

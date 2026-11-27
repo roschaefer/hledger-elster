@@ -855,7 +855,9 @@ fn euer_sheets(dataset: &TaxDataset, year: i32) -> Result<Vec<TrailSheet>, VatAd
     let vat_refund_ds: TaxDataset = dataset
         .for_year(year)
         .iter()
-        .filter(|p| p.tax_role == "vat_payment" && p.amount < Decimal::ZERO)
+        .filter(|p| {
+            matches!(p.tax_role.as_str(), "vat_payment" | "vat_advance") && p.amount < Decimal::ZERO
+        })
         .cloned()
         .collect();
     collect(&mut result, &mut seen, vat_outflows_sheet(&vat_outflows_ds));
