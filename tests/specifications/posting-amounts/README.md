@@ -10,6 +10,9 @@ The export accepts one EUR amount per posting, also written as `€` or without
 a commodity. Foreign amounts must be recorded in EUR before exporting; a
 conversion price on a foreign amount does not change its commodity.
 
+Foreign currencies and mixed-commodity postings are rejected with their source
+location. Unsupported decimal precision also returns an error.
+
 ## A foreign amount with a EUR price is rejected
 
 ```scrut
